@@ -11,6 +11,9 @@ export default function App() {
       <MainLayout>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/historico" element={<h1>Histórico</h1>} />
+          <Route path="/favoritos" element={<h1>Favoritos</h1>} />
+          <Route path="/perfil" element={<h1>Perfil</h1>} />
         </Routes>
       </MainLayout>
     </BrowserRouter>
