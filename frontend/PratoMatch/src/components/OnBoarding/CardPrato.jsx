@@ -8,7 +8,6 @@ const CardPrato = ({name, image}) => {
         </div>
         <div class="card_info"> 
             <h2>{name}</h2>
-            <a href="#!">hello</a>
         </div>
     </div>
     )
