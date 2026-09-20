@@ -1,19 +1,18 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
-import OnBoarding from './pages/OnBoarding'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-function App() {
-  const [count, setCount] = useState(0)
+import MainLayout from "./layouts/MainLayout.jsx";
 
+import Home from "./pages/Home";
+
+
+export default function App() {
   return (
-    <>
-      <OnBoarding />
-     
-    </>
-  )
+    <BrowserRouter>
+      <MainLayout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+        </Routes>
+      </MainLayout>
+    </BrowserRouter>
+  );
 }
-
-export default App
