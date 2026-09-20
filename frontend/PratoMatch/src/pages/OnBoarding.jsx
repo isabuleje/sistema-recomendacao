@@ -1,4 +1,10 @@
-//Página para o OnBoarding, onde o usuário vai escolher no mínimo 3 pratos interessantes para não haver o ColdStart e escolher se tem alergias ou algum tipo de restrição aliementar
+/*
+Página dividida em 3 partes:
+1. Selecionar se possui algum tipo de alergia ou restrição alimentar
+2. Escolher no mínimo 3 pratos de interesse
+3. Confirmar as preferências selecionadas
+
+*/
 import CardPrato from '../components/OnBoarding/CardPrato.jsx'
 import "../components/OnBoarding/CardPrato.css"
 
@@ -9,7 +15,7 @@ const OnBoarding = () => {
       <section className="pratos-container">
         <h2>Escolha no mínimo 3 pratos de seu interesse</h2>
 
-        <div className="pratos-grid">
+        <div className="pratos-grid" style={{  marginTop: "100px"}}>
           <CardPrato name="Prato 1" image="../public/Pratos/prato1.webp" />
           <CardPrato name="Prato 2" image="../public/Pratos/prato2.webp" />
           <CardPrato name="Prato 3" image="../public/Pratos/prato3.webp" />
@@ -27,4 +33,20 @@ const OnBoarding = () => {
     )
 }
 
+
+const RestricaoAlimentar = () => {
+  return (
+    <section className="restricao-container">
+      <h2>Antes de começar conte-nos sobre sua alimentação</h2>
+      <p> Assim, as recomendações ficam mais seguras e do seu estilo de vida.</p>
+
+      <h6>Você tem alguma restrição alimentar?</h6>
+      
+
+
+
+
+    </section>
+  )
+};
 export default OnBoarding
