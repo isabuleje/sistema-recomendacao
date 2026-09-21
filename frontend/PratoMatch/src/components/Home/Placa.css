@@ -1,6 +1,6 @@
 .placa {
   width: min(100%, 1580px);
-  min-height: 170px;
+  min-height: 140px;
   box-sizing: border-box;
 
   display: flex;
