@@ -1,0 +1,124 @@
+.placa {
+    width: 70%;
+    height: 100px;
+
+    background-color: #FFBF00;
+
+    /* Borda verde externa */
+    border: 4px solid #077B66;
+    border-radius: 35px;
+
+    /* Espaçamento entre as duas bordas verdes */
+    padding: 20px;
+
+    /* A parte verde que aparece embaixo e à direita */
+    box-shadow: 10px 10px 0 #077B66;
+
+    margin: 30px;
+}
+
+.placa-interna {
+    width: 100%;
+    height: 100%;
+
+    /* Fundo claro da parte interna */
+    background-color: #FFE0D1;
+
+    /* Segunda borda verde */
+    border: 4px solid #077B66;
+    border-radius: 30px;
+}
+
+.placa-texto {
+    font-size: 45px;
+    font-weight: 400;
+    transition: all 0.4s ease;
+    white-space: nowrap;
+
+    /* Centralizar o texto vertical e horizontalmente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    height: 100%;
+}
+
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+}
+
+.input {
+  width: 100%;
+  height: 55px;
+
+  padding: 0 60px 0 50px;
+
+  border: 3px solid #077B66;
+  border-radius: 30px;
+
+  background-color: #FFF6E8;
+
+  font-size: 16px;
+  font-family: Inter;
+  color: #077B66;
+
+  outline: none;
+}
+
+.input::placeholder {
+  color: #8a8a8a;
+}
+
+/* Lupa */
+.search-icon {
+  position: absolute;
+
+  left: 18px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  width: 22px;
+  height: 22px;
+
+  color: #077B66;
+
+  pointer-events: none;
+}
+
+/* Botão de enviar */
+.send-button {
+  position: absolute;
+
+  right: 12px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  width: 36px;
+  height: 36px;
+
+  border: none;
+  border-radius: 50%;
+
+   background-color: #077B66;
+  color: #FFF6E8;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+.send-button svg {
+  width: 21px;
+  height: 21px;
+}
+
+.send-button:hover {
+  background-color: rgba(7, 123, 102, 0.1);
+}

@@ -20,12 +20,11 @@
   letter-spacing: 0.18px;
   color-scheme: light dark;
   color: var(--text);
-  background: var(--bg);
+  background-color: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
 
 }
 
@@ -52,6 +51,13 @@
 body {
   margin: 0;
   font-family: var(--font-primary);
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(90deg, rgba(196, 80, 25, 0.055) 2px, transparent 2px),
+    linear-gradient(0deg, rgba(196, 80, 25, 0.055) 2px, transparent 2px);
+  background-attachment: fixed;
+  
+  background-size: 75px 75px; 
 }
 
 button,
@@ -70,6 +76,36 @@ select {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  background: transparent;
+}
+
+.app-layout {
+  min-height: 100svh;
+}
+
+/* A Sidebar recolhida ocupa 78px; o conteúdo começa depois dela. */
+.main-content {
+  min-height: 100svh;
+  width: calc(100% - 78px);
+  margin-left: 78px;
+  box-sizing: border-box;
+  transition: width 0.5s ease, margin-left 0.5s ease;
+}
+
+/* Quando a Sidebar abre, o conteúdo reserva os 260px completos. */
+.app-layout:has(.sidebar:hover) .main-content,
+.app-layout:has(.sidebar:focus-within) .main-content {
+  width: calc(100% - 260px);
+  margin-left: 260px;
+}
+
+@media (max-width: 720px) {
+  .main-content,
+  .app-layout:has(.sidebar:hover) .main-content,
+  .app-layout:has(.sidebar:focus-within) .main-content {
+    width: calc(100% - 78px);
+    margin-left: 78px;
+  }
 }
 
 h1,

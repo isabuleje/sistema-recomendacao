@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import diningImage from "../../assets/dining.png";
 import ShadowText from "../ShadowText/ShadowText";
@@ -12,13 +11,11 @@ const menuItems = [
 const profileItem = { label: "Perfil", icon: "bx-user", path: "/perfil" };
 
 const SideBar = () => {
-  // Controla se a sidebar mostra apenas os ícones ou também os nomes.
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
 
   return (
-    <aside className={`sidebar${isCollapsed ? " close" : ""}`}>
-      <div className="logo-details">
+    <aside className="sidebar close">
+      <div className="logo-details" style={{marginBottom: "30px"}}>
         <img src={diningImage} alt="PratoMatch Logo" className="logo_image" />
         <ShadowText main_color={"#ffbf00"} second_color={"#c45019"} className="logo_name">
           PratoMatch
@@ -35,7 +32,7 @@ const SideBar = () => {
               <div className={"menu-link"}>
                 <NavLink to={item.path} end={item.path === "/"}>
                   <i className={`bx ${item.icon}`} aria-hidden="true" />
-                  <ShadowText className="link_name" main_color={"#ffbf00"} second_color={"#c45019"}>
+                  <ShadowText className="link_name category-label" main_color={"#ffbf00"} second_color={"#c45019"}>
                     {item.label}
                   </ShadowText>
                 </NavLink>
@@ -51,23 +48,13 @@ const SideBar = () => {
         <li className={location.pathname === profileItem.path ? "active" : ""}>
           <NavLink to={profileItem.path}>
             <i className={`bx ${profileItem.icon}`} aria-hidden="true" />
-            <ShadowText className="link_name" main_color="#ffbf00" second_color="#c45019">
+            <ShadowText className="link_name category-label" main_color="#ffbf00" second_color="#c45019">
               {profileItem.label}
             </ShadowText>
           </NavLink>
         </li>
       </ul>
 
-      {/* Controle circular no meio da borda: compacto e separado da logo. */}
-      <button
-        className="sidebar-collapse-toggle"
-        type="button"
-        aria-label={isCollapsed ? "Expandir menu" : "Recolher menu"}
-        aria-expanded={!isCollapsed}
-        onClick={() => setIsCollapsed((collapsed) => !collapsed)}
-      >
-        <i className={`bx ${isCollapsed ? "bx-chevron-right" : "bx-chevron-left"}`} aria-hidden="true" />
-      </button>
     </aside>
   );
 };

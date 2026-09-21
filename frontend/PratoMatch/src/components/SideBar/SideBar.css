@@ -10,11 +10,17 @@
   z-index: 100;
   transition: all 0.5s ease;
   background: #077b66;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
+  font-family: 'Poppins', sans-serif;
 }
 .sidebar.close{
   width: 78px;
+}
+.sidebar.close:hover,
+.sidebar.close:focus-within{
+  width: 260px;
 }
 .sidebar .logo-details{
   position: relative;
@@ -34,6 +40,7 @@
   object-fit: contain;
 }
 .sidebar .logo-details .logo_name{
+  font-family: 'Harlow Solid LET', sans-serif;
   margin-left: 14px;
   margin-top: 40px;
   font-size: 28px;
@@ -43,15 +50,13 @@
   transition-delay: 0.1s;
   white-space: nowrap;
 }
-.arrow-button,
-.sidebar-collapse-toggle{
+.arrow-button{
   border: 0;
   background: transparent;
   color: inherit;
   cursor: pointer;
   padding: 0;
 }
-.sidebar-collapse-toggle:focus-visible,
 .arrow-button:focus-visible,
 .nav-links a:focus-visible{
   outline: 2px solid #c45019;
@@ -62,10 +67,15 @@
   opacity: 0;
   pointer-events: none;
 }
+.sidebar.close:hover .logo-details .logo_name,
+.sidebar.close:focus-within .logo-details .logo_name{
+  opacity: 1;
+  pointer-events: auto;
+}
 .sidebar .nav-links{
   flex: 1;
   min-height: 0;
-  padding: 30px 0 180px 0;
+  padding: 20px 0 24px 0;
   overflow: auto;
 }
 .sidebar.close .nav-links{
@@ -79,9 +89,9 @@
   list-style: none;
   transition: all 0.4s ease;
   /* Espaço vertical para que cada categoria fique visualmente separada. */
-  margin-bottom: 12px;
+  margin-bottom: 20px;
   margin-right: 8px;
-  margin-top: 10px;
+  margin-top: 0;
   border-bottom-right-radius: 16px;
   border-top-right-radius: 16px;
 }
@@ -152,11 +162,19 @@
   width: 100%;
 }
 .sidebar .nav-links li a .link_name{
+  font-family: 'Poppins', sans-serif;
   font-size: 22px;
   font-weight: 400;
   margin-left: 0;
   color: #11101d;
   transition: all 0.4s ease;
+}
+.sidebar .nav-links li a .category-label{
+  line-height: 1;
+}
+.sidebar .nav-links li a .category-label .shadow-text__back{
+  top: 2px;
+  left: 2px;
 }
 .sidebar .nav-links li.active a .link_name,
 .sidebar .nav-links li:hover a .link_name{  
@@ -165,6 +183,13 @@
 .sidebar.close .nav-links li a .link_name{
   opacity: 0;
   pointer-events: none;
+}
+.sidebar.close:hover .nav-links li a .link_name,
+.sidebar.close:focus-within .nav-links li a .link_name,
+.sidebar.close:hover .profile-link .link_name,
+.sidebar.close:focus-within .profile-link .link_name{
+  opacity: 1;
+  pointer-events: auto;
 }
 .sidebar .nav-links li .sub-menu{
   padding: 6px 6px 14px 80px;
@@ -225,6 +250,7 @@
 }
 .profile-link{
   padding: 0 0 12px;
+  padding-top: 10px;
   margin: 0;
   list-style: none;
 }
@@ -264,7 +290,15 @@
   font-size: 20px;
 }
 .profile-link .link_name{
+  font-family: 'Poppins', sans-serif;
   font-size: 22px;
+}
+.profile-link .category-label{
+  line-height: 1;
+}
+.profile-link .category-label .shadow-text__back{
+  top: 2px;
+  left: 2px;
 }
 .profile-link li.active i,
 .profile-link li:hover i{
@@ -275,43 +309,5 @@
 .sidebar.close .profile-link .link_name{
   opacity: 0;
   pointer-events: none;
-}
-.sidebar-collapse-toggle{
-  position: absolute;
-  top: 50%;
-  right: -16px;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  min-height: 32px;
-  margin: 0;
-  transform: translateY(-50%);
-  border: 2px solid #055746;
-  background: #fff;
-  color: #055746;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-  z-index: 2;
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-.sidebar-collapse-toggle:hover{
-  background: #FFD65A;
-  transform: translateY(-50%) scale(1.08);
-}
-.sidebar-collapse-toggle i{
-  font-size: 22px;
-  line-height: 1;
-}
-.sidebar-collapse-toggle:focus-visible{
-  outline: 2px solid #c45019;
-  outline-offset: 3px;
-}
-.sidebar.close .sidebar-collapse-toggle{
-  right: -16px;
-}
-
-/* Mantém o botão circular mesmo quando a Sidebar está recolhida. */
-.sidebar.close .sidebar-collapse-toggle i{
-  font-size: 22px;
 }
 
