@@ -1,0 +1,200 @@
+/* tava tudo vazando globalmente, agr n ta mais*/
+.cardContainer {
+  --primary-green: #115E41;
+  --bg-color: #FAF7F2;
+  --text-gray: #7A8781;
+  --tag-green-bg: #E1F0E5;
+  --tag-orange-bg: #F9EBE0;
+  --tag-orange-text: #8E6A4B;
+  --border-color: #EBE6DF;
+
+  display: flex;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 12px;
+  gap: 20px;
+  width: 100%;
+  margin: 20px 20px 24px 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.cardImageWrapper {
+  position: relative;
+  width: 280px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.cardImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.badgeVisualizado {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: white;
+  color: var(--primary-green);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.badgeHeart {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.cardContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: flex-start; 
+  text-align: left;
+}
+
+.cardTitle {
+  margin: 0 0 8px 0;
+  color: var(--primary-green);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.cardMeta {
+  display: flex;
+  align-items:flex-start;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--text-gray);
+  margin-bottom: 12px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary-green);
+  font-weight: 500;
+}
+
+.metaDot {
+  color: #c4c4c4;
+}
+
+.metaPrice {
+  color: var(--primary-green);
+  font-weight: 700;
+}
+
+.cardDescription {
+  margin: 0 0 16px 0;
+  color: var(--text-gray);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.cardTags {
+  display: flex;
+  gap: 10px;
+}
+
+.tag {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.tagGreen {
+  background-color: var(--tag-green-bg);
+  color: var(--primary-green);
+}
+
+.tagOrange {
+  background-color: var(--tag-orange-bg);
+  color: var(--tag-orange-text);
+}
+
+.cardActions {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  min-width: 180px;
+  padding: 8px 12px 4px 0;
+}
+
+.cardStats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.ratingScore {
+  color: var(--primary-green);
+  font-weight: 700;
+}
+
+.ratingCount {
+  color: var(--text-gray);
+}
+
+.date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-gray);
+}
+
+.btnDetalhes {
+  background-color: transparent;
+  color: var(--primary-green);
+  border: 1px solid var(--primary-green);
+  padding: 8px 16px;
+  border-radius: 24px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btnDetalhes:hover {
+  background-color: var(--primary-green);
+  color: white;
+}
+
+.home-page {
+  width: 100%;
+  font-family: Inter;
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0 0 0 24px;
+  padding-bottom: 48px;
+}
