@@ -1,7 +1,6 @@
-/* From Uiverse.io by vamsidevendrakumar */ 
+/* From Uiverse.io by vamsidevendrakumar */
 .card {
-  width: 300px;
-  height: 310px;
+  height: 350px;
   overflow: hidden;
   border-radius: 14px;
   background: #fff;
@@ -10,14 +9,13 @@
 
 .card-image-wrapper {
   position: relative;
-  height: 200px;
 }
 
-.card-image{
-    display: block;
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
+.card-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .favorite-button {
@@ -26,13 +24,13 @@
   right: 12px;
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
-  color: #c45019;
+  background: transparent;
+  color: #fefefe;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
@@ -49,8 +47,8 @@
 }
 
 .favorite-button svg {
-  width: 21px;
-  height: 21px;
+  width: 28px;
+  height: 28px;
 }
 
 .card-info {

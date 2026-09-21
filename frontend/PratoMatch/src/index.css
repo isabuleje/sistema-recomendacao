@@ -11,7 +11,7 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --font-primary: 'Harlow Solid LET', sans-serif;
+  --font-primary: "Inter", sans-serif;
   --sans: var(--font-primary);
   --heading: var(--font-primary);
   --mono: var(--font-primary);
@@ -25,7 +25,6 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
 }
 
 @media (prefers-color-scheme: dark) {
@@ -53,13 +52,13 @@ body {
   font-family: var(--font-primary);
   background-color: var(--bg);
   overflow-x: hidden;
-    overflow-y: auto;
+  overflow-y: auto;
   background-image:
     linear-gradient(90deg, rgba(196, 80, 25, 0.055) 2px, transparent 2px),
     linear-gradient(0deg, rgba(196, 80, 25, 0.055) 2px, transparent 2px);
   background-attachment: fixed;
-  
-  background-size: 75px 75px; 
+
+  background-size: 75px 75px;
 }
 
 button,
@@ -92,9 +91,11 @@ select {
   margin-left: 78px;
   min-width: 0;
   overflow-x: hidden;
-    overflow-y: auto;
+  overflow-y: auto;
   box-sizing: border-box;
-  transition: width 0.5s ease, margin-left 0.5s ease;
+  transition:
+    width 0.5s ease,
+    margin-left 0.5s ease;
 }
 
 /* Quando a Sidebar abre, o conteúdo reserva os 260px completos. */

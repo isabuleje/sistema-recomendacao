@@ -6,20 +6,17 @@ const FilterSection = () => {
 
   return (
     <section className="filter-section">
-
       <button
         className="filter-button"
         type="button"
         onClick={() => setIsOpen(!isOpen)}
       >
-
-          Filtros
-
+        <i className="bx bx-filter" aria-hidden="true" />
+        Filtros
       </button>
 
       {isOpen && (
         <div className="filter-options">
-
           <label>
             <input type="checkbox" name="vegetariano" />
             Vegetariano
@@ -44,10 +41,8 @@ const FilterSection = () => {
             <input type="checkbox" name="semLactose" />
             Sem Lactose
           </label>
-
         </div>
       )}
-
     </section>
   );
 };

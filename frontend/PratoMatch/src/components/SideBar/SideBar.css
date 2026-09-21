@@ -1,7 +1,7 @@
 /* Google Fonts Import Link */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
-.sidebar{
+.sidebar {
   position: fixed;
   top: 0;
   left: 0;
@@ -13,16 +13,16 @@
   isolation: isolate;
   display: flex;
   flex-direction: column;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
-.sidebar.close{
+.sidebar.close {
   width: 78px;
 }
 .sidebar.close:hover,
-.sidebar.close:focus-within{
+.sidebar.close:focus-within {
   width: 260px;
 }
-.sidebar .logo-details{
+.sidebar .logo-details {
   position: relative;
   height: 60px;
   width: 100%;
@@ -31,7 +31,7 @@
   padding-left: 18px;
   box-sizing: border-box;
 }
-.sidebar .logo-details .logo_image{
+.sidebar .logo-details .logo_image {
   display: inside-block;
   height: 40px;
   margin-top: 20px;
@@ -39,8 +39,8 @@
   flex: 0 0 40px;
   object-fit: contain;
 }
-.sidebar .logo-details .logo_name{
-  font-family: 'Harlow Solid LET', sans-serif;
+.sidebar .logo-details .logo_name {
+  font-family: "Harlow Solid LET", sans-serif;
   margin-left: 14px;
   margin-top: 20px;
   font-size: 28px;
@@ -50,7 +50,7 @@
   transition-delay: 0.1s;
   white-space: nowrap;
 }
-.arrow-button{
+.arrow-button {
   border: 0;
   background: transparent;
   color: inherit;
@@ -58,33 +58,33 @@
   padding: 0;
 }
 .arrow-button:focus-visible,
-.nav-links a:focus-visible{
+.nav-links a:focus-visible {
   outline: 2px solid #c45019;
   outline-offset: 2px;
 }
-.sidebar.close .logo-details .logo_name{
+.sidebar.close .logo-details .logo_name {
   transition-delay: 0s;
   opacity: 0;
   pointer-events: none;
 }
 .sidebar.close:hover .logo-details .logo_name,
-.sidebar.close:focus-within .logo-details .logo_name{
+.sidebar.close:focus-within .logo-details .logo_name {
   opacity: 1;
   pointer-events: auto;
 }
-.sidebar .nav-links{
+.sidebar .nav-links {
   flex: 1;
   min-height: 0;
   padding: 20px 0 24px 0;
   overflow: auto;
 }
-.sidebar.close .nav-links{
+.sidebar.close .nav-links {
   overflow: visible;
 }
-.sidebar .nav-links::-webkit-scrollbar{
+.sidebar .nav-links::-webkit-scrollbar {
   display: none;
 }
-.sidebar .nav-links li{
+.sidebar .nav-links li {
   position: relative;
   list-style: none;
   transition: all 0.4s ease;
@@ -95,37 +95,37 @@
   border-bottom-right-radius: 16px;
   border-top-right-radius: 16px;
 }
-.sidebar .nav-links li.active{
+.sidebar .nav-links li.active {
   background: #08735e;
 }
 
 .sidebar .nav-links > li.active:before,
-.sidebar .nav-links > li:before{
-  position:absolute;
-  left:0;
-  top:0;
-  content:'';
-  width:4px;
-  height:100%;
-  background:#c45019;
+.sidebar .nav-links > li:before {
+  position: absolute;
+  left: 0;
+  top: 0;
+  content: "";
+  width: 4px;
+  height: 100%;
+  background: #c45019;
   opacity: 0;
   transition: all 0.25s ease-in-out;
-  border-top-right-radius:5px;
-  border-top-right-radius:5px;
+  border-top-right-radius: 5px;
+  border-top-right-radius: 5px;
 }
 .sidebar .nav-links li.active:before,
-.sidebar .nav-links li:hover:before{
+.sidebar .nav-links li:hover:before {
   opacity: 1;
 }
-.sidebar .nav-links li .icon-link{
+.sidebar .nav-links li .icon-link {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.sidebar.close .nav-links li .icon-link{
+.sidebar.close .nav-links li .icon-link {
   display: block;
 }
-.sidebar .nav-links li i{
+.sidebar .nav-links li i {
   height: 42px;
   min-width: 78px;
   text-align: center;
@@ -135,128 +135,127 @@
   cursor: pointer;
   transition: all 0.3s ease;
 }
-.sidebar .nav-links li .arrow-button{
+.sidebar .nav-links li .arrow-button {
   height: 50px;
   min-width: 50px;
   font-size: 20px;
 }
-.sidebar .nav-links li .arrow-button .arrow{
+.sidebar .nav-links li .arrow-button .arrow {
   min-width: 0;
   width: 50px;
 }
 
 .sidebar .nav-links li.active i,
-.sidebar .nav-links li:hover i{
-  color: #FFFFFF;
-
+.sidebar .nav-links li:hover i {
+  color: #ffffff;
 }
-.sidebar .nav-links li.showMenu i.arrow{
+.sidebar .nav-links li.showMenu i.arrow {
   transform: rotate(-180deg);
 }
-.sidebar.close .nav-links i.arrow{
+.sidebar.close .nav-links i.arrow {
   display: none;
 }
-.sidebar .nav-links li a{
+.sidebar .nav-links li a {
   display: flex;
   align-items: center;
   text-decoration: none;
   width: 100%;
 }
-.sidebar .nav-links li a .link_name{
-  font-family: 'Poppins', sans-serif;
+.sidebar .nav-links li a .link_name {
+  font-family: "Poppins", sans-serif;
   font-size: 18px;
   font-weight: 400;
   margin-left: 0;
-  color: #FFFFFF;
+  color: #ffffff;
 
   transition: all 0.4s ease;
 }
-.sidebar .nav-links li a .category-label{
+.sidebar .nav-links li a .category-label {
   line-height: 1;
 }
-.sidebar .nav-links li a .category-label .shadow-text__back{
+.sidebar .nav-links li a .category-label .shadow-text__back {
   top: 2px;
   left: 2px;
 }
 .sidebar .nav-links li.active a .link_name,
-.sidebar .nav-links li:hover a .link_name{  
-  color: #FFFFFF;
-
+.sidebar .nav-links li:hover a .link_name {
+  color: #ffffff;
 }
-.sidebar.close .nav-links li a .link_name{
+.sidebar.close .nav-links li a .link_name {
   opacity: 0;
   pointer-events: none;
 }
 .sidebar.close:hover .nav-links li a .link_name,
 .sidebar.close:focus-within .nav-links li a .link_name,
 .sidebar.close:hover .profile-link .link_name,
-.sidebar.close:focus-within .profile-link .link_name{
+.sidebar.close:focus-within .profile-link .link_name {
   opacity: 1;
   pointer-events: auto;
 }
 
-.sidebar .nav-links li .sub-menu .link_name{
+.sidebar .nav-links li .sub-menu .link_name {
   display: none;
 }
-.sidebar.close .nav-links li .sub-menu .link_name{
+.sidebar.close .nav-links li .sub-menu .link_name {
   font-size: 18px;
   opacity: 1;
   display: block;
 }
-.sidebar .nav-links li .sub-menu.blank{
+.sidebar .nav-links li .sub-menu.blank {
   opacity: 1;
   pointer-events: auto;
   padding: 3px 20px 6px 16px;
   opacity: 0;
   pointer-events: none;
 }
-.sidebar .nav-links li:hover .sub-menu.blank{
+.sidebar .nav-links li:hover .sub-menu.blank {
   top: 50%;
   transform: translateY(-50%);
 }
-.profile-link{
+.profile-link {
   position: relative;
   padding: 16px 0 12px;
   margin: 0;
   list-style: none;
 }
-.profile-link::before{
+.profile-link::before {
   position: absolute;
   top: 0;
   left: 20px;
-  width: 65%;
+  right: 20px;
+  width: 50%;
   height: 1px;
-  content: '';
+  content: "";
   background: #f3dfb3;
 }
-.profile-link li{
+
+.profile-link li {
   position: relative;
   margin: 0 8px 0 0;
   border-radius: 0 16px 16px 0;
 }
 .profile-link li.active:before,
-.profile-link li:hover:before{
+.profile-link li:hover:before {
   position: absolute;
   left: 0;
   top: 0;
-  content: '';
+  content: "";
   width: 4px;
   height: 100%;
   background: #c45019;
   border-top-right-radius: 5px;
   border-bottom-right-radius: 5px;
 }
-.profile-link li.active{
+.profile-link li.active {
   background: #08735e;
 }
-.profile-link a{
+.profile-link a {
   display: flex;
   align-items: center;
   width: 100%;
   text-decoration: none;
-  
 }
-.profile-link i{
+.profile-link i {
   min-width: 78px;
   height: 42px;
   line-height: 42px;
@@ -264,35 +263,31 @@
   color: #ffbf00;
   font-size: 20px;
 }
-.profile-link .link_name{
-  font-family: 'Poppins', sans-serif;
+.profile-link .link_name {
+  font-family: "Poppins", sans-serif;
   font-size: 18px;
   font-weight: 400;
-  color: #FFFFFF;
+  color: #ffffff;
 
   transition: all 0.4s ease;
 }
-.profile-link .category-label{
+.profile-link .category-label {
   line-height: 1;
 }
-.profile-link .category-label .shadow-text__back{
+.profile-link .category-label .shadow-text__back {
   top: 2px;
   left: 2px;
 }
 .profile-link li.active i,
-.profile-link li:hover i{
-  color: #FFFFFF;
-
+.profile-link li:hover i {
+  color: #ffffff;
 }
 .profile-link li.active .link_name,
-.profile-link li:hover .link_name{
-  color: #FFFFFF;
-
+.profile-link li:hover .link_name {
+  color: #ffffff;
 }
 
-
-.sidebar.close .profile-link .link_name{
+.sidebar.close .profile-link .link_name {
   opacity: 0;
   pointer-events: none;
 }
-

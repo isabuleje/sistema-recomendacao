@@ -2,26 +2,26 @@
   position: relative;
   width: max-content;
   max-width: 100%;
-  margin: 18px 32px 0 auto;
+  flex: 0 0 auto;
+  margin: 10px 32px 0 16px;
   font-family: Poppins, sans-serif;
 }
 
 .filter-button {
-  width: 150px;
-  border:#077b66  2px solid;
-  border-radius: 15px;
+  width: 200px;
+  min-height: 48px;
+  border: #077b66 2px solid;
+  border-radius: 35px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 8px;
 
-  padding: 12px 20px;
   cursor: pointer;
   background: #fff6e8;
   color: #077b66;
   font-family: Poppins, sans-serif;
 }
-
-
 
 .filter-options {
   position: absolute;

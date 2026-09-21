@@ -1,0 +1,79 @@
+.input-wrapper {
+  position: relative;
+  width: min(100%, 1400px);
+  margin: 0;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 50px;
+
+  padding: 0 70px 0 50px;
+
+  border: 3px solid #077b66;
+  border-radius: 30px;
+
+  background-color: #fff6e8;
+
+  font-size: 16px;
+  font-family: Inter;
+  color: #077b66;
+
+  outline: none;
+}
+
+.input::placeholder {
+  color: #8a8a8a;
+}
+
+/* Lupa */
+.search-icon {
+  position: absolute;
+
+  left: 18px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  width: 22px;
+  height: 22px;
+
+  color: #077b66;
+
+  pointer-events: none;
+}
+
+/* Botão de enviar */
+.send-button {
+  position: absolute;
+
+  right: 12px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  width: 36px;
+  height: 36px;
+
+  border: none;
+  border-radius: 50%;
+
+  background-color: #077b66;
+  color: #fff6e8;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+.send-button svg {
+  width: 21px;
+  height: 21px;
+}
+
+.send-button:hover {
+  background-color: rgba(7, 123, 102, 0.1);
+}
