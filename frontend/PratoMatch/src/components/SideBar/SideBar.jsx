@@ -32,9 +32,9 @@ const SideBar = () => {
               <div className={"menu-link"}>
                 <NavLink to={item.path} end={item.path === "/"}>
                   <i className={`bx ${item.icon}`} aria-hidden="true" />
-                  <ShadowText className="link_name category-label" main_color={"#ffbf00"} second_color={"#c45019"}>
+                  <span className="link_name category-label">
                     {item.label}
-                  </ShadowText>
+                  </span>
                 </NavLink>
               </div>
           
@@ -48,9 +48,9 @@ const SideBar = () => {
         <li className={location.pathname === profileItem.path ? "active" : ""}>
           <NavLink to={profileItem.path}>
             <i className={`bx ${profileItem.icon}`} aria-hidden="true" />
-            <ShadowText className="link_name category-label" main_color="#ffbf00" second_color="#c45019">
+            <span className="link_name category-label">
               {profileItem.label}
-            </ShadowText>
+            </span>
           </NavLink>
         </li>
       </ul>

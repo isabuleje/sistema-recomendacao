@@ -1,57 +1,90 @@
 /* From Uiverse.io by vamsidevendrakumar */ 
 .card {
   width: 300px;
+  height: 310px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 5px 14px rgba(70, 19, 19, 0.14);
+}
+
+.card-image-wrapper {
+  position: relative;
   height: 200px;
-  perspective: 1000px;
 }
 
 .card-image{
+    display: block;
     width: 100%;
-    height: 100%;
+    height: 200px;
     object-fit: cover;
-    border-radius: 10px;
 }
 
-.card-inner {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  transform-style: preserve-3d;
-  transition: transform 0.999s;
-}
-
-.card:hover .card-inner {
-  transform: rotateY(180deg);
-}
-
-.card-front,
-.card-back {
+.favorite-button {
   position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #c45019;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
-.card-front {
-  background-color: #6A2C70;
+.favorite-button:hover,
+.favorite-button.is-favorite {
+  background: #c45019;
   color: #fff;
-  display: flex;
-  align-items: center;
-  border: 10px solid #6A2C70;
-  border-radius: 10px;
-  justify-content: center;
-  font-size: 24px;
-  transform: rotateY(0deg);
 }
 
-.card-back {
-  background-color: #F08A5D;
-  color: #fff;
+.favorite-button:focus-visible {
+  outline: 2px solid #077b66;
+  outline-offset: 2px;
+}
+
+.favorite-button svg {
+  width: 21px;
+  height: 21px;
+}
+
+.card-info {
+  min-height: 110px;
+  padding: 12px 16px 14px;
+  background: #fff;
+  color: #461313;
+}
+
+.card-title {
+  margin: 0 0 8px;
+  color: #461313;
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.card-metadata {
   display: flex;
   align-items: center;
-  border: 10px solid #F08A5D;
-  border-radius: 10px;
-  justify-content: center;
-  font-size: 24px;
-  transform: rotateY(180deg);
+  justify-content: space-between;
+  gap: 8px;
+  color: #077b66;
+  font-size: 13px;
+  font-family: Poppins, sans-serif;
+}
+
+.card-rating {
+  color: #c45019;
+  font-weight: 600;
+}
+
+.card-description {
+  margin: 8px 0 0;
+  color: #6b6375;
+  font-size: 12px;
+  font-family: Poppins, sans-serif;
 }
