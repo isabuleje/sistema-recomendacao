@@ -1,5 +1,4 @@
 //Página do Histórico, onde o usuário vai poder ver os pratos que ele já avaliou e as avaliações que ele deu para cada prato
-import "../components/Home/Placa.css";
 import "../components/Historico/Card.module.css";
 import Card from "../components/Historico/Card.jsx";
 
@@ -11,18 +10,11 @@ const Historico = () => {
         <i className="bx bx-user" style={{ color: "#000504" }} />
       </div>
 
-      <div className="placa">
-        <div className="placa-conteudo">
-          <h2 className="placa-texto">Seu histórico</h2>
-
-          <p className="placa-subtitulo">
-            Aqui estão os pratos que você já avaliou ou visualizou.
-          </p>
-
-        </div>
+      <div>
+        <button> Historico </button>
+        <button> Favoritos</button>
       </div>
 
-
       <Card
         titulo="Pizza Margherita"
         descricao="Massa artesanal, molho de tomate, mussarela de búfala e manjericão fresco."
@@ -82,8 +74,6 @@ const Historico = () => {
         numerosNota="(1,2k)"
         data="21 de setembro de 2025"
       />
-
-
     </div>
   );
 };

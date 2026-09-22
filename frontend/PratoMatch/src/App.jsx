@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import Perfil from "./pages/Perfil";
 import Historico from "./pages/Historico";
 import OnBoarding from "./pages/OnBoarding.jsx";
+import Favorito from "./pages/Favorito.jsx";
 
 export default function App() {
   return (
@@ -14,7 +15,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/historico" element={<Historico />} />
-          <Route path="/favoritos" element={<h1>Favoritos</h1>} />
+          <Route path="/favoritos" element={<Favorito />} />
           <Route path="/perfil" element={<Perfil />} />
           <Route path="/onboarding" element={<OnBoarding />} />
         </Routes>

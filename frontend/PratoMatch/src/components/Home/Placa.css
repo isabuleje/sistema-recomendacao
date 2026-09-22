@@ -27,7 +27,18 @@
   font-family: "Poppins", sans-serif;
   font-weight: 700;
   line-height: 1.5;
-  color: #055746;
+
+  background: linear-gradient(
+    90deg,
+    #055746 0%,
+    #077b66 60%,
+    #d6c334 80%,
+    #c45019 100%
+  );
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .placa-subtitulo {
