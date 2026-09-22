@@ -1,5 +1,6 @@
 //Página do Histórico, onde o usuário vai poder ver os pratos que ele já avaliou e as avaliações que ele deu para cada prato
-import "../components/Historico/Card.module.css";
+import { NavLink } from "react-router-dom";
+import styles from "../components/Historico/Card.module.css";
 import Card from "../components/Historico/Card.jsx";
 
 const Historico = () => {
@@ -10,9 +11,26 @@ const Historico = () => {
         <i className="bx bx-user" style={{ color: "#000504" }} />
       </div>
 
-      <div>
-        <button> Historico </button>
-        <button> Favoritos</button>
+      <div
+        className={styles["page-toggle"]}
+        aria-label="Alternar entre histórico e favoritos"
+      >
+        <NavLink
+          to="/historico"
+          className={({ isActive }) =>
+            `${styles["page-toggle-button"]} ${isActive ? styles["page-toggle-button-active"] : ""}`
+          }
+        >
+          Histórico
+        </NavLink>
+        <NavLink
+          to="/favoritos"
+          className={({ isActive }) =>
+            `${styles["page-toggle-button"]} ${isActive ? styles["page-toggle-button-active"] : ""}`
+          }
+        >
+          Favoritos
+        </NavLink>
       </div>
 
       <Card

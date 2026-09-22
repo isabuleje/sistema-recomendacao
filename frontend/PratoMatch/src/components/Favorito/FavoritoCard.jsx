@@ -1,4 +1,3 @@
-import React from "react";
 import styles from "./FavoritoCard.module.css";
 
 const FavoritoCard = ({
@@ -8,7 +7,6 @@ const FavoritoCard = ({
   tempo,
   nota,
   numerosNota,
-  data,
 }) => {
   return (
     <div className={styles.cardContainer}>

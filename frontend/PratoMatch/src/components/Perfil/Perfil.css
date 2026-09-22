@@ -1,0 +1,200 @@
+.perfil-page {
+  --primary-green: #115e41;
+  --bg-color: #faf7f2;
+  --text-gray: #7a8781;
+  --tag-green-bg: #e1f0e5;
+  --tag-orange-bg: #f9ebe0;
+  --tag-orange-text: #8e6a4b;
+  --border-color: #ebe6df;
+
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  gap: 64px;
+  padding: 64px 72px;
+  color: var(--primary-green);
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
+}
+
+/* Coluna esquerda: identidade + alergias/preferências */
+
+.perfil-tudo-esquerda {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.perfil-coluna-esquerda {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+}
+
+.perfil-coluna-alergia-preferencia {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-left: 40px;
+}
+
+.perfil-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--primary-green);
+  color: var(--bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 16px;
+}
+
+.perfil-nome {
+  margin: 40px 20px 40px;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--primary-green);
+}
+
+.perfil-secao {
+  margin-bottom: 32px;
+}
+
+.perfil-secao h2 {
+  margin: 0 0 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary-green);
+}
+
+.perfil-vazio {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-gray);
+}
+
+.perfil-tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.tag {
+  padding: 6px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--primary-green);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.tag-alergia {
+}
+
+.tag-preferencia {
+}
+
+/* Coluna direita: estatísticas + ações */
+
+.perfil-coluna-direita {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.perfil-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.perfil-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.perfil-stat-numero {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--primary-green);
+}
+
+.perfil-stat-legenda {
+  font-size: 1.2rem;
+  color: black;
+}
+
+.perfil-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px 50px 10px 50px;
+  border: 1px solid black;
+  border-radius: 16px;
+  max-width: 280px;
+  align-self: flex-end;
+}
+
+.perfil-botao {
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--primary-green);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.perfil-botao:hover,
+.perfil-botao:focus-visible {
+  background: white;
+  border-color: var(--primary-green);
+}
+
+.perfil-botao:focus-visible {
+  outline: 2px solid var(--primary-green);
+  outline-offset: 2px;
+}
+
+.perfil-botao-perigo {
+  color: var(--tag-orange-text);
+  border-color: var(--tag-orange-text);
+}
+
+.perfil-botao-perigo:hover,
+.perfil-botao-perigo:focus-visible {
+  background: var(--tag-orange-bg);
+  border-color: var(--tag-orange-text);
+}
+
+/* Responsivo */
+
+@media (max-width: 720px) {
+  .perfil-page {
+    flex-direction: column;
+    padding: 40px 24px;
+    gap: 40px;
+  }
+
+  .perfil-acoes {
+    max-width: none;
+    align-self: stretch;
+  }
+}
