@@ -1,0 +1,189 @@
+#onboarding {
+  --verde-escuro: #16332c;
+  --verde-primario: #1f6d45;
+  --verde-primario-hover: #185939;
+  --verde-claro-bg: #e3f1e7;
+  --creme-fundo: #fbf2e6;
+  --creme-card: #ffffff;
+  --bege-borda: #e7ddc9;
+  --texto-principal: #1b2b24;
+  --texto-suave: #6f7d74;
+
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 0 1.5rem;
+  box-sizing: border-box;
+  font-family: "Calibri", "Segoe UI", Arial, sans-serif;
+  color: var(--texto-principal);
+}
+
+#onboarding *,
+#onboarding *::before,
+#onboarding *::after {
+  box-sizing: border-box;
+}
+
+.onboarding-card {
+  width: 100%;
+  margin: 0;
+}
+
+/* O onboarding ocupa a viewport inteira; as outras páginas mantêm o recuo da sidebar. */
+.main-content:has(#onboarding),
+.app-layout:has(.sidebar:hover):has(#onboarding) .main-content,
+.app-layout:has(.sidebar:focus-within):has(#onboarding) .main-content {
+  width: calc(100% - 78px);
+  margin-left: 78px;
+}
+
+.app-layout:has(.sidebar:hover):has(#onboarding) .main-content,
+.app-layout:has(.sidebar:focus-within):has(#onboarding) .main-content {
+  width: calc(100% - 260px);
+  margin-left: 260px;
+}
+
+.onboarding-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  text-align: center;
+  gap: 0.85rem;
+  margin-bottom: 2rem;
+}
+
+.onboarding-logo {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--verde-escuro);
+}
+
+.onboarding-progresso {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.progresso-ponto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--bege-borda);
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.progresso-ponto.concluido,
+.progresso-ponto.ativo {
+  background: var(--verde-primario);
+}
+
+.progresso-ponto.ativo {
+  transform: scale(1.3);
+}
+
+.onboarding-fase-label {
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+}
+
+.onboarding-fase {
+  text-align: left;
+}
+
+.onboarding-fase h1,
+.onboarding-fase h2 {
+  margin: 0 0 0.5rem;
+  color: var(--verde-escuro);
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.onboarding-fase h1 {
+  font-size: 2rem;
+}
+
+.onboarding-subtitulo {
+  margin: 0 0 1.75rem;
+  color: var(--texto-suave);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.onboarding-nota,
+.onboarding-contador {
+  margin: 0.25rem 0 1.5rem;
+  color: var(--texto-suave);
+  font-size: 0.82rem;
+}
+
+.onboarding-contador {
+  color: var(--verde-primario);
+  font-weight: 600;
+}
+
+.onboarding-acoes {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.onboarding-acoes-unica {
+  justify-content: flex-end;
+}
+
+.botao {
+  border-radius: 999px;
+  padding: 0.7rem 1.6rem;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.botao-primario {
+  border: 1px solid var(--verde-primario);
+  background: var(--verde-primario);
+  color: #ffffff;
+}
+
+.botao-primario:hover:not(:disabled) {
+  background: var(--verde-primario-hover);
+}
+
+.botao-primario:disabled {
+  border-color: var(--bege-borda);
+  background: var(--bege-borda);
+  color: var(--texto-suave);
+  cursor: not-allowed;
+}
+
+.botao-secundario {
+  border: 1px solid var(--verde-primario);
+  background: transparent;
+  color: var(--verde-primario);
+}
+
+.botao-secundario:hover {
+  background: var(--verde-claro-bg);
+}
+
+@media (max-width: 480px) {
+  #onboarding {
+    padding: 0 1rem;
+  }
+
+  .onboarding-card {
+    width: 100%;
+  }
+}

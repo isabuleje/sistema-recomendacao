@@ -1,0 +1,194 @@
+.listaCampos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.campo {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 120px;
+  border: 2px solid var(--bege-borda);
+  border-radius: 18px;
+  background: var(--creme-fundo);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.campo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(7, 123, 102, 0.15);
+}
+
+.campoCheckbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.campoIcone {
+  position: absolute;
+  top: 15px;
+  left: 16px;
+  display: flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  color: var(--verde-primario);
+}
+
+.campoNome {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  color: var(--verde-primario);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.campoCheck {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  display: flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--verde-primario);
+  border-radius: 50%;
+  color: transparent;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.campo:has(.campoCheckbox:checked) {
+  border-color: var(--verde-primario);
+  background: var(--verde-primario);
+  box-shadow: 0 6px 16px rgba(7, 123, 102, 0.2);
+}
+
+.campo:has(.campoCheckbox:checked) .campoIcone,
+.campo:has(.campoCheckbox:checked) .campoNome {
+  color: #ffffff;
+}
+
+.campo:has(.campoCheckbox:checked) .campoCheck {
+  border-color: #ffffff;
+  background: #ffffff;
+  color: var(--verde-primario);
+}
+
+.campo-alergia {
+  height: auto;
+  min-height: 120px;
+  padding: 18px;
+  cursor: default;
+}
+
+.campo-alergia:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.campo-alergia > label {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: var(--verde-primario);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.autocomplete {
+  position: relative;
+  width: 100%;
+}
+
+.autocomplete input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--bege-borda);
+  border-radius: 12px;
+  outline: none;
+  background: var(--creme-fundo);
+  color: var(--texto-principal);
+  font: inherit;
+}
+
+.autocomplete input:focus {
+  border-color: var(--verde-primario);
+}
+
+.sugestoes {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 5px);
+  right: 0;
+  left: 0;
+  overflow: hidden;
+  border: 1px solid var(--bege-borda);
+  border-radius: 12px;
+  background: var(--creme-fundo);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+}
+
+.sugestoes button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: var(--texto-principal);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sugestoes button:hover {
+  background: rgba(7, 123, 102, 0.1);
+  color: var(--verde-primario);
+}
+
+.tagsAlergias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tagAlergia {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid var(--verde-primario);
+  border-radius: 20px;
+  background: rgba(7, 123, 102, 0.12);
+  color: var(--verde-primario);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.tagAlergia button {
+  display: flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--verde-primario);
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
