@@ -5,6 +5,7 @@ import MainLayout from "./layouts/MainLayout.jsx";
 import Home from "./pages/Home";
 import Perfil from "./pages/Perfil";
 import Historico from "./pages/Historico";
+import OnBoarding from "./pages/OnBoarding.jsx";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
           <Route path="/historico" element={<Historico />} />
           <Route path="/favoritos" element={<h1>Favoritos</h1>} />
           <Route path="/perfil" element={<Perfil />} />
+          <Route path="/onboarding" element={<OnBoarding />} />
         </Routes>
       </MainLayout>
     </BrowserRouter>
