@@ -81,7 +81,7 @@
 
 @media (max-width: 720px) {
   .placa {
-    width: 100%;
+    width: calc(100% - 12px);
     margin-left: 12px;
   }
 
