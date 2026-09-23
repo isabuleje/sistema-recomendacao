@@ -21,6 +21,7 @@ const RestricaoAlimentar = ({
         Assim, as recomendações ficam mais seguras e do seu estilo de vida.
       </p>
 
+      <h2 className="campo-subtitulo"> Você possui alguma restrição alimentar?</h2>
       <div
         className="listaCampos"
         role="radiogroup"
@@ -47,8 +48,8 @@ const RestricaoAlimentar = ({
         ))}
       </div>
 
+      <h2 className="campo-subtitulo"> Você possui alguma alergia?</h2>
       <div className="campo campo-alergia">
-        <label htmlFor="alergia">Você possui algum tipo de alergia?</label>
         <div className="autocomplete">
           <input
             id="alergia"

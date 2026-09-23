@@ -12,6 +12,7 @@
   align-items: center;
   gap: 16px;
   min-width: 0;
+  width: calc(100% - 32px);
   margin-bottom: 24px;
 }
 
@@ -96,9 +97,11 @@
 
   .category-filter-row {
     align-items: flex-start;
+    width: calc(100% - 12px);
   }
 
   .filter-section {
-    margin-right: 12px;
+    flex-basis: 160px;
+    width: 160px;
   }
 }

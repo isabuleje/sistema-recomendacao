@@ -231,6 +231,7 @@
   bottom: -12px;
   height: 4px;
   border-radius: 999px;
+  background: #055746;
 }
 
 .page-toggle-button {
@@ -239,9 +240,9 @@
   background: transparent;
   color: #055746;
   font: inherit;
-  font-weight: 600;
-  font-size: 0.95rem;
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.25;
   padding: 12px 18px 10px;
   cursor: pointer;
   text-decoration: none;

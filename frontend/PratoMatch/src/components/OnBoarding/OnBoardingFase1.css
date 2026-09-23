@@ -3,6 +3,7 @@
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 16px;
   width: 100%;
+  margin-top: 16px;
 }
 
 .campo {
@@ -19,6 +20,21 @@
     border-color 0.2s ease,
     transform 0.2s ease,
     box-shadow 0.2s ease;
+}
+
+.campo-subtitulo {
+  margin: 2rem 0 0.85rem;
+  color: var(--verde-escuro);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.onboarding-fase > .onboarding-subtitulo + .campo-subtitulo {
+  margin-top: 4rem;
+}
+
+.listaCampos + .campo-subtitulo {
+  margin-top: 6rem;
 }
 
 .campo:hover {

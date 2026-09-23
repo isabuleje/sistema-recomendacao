@@ -1,7 +1,5 @@
 const OnBoardingHeader = ({ fase, totalFases }) => (
   <header className="onboarding-header">
-    <span className="onboarding-logo">🍽️ PratoMatch</span>
-
     <div
       className="onboarding-progresso"
       role="list"

@@ -1,14 +1,13 @@
 .filter-section {
   position: relative;
-  width: max-content;
-  max-width: 100%;
-  flex: 0 0 auto;
-  margin: 10px 32px 0 16px;
+  width: 200px;
+  flex: 0 0 200px;
+  margin: 0;
   font-family: Poppins, sans-serif;
 }
 
 .filter-button {
-  width: 200px;
+  width: 100%;
   min-height: 48px;
   border: #077b66 2px solid;
   border-radius: 35px;
