@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 '''
 NÃO USAR O COMANDO DO MIGRATE PRO BANCO DE DADOS, porque eu ainda nao tenho certeza se os modelos finais vão ser esses
@@ -33,10 +33,13 @@ class Interacao(models.Model):
         on_delete=models.CASCADE
     )
 
-    #INTEGER pq a nota vai ser de 1 a 5 estrelas
+    #Validadores de 1 a 5, só pra garantir
     nota = models.IntegerField(
-        default=0
-    )
+    validators=[
+        MinValueValidator(1),
+        MaxValueValidator(5)
+    ]
+)
 
     data = models.DateTimeField(
         auto_now_add=True
@@ -44,3 +47,40 @@ class Interacao(models.Model):
 
     def __str__(self):
         return f"{self.usuario} - {self.prato} - {self.nota}"
+    
+    
+
+#Classe Alergia a parte pois o usuário pode ter várias alergias, então é melhor criar uma tabela separada pra isso
+class Alergia(models.Model):
+    nome = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nome
+
+class PreferenciaAlimentar(models.Model):
+    nome = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.nome
+    
+#O Django já cria um modelo de usuário, mas esse é um modelo complementar pq tem q guardar o ESTILO DE VIDA e as ALERGIAS
+class PerfilUsuario(models.Model):
+    #ele vai ter uma relação de um pra um com o modelo de usuário do Django
+    usuario = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    #Prefrencias pq a pessoa pode ser low_carb + vegano, ou sem gluten e onivoro ou sei la, pode ser varias combinações
+    preferencias = models.ManyToManyField(
+        PreferenciaAlimentar,
+        blank=True
+    )
+
+    alergias = models.ManyToManyField(
+        Alergia,
+        blank=True
+    )
+
+    def __str__(self):
+        return self.usuario.username
