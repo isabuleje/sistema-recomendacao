@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import Prato, Interacao
 
-# Register your models here.
+
+admin.site.register(Prato)
+admin.site.register(Interacao)
