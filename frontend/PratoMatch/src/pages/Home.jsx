@@ -1,58 +1,96 @@
-// Página inicial, onde o usuário vai poder ver os pratos recomendados, pratos populares e novidades
+// Página inicial, onde o usuário vai poder ver os pratos
+// recomendados, populares e novidades
+
 import "../components/Home/Placa.css";
 import "../components/Home/Categorias.css";
 import "../components/Home/Input.css";
 
 import { Search, Send } from "lucide-react";
+
 import Card from "../components/Home/Card";
 import FilterSection from "../components/Home/Filtro.jsx";
-import { useRef } from "react";
 
-const CategorySection = ({ title, description }) => (
+import { useEffect, useRef, useState } from "react";
+import { buscarPratos } from "../services/Pratos.js";
+
+const CategorySection = ({ title, description, pratos }) => (
   <section className="category-section">
     <div className="category-heading">
       <h2 className="category-title" style={{ color: "#055746" }}>
         {title}
       </h2>
+
       <p>{description}</p>
     </div>
-    <CardRail title={title} />
+
+    <CardRail pratos={pratos} />
   </section>
 );
 
-const CardRail = ({ title }) => {
+const CardRail = ({ pratos }) => {
   const cardsRef = useRef(null);
+
   const dragState = useRef({
     isDragging: false,
     startX: 0,
     startScrollLeft: 0,
   });
 
+  // Começa o arraste
   const handlePointerDown = (event) => {
-    if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (event.pointerType === "mouse" && event.button !== 0) {
+      return;
+    }
+
+    const container = cardsRef.current;
+
+    if (!container) {
+      return;
+    }
 
     dragState.current = {
       isDragging: true,
       startX: event.clientX,
-      startScrollLeft: cardsRef.current.scrollLeft,
+      startScrollLeft: container.scrollLeft,
     };
-    cardsRef.current.setPointerCapture(event.pointerId);
-    cardsRef.current.classList.add("is-dragging");
+
+    container.setPointerCapture(event.pointerId);
+
+    container.classList.add("is-dragging");
   };
 
+  // Durante o arraste
   const handlePointerMove = (event) => {
-    if (!dragState.current.isDragging) return;
+    if (!dragState.current.isDragging) {
+      return;
+    }
+
+    const container = cardsRef.current;
+
+    if (!container) {
+      return;
+    }
 
     const distance = event.clientX - dragState.current.startX;
-    cardsRef.current.scrollLeft = dragState.current.startScrollLeft - distance;
+
+    container.scrollLeft = dragState.current.startScrollLeft - distance;
   };
 
+  // Para o arraste
   const stopDragging = (event) => {
-    if (!dragState.current.isDragging) return;
+    if (!dragState.current.isDragging) {
+      return;
+    }
+
+    const container = cardsRef.current;
 
     dragState.current.isDragging = false;
-    cardsRef.current.releasePointerCapture?.(event.pointerId);
-    cardsRef.current.classList.remove("is-dragging");
+
+    if (container) {
+      container.releasePointerCapture?.(event.pointerId);
+
+      container.classList.remove("is-dragging");
+    }
   };
 
   return (
@@ -66,15 +104,16 @@ const CardRail = ({ title }) => {
         onPointerCancel={stopDragging}
         onPointerLeave={stopDragging}
       >
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((number) => (
+        {pratos.map((prato) => (
           <Card
-            key={`${title}-${number}`}
-            title={`Prato ${number}`}
-            description={`Prato muito aura + ego, larper Tung tung Sahur, amongos, tralelelo tralala, 67 67 67 67`}
-            category="Massas"
-            prepTime="35 min"
-            rating="4,8 ★"
-            image="/Pratos/pizzar.jpg"
+            key={prato.id}
+            image="public/Pratos/pizzar.jpg"
+            title={prato.nome}
+            description={prato.descricao || "Sem descrição disponível."}
+            category={prato.tags?.length > 0 ? prato.tags[0] : "Prato"}
+            prepTime={prato.tempo_preparo}
+            rating={prato.estrelas}
+            evaluations={prato.avaliacoes}
           />
         ))}
       </div>
@@ -83,11 +122,46 @@ const CardRail = ({ title }) => {
 };
 
 const Home = () => {
+  const [pratos, setPratos] = useState([]);
+
+  const [carregando, setCarregando] = useState(true);
+
+  const [erro, setErro] = useState(null);
+
+  useEffect(() => {
+    const carregarPratos = async () => {
+      try {
+        setCarregando(true);
+        setErro(null);
+
+        const dados = await buscarPratos();
+
+        setPratos(dados);
+      } catch (error) {
+        console.error("Erro ao carregar pratos:", error);
+
+        setErro("Não foi possível carregar os pratos.");
+      } finally {
+        setCarregando(false);
+      }
+    };
+
+    carregarPratos();
+  }, []);
+
   return (
     <div className="home-page">
       <div className="user-greeting">
-        <p style={{ color: "#055746", fontWeight: "700" }}> Olá, usuário! 👋</p>
-        <i class="bx bx-user" style={{ color: "#000504" }} />
+        <p
+          style={{
+            color: "#055746",
+            fontWeight: "700",
+          }}
+        >
+          Olá, usuário! 👋
+        </p>
+
+        <i className="bx bx-user" style={{ color: "#000504" }} />
       </div>
 
       <div className="placa">
@@ -104,12 +178,14 @@ const Home = () => {
         <div className="category-filter-row">
           <div className="input-wrapper">
             <Search className="search-icon" />
+
             <input
               type="text"
               placeholder="O que você quer comer hoje?"
               name="text"
               className="input"
             />
+
             <button
               className="send-button"
               type="button"
@@ -122,18 +198,41 @@ const Home = () => {
           <FilterSection />
         </div>
 
-        <CategorySection
-          title="Recomendados para você"
-          description="Encontre os pratos mais indicados para o seu gosto."
-        />
-        <CategorySection
-          title="Pratos populares"
-          description="Os pratos mais pedidos pelos nossos usuários."
-        />
-        <CategorySection
-          title="Novidades"
-          description="Descubra os novos pratos que chegaram."
-        />
+        {carregando && (
+          <div className="pratos-loading">
+            <p>Carregando pratos...</p>
+          </div>
+        )}
+
+        {!carregando && erro && (
+          <div className="pratos-error">
+            <p>{erro}</p>
+          </div>
+        )}
+
+        {!carregando && !erro && (
+          <>
+            <CategorySection
+              title="Recomendados para você"
+              description="Encontre os pratos mais indicados para o seu gosto."
+              pratos={pratos.slice(0, 10)}
+            />
+
+            <CategorySection
+              title="Pratos populares"
+              description="Os pratos mais pedidos pelos nossos usuários."
+              pratos={[...pratos]
+                .sort((a, b) => b.avaliacoes - a.avaliacoes)
+                .slice(0, 10)}
+            />
+
+            <CategorySection
+              title="Novidades"
+              description="Descubra os novos pratos que chegaram."
+              pratos={pratos.slice(-10)}
+            />
+          </>
+        )}
       </section>
     </div>
   );

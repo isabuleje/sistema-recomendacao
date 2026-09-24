@@ -4,6 +4,7 @@ export const RESTRICOES = [
   { value: "vegano", label: "Vegano", icone: "🥬" },
   { value: "gluten", label: "Sem glúten", icone: "🌾" },
   { value: "lactose", label: "Sem lactose", icone: "🥛" },
+  {value: "baixa_caloria", label: "Baixa calorias", icone: "🚫"}
 ];
 
 export const CULINARIAS = [

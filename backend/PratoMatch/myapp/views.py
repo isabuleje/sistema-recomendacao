@@ -5,7 +5,7 @@ from .models import Prato
 from .serializers import PratoSerializer
 from django.http import JsonResponse
 
-from recomendacao.main import obter_categorias, obter_ingredientes
+from recomendacao.main import obter_categorias, obter_ingredientes, obter_pratos
 
 @api_view(['GET'])
 def listar_pratos(request):
@@ -27,4 +27,9 @@ def categorias(request):
 def ingredientes(request):
     return JsonResponse({
         "ingredientes": obter_ingredientes()
+    })
+    
+def pratos(request):
+    return JsonResponse({
+        "pratos": obter_pratos()
     })

@@ -4,16 +4,21 @@ import ast
 
 # Ler CSV e mostrar as receitas encontradas
 BASE_DIR = Path(__file__).resolve().parent.parent
-df = pd.read_csv(BASE_DIR / "dataset" / "RAW_recipes.csv")
-print(f"Receitas encontradas: {len(df)}")
+
+RECEITAS = pd.read_csv(BASE_DIR / "dataset" / "RAW_recipes.csv")
+INTERACOES = pd.read_csv(
+    BASE_DIR / "dataset" / "RAW_interactions.csv"
+)
+
+print(f"Receitas encontradas: {len(RECEITAS)}")
 
 
 #Tags e ingredientes estão como string, então tem que converter para lista
-df["tags"] = df["tags"].apply(
+RECEITAS["tags"] = RECEITAS["tags"].apply(
     lambda x: ast.literal_eval(x) if isinstance(x, str) else []
 )
 
-df["ingredients"] = df["ingredients"].apply(
+RECEITAS["ingredients"] = RECEITAS["ingredients"].apply(
     lambda x: ast.literal_eval(x) if isinstance(x, str) else []
 )
 
@@ -135,7 +140,7 @@ TAGS_IGNORAR = {
 }
 
 
-df["categorias"] = df["tags"].apply(
+RECEITAS["categorias"] = RECEITAS["tags"].apply(
     lambda tags: [
         tag for tag in tags
         if tag not in TAGS_IGNORAR
@@ -147,7 +152,7 @@ def obter_categorias():
     categorias_unicas = sorted(
         {
             categoria
-            for lista in df["categorias"]
+            for lista in RECEITAS["categorias"]
             for categoria in lista
             if isinstance(categoria, str)
             and categoria.strip()
@@ -163,7 +168,7 @@ def obter_ingredientes():
     ingredientes_unicos = sorted(
         {
             ingrediente.strip()
-            for lista in df["ingredients"]
+            for lista in RECEITAS["ingredients"]
             for ingrediente in lista
             if isinstance(ingrediente, str)
             and ingrediente.strip()
@@ -174,4 +179,82 @@ def obter_ingredientes():
 
     return ingredientes_unicos
 
-    return ingredientes_unicos
+
+#Antes do obter pratos, pq ele vem do RAW_interactions e nao do RAW_recipes
+avaliacoes = (
+    INTERACOES
+    .groupby("recipe_id")["rating"]
+    .agg(
+        estrelas="mean",
+        avaliacoes="count"
+    )
+    .reset_index()
+)
+
+df = RECEITAS.merge(
+    avaliacoes,
+    left_on="id",
+    right_on="recipe_id",
+    how="left"
+)
+
+def obter_pratos():
+
+    pratos = []
+
+    for _, prato in df.iterrows():
+
+        pratos.append({
+
+            "id": (
+                int(prato["id"])
+                if pd.notna(prato["id"])
+                else None
+            ),
+
+            "nome": (
+                str(prato["name"]).strip()
+                if pd.notna(prato["name"])
+                else "Prato sem nome"
+            ),
+
+            "descricao": (
+                str(prato["description"]).strip()
+                if pd.notna(prato["description"])
+                else ""
+            ),
+
+            "tempo_preparo": (
+                int(prato["minutes"])
+                if pd.notna(prato["minutes"])
+                else 0
+            ),
+
+            "estrelas": (
+                round(float(prato["estrelas"]), 1)
+                if pd.notna(prato["estrelas"])
+                else 0
+            ),
+
+            "avaliacoes": (
+                int(prato["avaliacoes"])
+                if pd.notna(prato["avaliacoes"])
+                else 0
+            ),
+
+            "tags": (
+                prato["categorias"]
+                if isinstance(prato["categorias"], list)
+                else []
+            ),
+
+            "ingredientes": (
+                prato["ingredients"]
+                if isinstance(prato["ingredients"], list)
+                else []
+            ),
+
+        })
+
+    return pratos
+
