@@ -30,9 +30,8 @@ class Prato(models.Model):
     
     tempo_preparo = models.IntegerField()
     imagem = models.ImageField(upload_to='pratos/')
-    categoria = models.CharField(max_length=100)
     avaliacoes = models.IntegerField(default=0)
-    qntd_estrela = models.IntegerField(default=0)
+    total_estrelas = models.IntegerField(default=0)
     
     #Aqui que pega, pq seria mt bom q os pratos tivessem uma categoria, mas ai os CSV nao tem essa informação, dps tem q ver isso ai
     categorias = models.ManyToManyField(
@@ -45,40 +44,41 @@ class Prato(models.Model):
 
 #A interação vai ter apenas a nota que o usuário deu ao prato, e a data que ele avaliou
 class Interacao(models.Model):
+
     usuario = models.ForeignKey(
         User,
         on_delete=models.CASCADE
     )
-    
-    TIPOS_INTERACAO = [
-        ("interesse", "Interesse"),
-        ("avaliacao", "Avaliação"),
-    ]
 
     prato = models.ForeignKey(
         Prato,
         on_delete=models.CASCADE
     )
 
-    tipo = models.CharField(
-        max_length=20,
-        choices=TIPOS_INTERACAO
-    )
-
-    #notas de 1 a 5
     nota = models.IntegerField(
         null=True,
-        blank=True
+        blank=True,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ]
     )
+
+    interesse = models.BooleanField(
+        default=False
+    )
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["usuario", "prato"],
+                name="usuario_prato_unico"
+            )
+        ]
 
     data = models.DateTimeField(
         auto_now_add=True
     )
-
-    def __str__(self):
-        return f"{self.usuario} - {self.prato} - {self.nota}"
-    
-    
 
 #Classe Alergia a parte pois o usuário pode ter várias alergias, então é melhor criar uma tabela separada pra isso
 class Alergia(models.Model):
@@ -88,7 +88,10 @@ class Alergia(models.Model):
         return self.nome
 
 class PreferenciaAlimentar(models.Model):
-    nome = models.CharField(max_length=100)
+    nome = models.CharField(
+        max_length=100,
+        unique=True
+    )
 
     def __str__(self):
         return self.nome
