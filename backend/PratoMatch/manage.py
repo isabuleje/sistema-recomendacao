@@ -2,7 +2,12 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from pathlib import Path
 
+#tava dando problema com a pasta recomendacao
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+sys.path.insert(0, str(BASE_DIR))
 
 def main():
     """Run administrative tasks."""

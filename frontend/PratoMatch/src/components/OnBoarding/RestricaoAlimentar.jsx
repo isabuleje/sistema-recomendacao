@@ -1,4 +1,4 @@
-import { INGREDIENTES, RESTRICOES } from "./onboardingData";
+import { RESTRICOES } from "./onboardingData";
 
 const RestricaoAlimentar = ({
   restricao,
@@ -9,8 +9,9 @@ const RestricaoAlimentar = ({
   adicionarAlergia,
   removerAlergia,
   onAvancar,
+  ingredientes
 }) => {
-  const sugestoes = INGREDIENTES.filter((ingrediente) =>
+  const sugestoes = ingredientes.filter((ingrediente) =>
     ingrediente.toLowerCase().includes(alergia.toLowerCase()),
   ).filter((ingrediente) => !alergias.includes(ingrediente));
 

@@ -17,17 +17,6 @@ df["ingredients"] = df["ingredients"].apply(
     lambda x: ast.literal_eval(x) if isinstance(x, str) else []
 )
 
-import pandas as pd
-import ast
-
-
-# ==========================================================
-# CONFIGURAÇÃO
-# ==========================================================
-
-ARQUIVO_CSV = "RAW_recipes.csv"
-
-
 # Tags que NÃO serão consideradas categorias
 TAGS_IGNORAR = {
     "15-minutes-or-less",
@@ -137,6 +126,8 @@ TAGS_IGNORAR = {
     "served-cold",
     "served-hot",
     "to-go",
+    "a1-sauce",
+    
 
     # tags sus
     "Throw the ultimate fiesta with this sopaipillas recipe from Food.com.",
@@ -144,60 +135,40 @@ TAGS_IGNORAR = {
 }
 
 
-tags_ignorar = {
-    tag.lower().strip()
-    for tag in TAGS_IGNORAR
-}
-
-def limpar_tags(tags):
-
-    resultado = []
-
-    for tag in tags:
-
-        if not isinstance(tag, str):
-            continue
-
-        tag = tag.strip()
-
-        if not tag:
-            continue
-
-        if tag.lower() in tags_ignorar:
-            continue
-
-        resultado.append(tag)
-
-    return resultado
-
-
-df["categorias"] = df["tags"].apply(limpar_tags)
-
-
-#Categorias únicas para mostrar no frontend, lá no OnBoarding
-categorias_unicas = sorted(
-    {
-        categoria
-        for lista in df["categorias"]
-        for categoria in lista
-    },
-    key=str.lower
+df["categorias"] = df["tags"].apply(
+    lambda tags: [
+        tag for tag in tags
+        if tag not in TAGS_IGNORAR
+    ]
 )
 
-print(f"Categorias encontradas: {len(categorias_unicas)}")
-print(categorias_unicas)
+def obter_categorias():
+
+    categorias_unicas = sorted(
+        {
+            categoria
+            for lista in df["categorias"]
+            for categoria in lista
+            if isinstance(categoria, str)
+            and categoria.strip()
+        },
+        key=str.lower
+    )
+
+    return categorias_unicas
 
 
-#Ingredientes únicos para dps verificar alergias e restrições 
-ingredientes_unicos = sorted(
-    {
-        ingrediente.strip()
-        for lista in df["ingredients"]
-        for ingrediente in lista
-        if isinstance(ingrediente, str)
-        and ingrediente.strip()
-    },
-    key=str.lower
-)
+def obter_ingredientes():
 
-print(f"Ingredientes encontrados: {len(ingredientes_unicos)}")
+    ingredientes_unicos = sorted(
+        {
+            ingrediente.strip()
+            for lista in df["ingredients"]
+            for ingrediente in lista
+            if isinstance(ingrediente, str)
+            and ingrediente.strip()
+        },
+        key=str.lower
+    )
+
+    return ingredientes_unicos

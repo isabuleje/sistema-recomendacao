@@ -1,11 +1,10 @@
-import { CULINARIAS } from "./onboardingData";
-
 const EscolhaCulinaria = ({
   selecionadas,
   onToggle,
   onVoltar,
   onAvancar,
   podeAvancar,
+  categorias
 }) => (
   <section className="onboarding-fase">
     <h2>Escolha suas culinárias favoritas</h2>
@@ -14,7 +13,7 @@ const EscolhaCulinaria = ({
     </p>
 
     <div className="chips-grid">
-      {CULINARIAS.map((item) => {
+      {categorias.map((item) => {
         const ativo = selecionadas.includes(item);
         return (
           <button

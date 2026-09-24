@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import OnBoardingHeader from "../components/OnBoarding/OnBoardingHeader";
 import RestricaoAlimentar from "../components/OnBoarding/RestricaoAlimentar";
 import EscolhaCulinaria from "../components/OnBoarding/EscolhaCulinaria";
@@ -12,13 +12,36 @@ import "../components/OnBoarding/OnBoardingFase1.css";
 import "../components/OnBoarding/OnBoardingFase2.css";
 import "../components/OnBoarding/OnBoardingFase3.css";
 
+import {buscarCategorias, buscarIngredientes} from "../services/Ingredientes_Categorias.js"
+
 const OnBoarding = ({ onConcluir }) => {
   const [fase, setFase] = useState(1);
+  const [categorias, setCategorias] = useState([]);
+  const [ingredientes, setIngredientes] = useState([]);
   const [restricao, setRestricao] = useState("nenhuma");
   const [alergia, setAlergia] = useState("");
   const [alergias, setAlergias] = useState([]);
   const [culinariasSelecionadas, setCulinariasSelecionadas] = useState([]);
   const [pratosSelecionados, setPratosSelecionados] = useState([]);
+
+  useEffect(() => {
+    let ativo = true;
+
+    Promise.all([buscarCategorias(), buscarIngredientes()])
+      .then(([categoriasEncontradas, ingredientesEncontrados]) => {
+        if (!ativo) return;
+
+        setCategorias(Array.isArray(categoriasEncontradas) ? categoriasEncontradas : []);
+        setIngredientes(Array.isArray(ingredientesEncontrados) ? ingredientesEncontrados : []);
+      })
+      .catch((error) => {
+        console.error("Erro ao carregar dados do onboarding:", error);
+      });
+
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   const adicionarAlergia = (ingrediente) => {
     setAlergias((anteriores) =>
@@ -84,6 +107,7 @@ const OnBoarding = ({ onConcluir }) => {
             adicionarAlergia={adicionarAlergia}
             removerAlergia={removerAlergia}
             onAvancar={avancar}
+            ingredientes={ingredientes}
           />
         )}
 
@@ -94,6 +118,7 @@ const OnBoarding = ({ onConcluir }) => {
             onVoltar={voltar}
             onAvancar={avancar}
             podeAvancar={culinariasSelecionadas.length > 0}
+            categorias={categorias}
           />
         )}
 
