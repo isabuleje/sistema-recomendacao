@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 import styles from "../components/Favorito/FavoritoCard.module.css";
 import FavoritoCard from "../components/Favorito/FavoritoCard.jsx";
 
-const Historico = () => {
+const Favorito = ({ favoritos = [], alternarFavorito = () => {} }) => {
   return (
     <div className="home-page">
       <div className="user-greeting">
@@ -33,45 +33,24 @@ const Historico = () => {
         </NavLink>
       </div>
 
-      <FavoritoCard
-        titulo="Pizza Margherita"
-        descricao="Massa artesanal, molho de tomate, mussarela de búfala e manjericão fresco."
-        imagem="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400"
-        tempo="25 min"
-        nota="4,8"
-        numerosNota="(1,2k)"
-      />
-
-      <FavoritoCard
-        titulo="Pizza Margherita"
-        descricao="Massa artesanal, molho de tomate, mussarela de búfala e manjericão fresco."
-        imagem="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400"
-        tempo="25 min"
-        nota="4,8"
-        numerosNota="(1,2k)"
-      />
-
-      <FavoritoCard
-        titulo="Pizza Margherita"
-        descricao="Massa artesanal, molho de tomate, mussarela de búfala e manjericão fresco."
-        imagem="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400"
-        tempo="25 min"
-        nota="4,8"
-        numerosNota="(1,2k)"
-        data="21 de setembro de 2025"
-      />
-
-      <FavoritoCard
-        titulo="Pizza Margherita"
-        descricao="Massa artesanal, molho de tomate, mussarela de búfala e manjericão fresco."
-        imagem="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400"
-        tempo="25 min"
-        nota="4,8"
-        numerosNota="(1,2k)"
-        data="21 de setembro de 2025"
-      />
+      {favoritos.length === 0 ? (
+        <p>Nenhum prato foi favoritado ainda.</p>
+      ) : (
+        favoritos.map((prato) => (
+          <FavoritoCard
+            key={prato.id}
+            titulo={prato.nome}
+            descricao={prato.descricao || "Sem descrição disponível."}
+            imagem="/Pratos/pizzar.jpg"
+            tempo={`${prato.tempo_preparo || "--"} min`}
+            nota={prato.estrelas || "--"}
+            numerosNota={prato.avaliacoes ? `(${prato.avaliacoes})` : ""}
+            onToggleFavorite={() => alternarFavorito(prato)}
+          />
+        ))
+      )}
     </div>
   );
 };
 
-export default Historico;
+export default Favorito;

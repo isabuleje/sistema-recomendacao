@@ -179,6 +179,7 @@ def obter_ingredientes():
 
     return ingredientes_unicos
 
+print(obter_ingredientes())
 
 #Antes do obter pratos, pq ele vem do RAW_interactions e nao do RAW_recipes
 avaliacoes = (
@@ -213,13 +214,13 @@ def obter_pratos():
             ),
 
             "nome": (
-                str(prato["name"]).strip()
+                str(prato["name"]).strip().capitalize()
                 if pd.notna(prato["name"])
                 else "Prato sem nome"
             ),
 
             "descricao": (
-                str(prato["description"]).strip()
+                str(prato["description"]).strip().capitalize()
                 if pd.notna(prato["description"])
                 else ""
             ),
@@ -243,7 +244,10 @@ def obter_pratos():
             ),
 
             "tags": (
-                prato["categorias"]
+                [
+                    tag.capitalize()
+                    for tag in prato["categorias"]
+                ]
                 if isinstance(prato["categorias"], list)
                 else []
             ),

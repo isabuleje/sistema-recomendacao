@@ -1,46 +1,84 @@
-import React from 'react';
-import styles from './Card.module.css';
+import styles from "./Card.module.css";
+import { Heart } from "lucide-react";
 
-const Card = ({ 
+const Card = ({
+  id,
   titulo,
   descricao,
   imagem,
-  tempo ,
+  tempo,
   nota,
   numerosNota,
-  data
+  data,
+  isFavorite,
+  onToggleFavorite,
 }) => {
   return (
     <div className={styles.cardContainer}>
-      
       {/* Lado Esquerdo: Imagem e Badges */}
       <div className={styles.cardImageWrapper}>
         <div className={styles.badgeVisualizado}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
             <circle cx="12" cy="12" r="3"></circle>
           </svg>
           Visualizado
         </div>
-        <div className={styles.badgeHeart}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-          </svg>
-        </div>
-        <img 
-          src={imagem} 
-          alt={titulo} 
-          className={styles.cardImage} 
-        />
+        <button
+          className={`${styles.favoriteButton} ${isFavorite ? styles.favoriteButtonActive : ""}`}
+          type="button"
+          aria-label={
+            isFavorite
+              ? `Remover ${titulo} dos favoritos`
+              : `Adicionar ${titulo} aos favoritos`
+          }
+          aria-pressed={isFavorite}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={() =>
+            onToggleFavorite({
+              id,
+              nome: titulo,
+              descricao,
+              imagem,
+              tempo_preparo: tempo,
+              estrelas: nota,
+              avaliacoes: numerosNota,
+            })
+          }
+        >
+          <Heart
+            fill={isFavorite ? "currentColor" : "none"}
+            aria-hidden="true"
+          />
+        </button>
+        <img src={imagem} alt={titulo} className={styles.cardImage} />
       </div>
 
       {/* Centro: Informações da Pizza */}
       <div className={styles.cardContent}>
         <h3 className={styles.cardTitle}>{titulo}</h3>
-        
+
         <div className={styles.cardMeta}>
           <span className={styles.metaItem}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
               <path d="M7 2v20"></path>
               <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>
@@ -49,7 +87,16 @@ const Card = ({
           </span>
           <span className={styles.metaDot}>•</span>
           <span className={styles.metaItem}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
@@ -60,7 +107,9 @@ const Card = ({
         <p className={styles.cardDescription}>{descricao}</p>
 
         <div className={styles.cardTags}>
-          <span className={`${styles.tag} ${styles.tagGreen}`}>Vegetariano</span>
+          <span className={`${styles.tag} ${styles.tagGreen}`}>
+            Vegetariano
+          </span>
           <span className={`${styles.tag} ${styles.tagGreen}`}>Sem Glúten</span>
           <span className={`${styles.tag} ${styles.tagOrange}`}>Italiano</span>
         </div>
@@ -70,14 +119,32 @@ const Card = ({
       <div className={styles.cardActions}>
         <div className={styles.cardStats}>
           <div className={styles.rating}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFAB00" stroke="#FFAB00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="#FFAB00"
+              stroke="#FFAB00"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
             </svg>
             <span className={styles.ratingScore}>{nota}</span>
-            <span className={styles.ratingCount}>{numerosNota }</span>
+            <span className={styles.ratingCount}>{numerosNota}</span>
           </div>
           <div className={styles.date}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
               <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -86,10 +153,19 @@ const Card = ({
             {data}
           </div>
         </div>
-        
+
         <button className={styles.btnDetalhes}>
           Ver detalhes
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <line x1="5" y1="12" x2="19" y2="12"></line>
             <polyline points="12 5 19 12 12 19"></polyline>
           </svg>

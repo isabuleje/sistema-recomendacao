@@ -1,5 +1,4 @@
 import "./Cards.css";
-import { useState } from "react";
 import { Heart } from "lucide-react";
 
 const Card = ({
@@ -9,10 +8,9 @@ const Card = ({
   category,
   prepTime,
   rating,
-  evaluations,
+  isFavorite,
+  onToggleFavorite,
 }) => {
-  const [isFavorite, setIsFavorite] = useState(false);
-
   return (
     <div className="card">
       <div className="card-image-wrapper">
@@ -26,7 +24,8 @@ const Card = ({
               : `Adicionar ${title} aos favoritos`
           }
           aria-pressed={isFavorite}
-          onClick={() => setIsFavorite((favorite) => !favorite)}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={onToggleFavorite}
         >
           <Heart
             fill={isFavorite ? "currentColor" : "none"}

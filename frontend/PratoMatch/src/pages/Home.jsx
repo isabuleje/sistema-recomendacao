@@ -13,7 +13,13 @@ import FilterSection from "../components/Home/Filtro.jsx";
 import { useEffect, useRef, useState } from "react";
 import { buscarPratos } from "../services/Pratos.js";
 
-const CategorySection = ({ title, description, pratos }) => (
+const CategorySection = ({
+  title,
+  description,
+  pratos,
+  favoritos,
+  alternarFavorito,
+}) => (
   <section className="category-section">
     <div className="category-heading">
       <h2 className="category-title" style={{ color: "#055746" }}>
@@ -23,11 +29,15 @@ const CategorySection = ({ title, description, pratos }) => (
       <p>{description}</p>
     </div>
 
-    <CardRail pratos={pratos} />
+    <CardRail
+      pratos={pratos}
+      favoritos={favoritos}
+      alternarFavorito={alternarFavorito}
+    />
   </section>
 );
 
-const CardRail = ({ pratos }) => {
+const CardRail = ({ pratos, favoritos, alternarFavorito }) => {
   const cardsRef = useRef(null);
 
   const dragState = useRef({
@@ -114,6 +124,8 @@ const CardRail = ({ pratos }) => {
             prepTime={prato.tempo_preparo}
             rating={prato.estrelas}
             evaluations={prato.avaliacoes}
+            isFavorite={favoritos.some((favorito) => favorito.id === prato.id)}
+            onToggleFavorite={() => alternarFavorito(prato)}
           />
         ))}
       </div>
@@ -121,7 +133,7 @@ const CardRail = ({ pratos }) => {
   );
 };
 
-const Home = () => {
+const Home = ({ favoritos, alternarFavorito }) => {
   const [pratos, setPratos] = useState([]);
 
   const [carregando, setCarregando] = useState(true);
@@ -216,6 +228,8 @@ const Home = () => {
               title="Recomendados para você"
               description="Encontre os pratos mais indicados para o seu gosto."
               pratos={pratos.slice(0, 10)}
+              favoritos={favoritos}
+              alternarFavorito={alternarFavorito}
             />
 
             <CategorySection
@@ -224,12 +238,16 @@ const Home = () => {
               pratos={[...pratos]
                 .sort((a, b) => b.avaliacoes - a.avaliacoes)
                 .slice(0, 10)}
+              favoritos={favoritos}
+              alternarFavorito={alternarFavorito}
             />
 
             <CategorySection
               title="Novidades"
               description="Descubra os novos pratos que chegaram."
               pratos={pratos.slice(-10)}
+              favoritos={favoritos}
+              alternarFavorito={alternarFavorito}
             />
           </>
         )}
