@@ -167,8 +167,11 @@ def obter_ingredientes():
             for ingrediente in lista
             if isinstance(ingrediente, str)
             and ingrediente.strip()
+            and not any(char.isdigit() for char in ingrediente)
         },
         key=str.lower
     )
+
+    return ingredientes_unicos
 
     return ingredientes_unicos

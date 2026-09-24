@@ -12,7 +12,10 @@ import "../components/OnBoarding/OnBoardingFase1.css";
 import "../components/OnBoarding/OnBoardingFase2.css";
 import "../components/OnBoarding/OnBoardingFase3.css";
 
-import {buscarCategorias, buscarIngredientes} from "../services/Ingredientes_Categorias.js"
+import {
+  buscarCategorias,
+  buscarIngredientes,
+} from "../services/Ingredientes_Categorias.js";
 
 const OnBoarding = ({ onConcluir }) => {
   const [fase, setFase] = useState(1);
@@ -31,8 +34,12 @@ const OnBoarding = ({ onConcluir }) => {
       .then(([categoriasEncontradas, ingredientesEncontrados]) => {
         if (!ativo) return;
 
-        setCategorias(Array.isArray(categoriasEncontradas) ? categoriasEncontradas : []);
-        setIngredientes(Array.isArray(ingredientesEncontrados) ? ingredientesEncontrados : []);
+        setCategorias(
+          Array.isArray(categoriasEncontradas) ? categoriasEncontradas : [],
+        );
+        setIngredientes(
+          Array.isArray(ingredientesEncontrados) ? ingredientesEncontrados : [],
+        );
       })
       .catch((error) => {
         console.error("Erro ao carregar dados do onboarding:", error);
