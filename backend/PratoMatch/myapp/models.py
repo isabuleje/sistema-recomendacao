@@ -115,6 +115,13 @@ class PerfilUsuario(models.Model):
         Alergia,
         blank=True
     )
+    
+    #como o OnBoarding vai perguntar quais categorias, é bom guardar aqui
+    categorias_preferidas = models.ManyToManyField(
+        Categoria,
+        blank=True
+    )
+
 
     def __str__(self):
         return self.usuario.username
