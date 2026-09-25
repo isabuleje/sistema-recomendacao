@@ -138,6 +138,7 @@ const RestricaoAlimentar = ({
         />
         Você pode alterar essas escolhas depois no seu perfil.
       </p>
+      
       <div className="onboarding-acoes onboarding-acoes-unica">
         <button
           type="button"
