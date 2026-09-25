@@ -1,5 +1,6 @@
 import CardPratoCirculo from "./CardPratoCirculo";
 import { MIN_PRATOS, PRATOS } from "./onboardingData";
+import { ArrowRight } from "lucide-react";
 
 const EscolhaPratos = ({
   selecionados,
@@ -9,7 +10,7 @@ const EscolhaPratos = ({
   podeConcluir,
 }) => (
   <section className="onboarding-fase">
-    <h2>Escolha seus pratos favoritos</h2>
+    <h1>Escolha seus pratos favoritos</h1>
     <p className="onboarding-subtitulo">
       Selecione pelo menos {MIN_PRATOS} pratos para finalizar seu perfil.
     </p>
@@ -43,7 +44,8 @@ const EscolhaPratos = ({
         onClick={onConcluir}
         disabled={!podeConcluir}
       >
-        Concluir
+        <span className="botao-texto">Concluir</span>
+        <ArrowRight className="botao-seta" />
       </button>
     </div>
   </section>
