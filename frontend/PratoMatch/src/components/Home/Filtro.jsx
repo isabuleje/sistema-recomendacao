@@ -41,6 +41,11 @@ const FilterSection = () => {
             <input type="checkbox" name="semLactose" />
             Sem Lactose
           </label>
+
+          <label>
+            <input type="checkbox" name="baixaCalorias" />
+            Baixa Calorias
+          </label>
         </div>
       )}
     </section>

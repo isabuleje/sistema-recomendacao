@@ -1,3 +1,6 @@
+import {CircleAlert} from "lucide-react";
+
+
 const EscolhaCulinaria = ({
   selecionadas,
   onToggle,
@@ -30,9 +33,12 @@ const EscolhaCulinaria = ({
     </div>
 
     {!podeAvancar && (
+      <>
+      <CircleAlert className="alert-icon" />
       <p className="onboarding-nota">
         Escolha ao menos uma culinária para continuar.
       </p>
+      </>
     )}
 
     <div className="onboarding-acoes">
