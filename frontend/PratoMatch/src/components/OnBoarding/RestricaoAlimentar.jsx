@@ -1,4 +1,5 @@
 import { RESTRICOES } from "./onboardingData";
+import { Search, CircleAlert, TriangleAlert, Leaf} from "lucide-react";
 
 const RestricaoAlimentar = ({
   restricao,
@@ -9,11 +10,13 @@ const RestricaoAlimentar = ({
   adicionarAlergia,
   removerAlergia,
   onAvancar,
-  ingredientes
+  ingredientes,
 }) => {
-  const sugestoes = ingredientes.filter((ingrediente) =>
-    ingrediente.toLowerCase().includes(alergia.toLowerCase()),
-  ).filter((ingrediente) => !alergias.includes(ingrediente));
+  const sugestoes = ingredientes
+    .filter((ingrediente) =>
+      ingrediente.toLowerCase().includes(alergia.toLowerCase()),
+    )
+    .filter((ingrediente) => !alergias.includes(ingrediente));
 
   return (
     <section className="onboarding-fase">
@@ -22,7 +25,13 @@ const RestricaoAlimentar = ({
         Assim, as recomendações ficam mais seguras e do seu estilo de vida.
       </p>
 
-      <h2 className="campo-subtitulo"> Você possui alguma restrição alimentar?</h2>
+      {/* dps colocar leaf e o subtitulo um do lado do outro, e o Leaf Verde*/}
+      <Leaf className="alert-icon" />
+      <h2 className="campo-subtitulo">
+        {" "}
+        Você possui alguma restrição alimentar?
+      </h2>
+
       <div
         className="listaCampos"
         role="radiogroup"
@@ -42,6 +51,7 @@ const RestricaoAlimentar = ({
               {opcao.icone}
             </span>
             <span className="campoNome">{opcao.label}</span>
+            <span className="campoDescricao">{opcao.descricao}</span>
             <span className="campoCheck" aria-hidden="true">
               ✓
             </span>
@@ -49,9 +59,15 @@ const RestricaoAlimentar = ({
         ))}
       </div>
 
+      {/* dps colocar trianglealert e o subtitulo um do lado do outro */}
+      <TriangleAlert className="alert-icon" />
       <h2 className="campo-subtitulo"> Você possui alguma alergia?</h2>
+
+      <p className="campo-subtitulo"> Informe se há algum elemento que você não pode consumir</p>
+
       <div className="campo campo-alergia">
         <div className="autocomplete">
+          <Search className="search-icon" />
           <input
             id="alergia"
             type="text"
@@ -59,6 +75,8 @@ const RestricaoAlimentar = ({
             value={alergia}
             onChange={(event) => setAlergia(event.target.value)}
           />
+
+          
           {alergia && sugestoes.length > 0 && (
             <div className="sugestoes">
               {sugestoes.map((ingrediente) => (
@@ -90,6 +108,7 @@ const RestricaoAlimentar = ({
       </div>
 
       <p className="onboarding-nota">
+        <CircleAlert className="alert-icon" />
         Você pode alterar essas escolhas depois no seu perfil.
       </p>
       <div className="onboarding-acoes onboarding-acoes-unica">

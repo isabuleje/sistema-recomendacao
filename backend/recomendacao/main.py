@@ -151,7 +151,7 @@ def obter_categorias():
 
     categorias_unicas = sorted(
         {
-            categoria
+            categoria.capitalize()
             for lista in RECEITAS["categorias"]
             for categoria in lista
             if isinstance(categoria, str)
@@ -167,7 +167,7 @@ def obter_ingredientes():
 
     ingredientes_unicos = sorted(
         {
-            ingrediente.strip()
+            ingrediente.strip().capitalize()
             for lista in RECEITAS["ingredients"]
             for ingrediente in lista
             if isinstance(ingrediente, str)

@@ -37,7 +37,7 @@ body {
     linear-gradient(90deg, rgba(196, 80, 25, 0.055) 2px, transparent 2px),
     linear-gradient(0deg, rgba(196, 80, 25, 0.055) 2px, transparent 2px);
   background-attachment: fixed;
-  background-size: 75px 75px;
+  background-size: 140px 140px;
 }
 
 @media (prefers-color-scheme: dark) {
