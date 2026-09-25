@@ -2,11 +2,11 @@ from pathlib import Path
 import pandas as pd
 from pandas.core.frame import DataFrame
 import ast
+from decimal import Decimal
 
 #constantes
 #MINIMO_DE_RECEITAS_EM_COMUM_PARA_AVALIAR_SEMELHANCA = 5
 MINIMO_EM_COMUM = 3
-
 
 #funções auxiliares
 
@@ -23,12 +23,7 @@ def obter_receita(id: int) -> dict:
     lista: dict = pd.read_csv("backend/dataset/PP_recipes.csv")
     #'i' = equivalente aos indices que a coluna 'items' do PP_users.csv representa
     #'id' = equivalente aos indices que a coluna 'id' no RAW_recipes.csv representa
-    return lista[lista['i'] == id]
-
-def obter_receita_RAW(id: int) -> dict:
-    lista = pd.read_csv("backend/dataset/RAW_recipes.csv")
-    return lista[lista['id'] == id]
-
+    return lista.loc[id]
 
 
 def calcular_similaridade_cosseno(lista_1: list[float], idxlista_1: list[int], lista_2: list[float], idxlista_2: list[int]) -> float:
@@ -48,8 +43,12 @@ def calcular_similaridade_cosseno(lista_1: list[float], idxlista_1: list[int], l
     produto: float = (sum(x * y for x, y in zip(lista_1_comum, lista_2_comum)))
     # ||X||
     comprimento: callable = lambda lista: (sum(x ** 2 for x in lista) ** 0.5)
-    # (X * Y) / (||X|| * ||Y||)          
-    coef: float = produto / (comprimento(lista_1_comum) * comprimento(lista_2_comum))
+    # (X * Y) / (||X|| * ||Y||)
+    coef: float
+    try:
+        coef = produto / (comprimento(lista_1_comum) * comprimento(lista_2_comum))
+    except (ZeroDivisionError):
+        coef = 0.0
     return coef
 
 #usando id ('u') de usuário de PP_users.csv
@@ -68,9 +67,10 @@ def id_similaridade_cosseno(id_usuario_1: int, id_usuario_2: int, lista: DataFra
         ast.literal_eval(usuario2['items'])
     )
 
-def vizinhos_knn(id: int, fazer_print: bool = False) -> DataFrame:
+def lista_vizinhos(id: int, lista: DataFrame = None, fazer_print: bool = False) -> DataFrame:
     final: dict = {'u': [], 'similaridade': []}
-    lista: DataFrame = pd.read_csv("backend/dataset/PP_users.csv")
+    if lista is None:
+        lista: DataFrame = pd.read_csv("backend/dataset/PP_users.csv")
     for id2 in lista['u']:
         similaridade: float = id_similaridade_cosseno(id, id2, lista)
         if similaridade > 0.0:
@@ -78,9 +78,45 @@ def vizinhos_knn(id: int, fazer_print: bool = False) -> DataFrame:
                 if fazer_print:
                     print(id, ":", id2, "| grau de similaridade de cosseno:", similaridade)
                 final['u'].append(id2)
-                final['similaridade'].append(similaridade)
+                final['similaridade'].append(Decimal(similaridade))
     if fazer_print:
         print("fim")
-    return DataFrame(final)
+    return DataFrame(final).sort_values('similaridade')
 
-print(vizinhos_knn(id=1, fazer_print=True))
+def k_nn(id: int, k: int = 3, lista: DataFrame = None, fazer_print: bool = False) -> DataFrame:
+    if lista is None:
+        lista: DataFrame = pd.read_csv("backend/dataset/PP_users.csv")
+    vizinhos: DataFrame = lista_vizinhos(id, lista, fazer_print).iloc[-k:].iloc[::-1]
+    tabela_influencia: dict = {'u':[], 'influencia':[]}
+    total: Decimal = sum(vizinhos['similaridade'])
+    for linha in vizinhos['u']:
+        tabela_influencia['u'].append(linha)
+        tabela_influencia['influencia'].append(vizinhos.loc[vizinhos['u'] == linha, 'similaridade'].item() / total)
+    return DataFrame(tabela_influencia)
+
+def obter_recomendacoes(id: int, k: int = 3, limite: int = 50, lista: DataFrame = None):
+    if lista is None:
+            lista: DataFrame = pd.read_csv("backend/dataset/PP_users.csv")
+    receitas_usuario: list[int] = ast.literal_eval(obter_usuario_preload(id, lista)['items'])
+    tabela_vizinhos: DataFrame = k_nn(id, k, lista)
+    receitas_novas: dict[int, list] = {} #{id da receita ('i') : [quantas vezes apareceu, soma da nota recebida]}
+    maior_frequencia: int = 0
+    for vizinho, influencia in zip(tabela_vizinhos['u'], tabela_vizinhos['influencia']):
+        possiveis_receitas = ast.literal_eval(obter_usuario_preload(vizinho, lista)['items'])
+        receitas_notas = zip(possiveis_receitas, ast.literal_eval(obter_usuario_preload(vizinho, lista)['ratings']))
+        for receita, nota in receitas_notas:
+            if not receita in receitas_usuario:
+                if receita in receitas_novas:
+                    receitas_novas[receita][0] += 1
+                    if receitas_novas[receita][0] > maior_frequencia:
+                        maior_frequencia = receitas_novas[receita][0]
+                    receitas_novas[receita][1] += Decimal(nota) * (influencia * Decimal(k))
+                else:
+                    receitas_novas[receita] = [1, Decimal(nota) * (influencia * Decimal(k))]
+                    if maior_frequencia == 0:
+                        maior_frequencia = 1
+    for receita in receitas_novas:
+        #{id da receita ('i') : soma da nota recebida / quantas vezes apareceu}
+        receitas_novas[receita] = (float(receitas_novas[receita][1]) / receitas_novas[receita][0])
+    return DataFrame(receitas_novas.items(), columns=['u', 'nota_esperada']).sort_values('nota_esperada')[-limite:][::-1]
+print(obter_recomendacoes(id=1, k=3, limite=50))
