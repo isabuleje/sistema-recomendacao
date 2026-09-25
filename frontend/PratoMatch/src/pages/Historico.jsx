@@ -3,7 +3,20 @@ import { NavLink } from "react-router-dom";
 import styles from "../components/Historico/Card.module.css";
 import Card from "../components/Historico/Card.jsx";
 
-const Historico = () => {
+const historicoPratos = Array.from({ length: 6 }, (_, indice) => ({
+  id: `historico-${indice + 1}`,
+  titulo: "Pizza Margherita",
+  descricao:
+    "Massa artesanal, molho de tomate, mussarela de búfala e manjericão fresco.",
+  imagem:
+    "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400",
+  tempo: "25 min",
+  nota: "4,8",
+  numerosNota: "(1,2k)",
+  data: "21 de setembro de 2025",
+}));
+
+const Historico = ({ favoritos = [], alternarFavorito = () => {} }) => {
   return (
     <div className="home-page">
       <div className="user-greeting">
@@ -33,65 +46,14 @@ const Historico = () => {
         </NavLink>
       </div>
 
-      <Card
-        titulo="Pizza Margherita"
-        descricao="Massa artesanal, molho de tomate, mussarela de búfala e manjericão fresco."
-        imagem="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400"
-        tempo="25 min"
-        nota="4,8"
-        numerosNota="(1,2k)"
-        data="21 de setembro de 2025"
-      />
-
-      <Card
-        titulo="Pizza Margherita"
-        descricao="Massa artesanal, molho de tomate, mussarela de búfala e manjericão fresco."
-        imagem="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400"
-        tempo="25 min"
-        nota="4,8"
-        numerosNota="(1,2k)"
-        data="21 de setembro de 2025"
-      />
-
-      <Card
-        titulo="Pizza Margherita"
-        descricao="Massa artesanal, molho de tomate, mussarela de búfala e manjericão fresco."
-        imagem="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400"
-        tempo="25 min"
-        nota="4,8"
-        numerosNota="(1,2k)"
-        data="21 de setembro de 2025"
-      />
-
-      <Card
-        titulo="Pizza Margherita"
-        descricao="Massa artesanal, molho de tomate, mussarela de búfala e manjericão fresco."
-        imagem="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400"
-        tempo="25 min"
-        nota="4,8"
-        numerosNota="(1,2k)"
-        data="21 de setembro de 2025"
-      />
-
-      <Card
-        titulo="Pizza Margherita"
-        descricao="Massa artesanal, molho de tomate, mussarela de búfala e manjericão fresco."
-        imagem="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400"
-        tempo="25 min"
-        nota="4,8"
-        numerosNota="(1,2k)"
-        data="21 de setembro de 2025"
-      />
-
-      <Card
-        titulo="Pizza Margherita"
-        descricao="Massa artesanal, molho de tomate, mussarela de búfala e manjericão fresco."
-        imagem="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400"
-        tempo="25 min"
-        nota="4,8"
-        numerosNota="(1,2k)"
-        data="21 de setembro de 2025"
-      />
+      {historicoPratos.map((prato) => (
+        <Card
+          key={prato.id}
+          {...prato}
+          isFavorite={favoritos.some((favorito) => favorito.id === prato.id)}
+          onToggleFavorite={alternarFavorito}
+        />
+      ))}
     </div>
   );
 };

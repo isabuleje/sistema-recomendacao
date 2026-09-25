@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import MainLayout from "./layouts/MainLayout.jsx";
@@ -9,13 +10,46 @@ import OnBoarding from "./pages/OnBoarding.jsx";
 import Favorito from "./pages/Favorito.jsx";
 
 export default function App() {
+  const [favoritos, setFavoritos] = useState([]);
+
+  const alternarFavorito = (prato) => {
+    setFavoritos((atuais) => {
+      const jaFavoritado = atuais.some((favorito) => favorito.id === prato.id);
+
+      return jaFavoritado
+        ? atuais.filter((favorito) => favorito.id !== prato.id)
+        : [...atuais, prato];
+    });
+  };
+
   return (
     <BrowserRouter>
       <MainLayout>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/historico" element={<Historico />} />
-          <Route path="/favoritos" element={<Favorito />} />
+          <Route
+            path="/"
+            element={
+              <Home favoritos={favoritos} alternarFavorito={alternarFavorito} />
+            }
+          />
+          <Route
+            path="/historico"
+            element={
+              <Historico
+                favoritos={favoritos}
+                alternarFavorito={alternarFavorito}
+              />
+            }
+          />
+          <Route
+            path="/favoritos"
+            element={
+              <Favorito
+                favoritos={favoritos}
+                alternarFavorito={alternarFavorito}
+              />
+            }
+          />
           <Route path="/perfil" element={<Perfil />} />
           <Route path="/onboarding" element={<OnBoarding />} />
         </Routes>

@@ -1,11 +1,16 @@
 import "./Cards.css";
-import { useState } from "react";
 import { Heart } from "lucide-react";
 
-
-const Card = ({ image, title, description, category, prepTime, rating }) => {
-  const [isFavorite, setIsFavorite] = useState(false);
-
+const Card = ({
+  image,
+  title,
+  description,
+  category,
+  prepTime,
+  rating,
+  isFavorite,
+  onToggleFavorite,
+}) => {
   return (
     <div className="card">
       <div className="card-image-wrapper">
@@ -13,19 +18,27 @@ const Card = ({ image, title, description, category, prepTime, rating }) => {
         <button
           className={`favorite-button${isFavorite ? " is-favorite" : ""}`}
           type="button"
-          aria-label={isFavorite ? `Remover ${title} dos favoritos` : `Adicionar ${title} aos favoritos`}
+          aria-label={
+            isFavorite
+              ? `Remover ${title} dos favoritos`
+              : `Adicionar ${title} aos favoritos`
+          }
           aria-pressed={isFavorite}
-          onClick={() => setIsFavorite((favorite) => !favorite)}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={onToggleFavorite}
         >
-          <Heart fill={isFavorite ? "currentColor" : "none"} aria-hidden="true" />
+          <Heart
+            fill={isFavorite ? "currentColor" : "none"}
+            aria-hidden="true"
+          />
         </button>
       </div>
       <div className="card-info">
         <h2 className="card-title">{title}</h2>
         <div className="card-metadata">
           <span>{category}</span>
-          <span>{prepTime}</span>
-          <span className="card-rating">{rating}</span>
+          <span>{prepTime} min </span>
+          <span className="card-rating">⭐ {rating}</span>
         </div>
         <p className="card-description">{description}</p>
       </div>

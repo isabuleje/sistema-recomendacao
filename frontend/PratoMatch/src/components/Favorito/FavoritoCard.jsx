@@ -1,4 +1,5 @@
 import styles from "./FavoritoCard.module.css";
+import { Heart } from "lucide-react";
 
 const FavoritoCard = ({
   titulo,
@@ -7,23 +8,30 @@ const FavoritoCard = ({
   tempo,
   nota,
   numerosNota,
+  isFavorite = true,
+  onToggleFavorite,
 }) => {
   return (
     <div className={styles.cardContainer}>
       {/* Lado Esquerdo: Imagem e Badges */}
       <div className={styles.cardImageWrapper}>
-        <div className={styles.badgeHeart}>
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="#e53935"
-            stroke="#e53935"
-            strokeWidth="1.5"
-          >
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" />
-          </svg>
-        </div>
+        <button
+          className={`${styles.favoriteButton} ${isFavorite ? styles.favoriteButtonActive : ""}`}
+          type="button"
+          aria-label={
+            isFavorite
+              ? `Remover ${titulo} dos favoritos`
+              : `Adicionar ${titulo} aos favoritos`
+          }
+          aria-pressed={isFavorite}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={onToggleFavorite}
+        >
+          <Heart
+            fill={isFavorite ? "currentColor" : "none"}
+            aria-hidden="true"
+          />
+        </button>
         <img src={imagem} alt={titulo} className={styles.cardImage} />
       </div>
 

@@ -53,7 +53,7 @@
 
 .card-info {
   min-height: 110px;
-  padding: 12px 16px 14px;
+  padding: 12px 16px 10px;
   background: #fff;
   color: #461313;
 }
@@ -75,14 +75,24 @@
   font-family: Poppins, sans-serif;
 }
 
+.card-rating-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .card-rating {
   color: #c45019;
   font-weight: 600;
 }
 
+.card-evaluations {
+  color: #077b66;
+}
+
 .card-description {
-  margin: 8px 0 0;
+  margin: 2px 0 0;
   color: #6b6375;
-  font-size: 12px;
+  font-size: 10px;
   font-family: Poppins, sans-serif;
 }
