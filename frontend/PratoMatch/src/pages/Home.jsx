@@ -9,6 +9,7 @@ import { Search, Send } from "lucide-react";
 
 import Card from "../components/Home/Card";
 import FilterSection from "../components/Home/Filtro.jsx";
+import Loading from "../components/Loading/Loading.jsx";
 
 import { useEffect, useRef, useState } from "react";
 import { buscarPratos } from "../services/Pratos.js";
@@ -135,7 +136,6 @@ const CardRail = ({ pratos, favoritos, alternarFavorito }) => {
 
 const Home = ({ favoritos, alternarFavorito }) => {
   const [pratos, setPratos] = useState([]);
-
   const [carregando, setCarregando] = useState(true);
 
   const [erro, setErro] = useState(null);
@@ -212,7 +212,7 @@ const Home = ({ favoritos, alternarFavorito }) => {
 
         {carregando && (
           <div className="pratos-loading">
-            <p>Carregando pratos...</p>
+            <Loading />
           </div>
         )}
 

@@ -16,6 +16,14 @@
   margin-bottom: 24px;
 }
 
+/* LOADING - acho q vou mexer bastante nisso aq ainda */
+.pratos-loading {
+  display: grid;
+  place-items: center;
+  width: calc(100% - 32px);
+  min-height: min(42vh, 360px);
+}
+
 .category-section {
   margin-top: 12px;
   min-width: 0;

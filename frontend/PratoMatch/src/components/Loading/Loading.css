@@ -2,17 +2,17 @@
 .loading {
  --speed-of-animation: 0.9s;
  --gap: 6px;
- --first-color: #4c86f9;
- --second-color: #49a84c;
- --third-color: #f6bb02;
- --fourth-color: #f6bb02;
- --fifth-color: #2196f3;
+ --first-color: #16332c;
+ --second-color: #1f6d45;
+ --third-color: #185939;
+ --fourth-color: #ffbf00;
+ --fifth-color: #c45019;
  display: flex;
  justify-content: center;
  align-items: center;
- width: 100px;
+ width: 200px;
  gap: 6px;
- height: 100px;
+ height: 200px;
 }
 
 .loading span {
