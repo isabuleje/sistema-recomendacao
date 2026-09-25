@@ -138,11 +138,11 @@ const RestricaoAlimentar = ({
         />
         Você pode alterar essas escolhas depois no seu perfil.
       </p>
-      
+
       <div className="onboarding-acoes onboarding-acoes-unica">
         <button
           type="button"
-          className="botao botao-primario"
+          className="botao botao-avancar"
           onClick={onAvancar}
         >
           <span className="botao-texto">Continuar</span>

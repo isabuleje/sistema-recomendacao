@@ -45,7 +45,7 @@ const EscolhaCulinaria = ({
         {totalPaginas > 1 && (
           <button
             type="button"
-            className="botao botao-secundario botao-refresh"
+            className="botao botao-mostrar-outros"
             onClick={mostrarOutras}
           >
             <span>↻</span>
@@ -91,7 +91,7 @@ const EscolhaCulinaria = ({
       <div className="onboarding-acoes">
         <button
           type="button"
-          className="botao botao-secundario"
+          className="botao botao-voltar"
           onClick={onVoltar}
           style={{ height: "2.7rem" }}
         >
@@ -100,7 +100,7 @@ const EscolhaCulinaria = ({
 
         <button
           type="button"
-          className="botao botao-primario"
+          className="botao botao-avancar"
           onClick={onAvancar}
           disabled={!podeAvancar}
           style={{ height: "2.7rem" }}
