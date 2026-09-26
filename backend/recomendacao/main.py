@@ -286,5 +286,3 @@ def obter_pratos(limite=None):
         })
 
     return pratos
-
-print(obter_pratos(5))

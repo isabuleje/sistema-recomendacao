@@ -20,24 +20,11 @@ class Categoria(models.Model):
     def __str__(self):
         return self.nome
     
-# Os pratos vão ter imagem, nome, ingredientes utilizados, categoria, tempo preparo, avaliações, qntd_estrela(1 a 5)
+# Os pratos vão ter id e nome :)
 class Prato(models.Model):
+    id = models.IntegerField(primary_key=True)
     nome = models.CharField(max_length=100)
-
-    ingredientes = models.ManyToManyField(
-        Ingrediente
-    )
-    
-    tempo_preparo = models.IntegerField()
-    imagem = models.ImageField(upload_to='pratos/')
-    avaliacoes = models.IntegerField(default=0)
-    total_estrelas = models.IntegerField(default=0)
-    
-    #Aqui que pega, pq seria mt bom q os pratos tivessem uma categoria, mas ai os CSV nao tem essa informação, dps tem q ver isso ai
-    categorias = models.ManyToManyField(
-        Categoria,
-        blank=True
-    )
+        
     def __str__(self):
         return self.nome
     
@@ -52,12 +39,12 @@ class Interacao(models.Model):
 
     prato = models.ForeignKey(
         Prato,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name="interacoes"
     )
 
+
     nota = models.IntegerField(
-        null=True,
-        blank=True,
         validators=[
             MinValueValidator(1),
             MaxValueValidator(5)
@@ -72,9 +59,11 @@ class Interacao(models.Model):
     status = models.CharField(
         max_length=20,
         choices=[
-            ("Vizualizado", "Vizualizado"),
-            ("Favorito", "Favorito")
+            ("visualizado", "Visualizado"),
+            ("favorito", "Favorito"),
         ],
+        null=True,
+        blank=True,
         default=None,
     )
     
