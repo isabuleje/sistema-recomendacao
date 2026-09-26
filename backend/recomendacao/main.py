@@ -10,8 +10,6 @@ INTERACOES = pd.read_csv(
     BASE_DIR / "dataset" / "RAW_interactions.csv"
 )
 
-print(f"Receitas encontradas: {len(RECEITAS)}")
-
 
 #Tags e ingredientes estão como string, então tem que converter para lista
 RECEITAS["tags"] = RECEITAS["tags"].apply(
@@ -179,7 +177,6 @@ def obter_ingredientes():
 
     return ingredientes_unicos
 
-print(obter_ingredientes())
 
 #Antes do obter pratos, pq ele vem do RAW_interactions e nao do RAW_recipes
 avaliacoes = (
@@ -199,19 +196,16 @@ df = RECEITAS.merge(
     how="left"
 )
 
-def obter_pratos():
-
+def obter_pratos(limite=None):
     pratos = []
 
     for _, prato in df.iterrows():
 
-        pratos.append({
+        if limite is not None and len(pratos) >= limite:
+            break
 
-            "id": (
-                int(prato["id"])
-                if pd.notna(prato["id"])
-                else None
-            ),
+        pratos.append({
+            "id": int(prato["id"]) if pd.notna(prato["id"]) else None,
 
             "nome": (
                 str(prato["name"]).strip().capitalize()
@@ -244,10 +238,7 @@ def obter_pratos():
             ),
 
             "tags": (
-                [
-                    tag.capitalize()
-                    for tag in prato["categorias"]
-                ]
+                [tag.capitalize() for tag in prato["categorias"]]
                 if isinstance(prato["categorias"], list)
                 else []
             ),
@@ -257,8 +248,6 @@ def obter_pratos():
                 if isinstance(prato["ingredients"], list)
                 else []
             ),
-
         })
 
     return pratos
-

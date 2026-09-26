@@ -31,5 +31,5 @@ def ingredientes(request):
     
 def pratos(request):
     return JsonResponse({
-        "pratos": obter_pratos()
+        "pratos": obter_pratos(limite=100)
     })

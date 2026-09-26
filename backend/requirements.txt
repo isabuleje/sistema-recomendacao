@@ -2,3 +2,4 @@ django
 pandas
 matplotlib
 numpy
+django-cors-headers
