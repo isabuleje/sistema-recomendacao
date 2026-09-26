@@ -1,5 +1,5 @@
 import { RESTRICOES } from "./onboardingData";
-import { Search, CircleAlert, TriangleAlert, Leaf} from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 
 const RestricaoAlimentar = ({
   restricao,
@@ -25,12 +25,25 @@ const RestricaoAlimentar = ({
         Assim, as recomendações ficam mais seguras e do seu estilo de vida.
       </p>
 
-      {/* dps colocar leaf e o subtitulo um do lado do outro, e o Leaf Verde*/}
-      <Leaf className="alert-icon" />
-      <h2 className="campo-subtitulo">
-        {" "}
-        Você possui alguma restrição alimentar?
-      </h2>
+      <div className="titulo-grupo">
+        <div className="titulo-com-icone">
+          <img
+            src="public/leaf (1).png"
+            width={40}
+            height={40}
+            alt="Ícone de folha"
+            className="alert-icon"
+          />
+          <h2 className="campo-subtitulo">
+            Você possui alguma restrição alimentar?
+          </h2>
+        </div>
+
+        <p className="campo-complemento">
+          Selecione todas as opções que se aplicam a você. Se não houver
+          nenhuma, selecione "Nenhuma".
+        </p>
+      </div>
 
       <div
         className="listaCampos"
@@ -59,11 +72,21 @@ const RestricaoAlimentar = ({
         ))}
       </div>
 
-      {/* dps colocar trianglealert e o subtitulo um do lado do outro */}
-      <TriangleAlert className="alert-icon" />
-      <h2 className="campo-subtitulo"> Você possui alguma alergia?</h2>
+      <div className="titulo-grupo">
+        <div className="titulo-com-icone">
+          <img
+            src="public/alert.png"
+            alt="Ícone de alerta"
+            width={40}
+            height={40}
+          />
+          <h2 className="campo-subtitulo">Você possui alguma alergia?</h2>
+        </div>
 
-      <p className="campo-subtitulo"> Informe se há algum elemento que você não pode consumir</p>
+        <label htmlFor="alergia" className="campo-label">
+          Informe se há algum elemento que você não pode consumir
+        </label>
+      </div>
 
       <div className="campo campo-alergia">
         <div className="autocomplete">
@@ -76,7 +99,6 @@ const RestricaoAlimentar = ({
             onChange={(event) => setAlergia(event.target.value)}
           />
 
-          
           {alergia && sugestoes.length > 0 && (
             <div className="sugestoes">
               {sugestoes.map((ingrediente) => (
@@ -108,16 +130,23 @@ const RestricaoAlimentar = ({
       </div>
 
       <p className="onboarding-nota">
-        <CircleAlert className="alert-icon" />
+        <img
+          src="public/letter-i.png"
+          alt="Ícone de alerta"
+          width={20}
+          height={20}
+        />
         Você pode alterar essas escolhas depois no seu perfil.
       </p>
+
       <div className="onboarding-acoes onboarding-acoes-unica">
         <button
           type="button"
-          className="botao botao-primario"
+          className="botao botao-avancar"
           onClick={onAvancar}
         >
-          Continuar
+          <span className="botao-texto">Continuar</span>
+          <ArrowRight className="botao-seta" />
         </button>
       </div>
     </section>

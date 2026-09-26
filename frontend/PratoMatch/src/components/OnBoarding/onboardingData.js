@@ -121,11 +121,6 @@ export const PRATOS = [
     nome: "Risoto de Cogumelos",
     imagem: "/public/Pratos/pizzar.jpg",
   },
-  {
-    id: "prato6",
-    nome: "Risoto de Cogumelos",
-    imagem: "/public/Pratos/pizzar.jpg",
-  },
 ];
 
 export const TOTAL_FASES = 3;
