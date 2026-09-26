@@ -44,7 +44,7 @@ const Favorito = ({ favoritos = [], alternarFavorito = () => {} }) => {
             titulo={prato.nome}
             descricao={prato.descricao || "Sem descrição disponível."}
             imagem={
-              prato.imagem || "src/assets/nova_comida_cansei_da_pizza.jpg"
+              prato.imagem || "assets/nova_comida_cansei_da_pizza.jpg"
             }
             categorias={prato.tags || []}
             tempo={prato.tempo_preparo}

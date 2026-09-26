@@ -9,8 +9,7 @@ const historicoPratos = Array.from({ length: 6 }, (_, indice) => ({
   titulo: "Pizza Margherita",
   descricao:
     "Massa artesanal, molho de tomate, mussarela de búfala e manjericão fresco.",
-  imagem:
-    "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400",
+  imagem: "assets/nova_comida_cansei_da_pizza.jpg",
   tempo: "25 min",
   nota: "4,8",
   numerosNota: "(1,2k)",

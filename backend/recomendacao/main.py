@@ -244,7 +244,10 @@ def obter_pratos(limite=None):
             ),
 
             "ingredientes": (
-                prato["ingredients"]
+                [
+                    ingrediente.capitalize()
+                    for ingrediente in prato["ingredients"]
+                ]
                 if isinstance(prato["ingredients"], list)
                 else []
             ),
@@ -268,10 +271,20 @@ def obter_pratos(limite=None):
             ),
             
             "passos": (
-                prato["steps"]
-                if isinstance(prato["steps"], list)
-                else []
-            ),
+    [
+        passo.capitalize()
+            for passo in ast.literal_eval(prato["steps"])
+            ]
+            if isinstance(prato["steps"], str)
+            else [
+                passo.capitalize()
+                for passo in prato["steps"]
+            ]
+            if isinstance(prato["steps"], list)
+            else []
+        ),
         })
 
     return pratos
+
+print(obter_pratos(5))
