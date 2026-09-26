@@ -42,7 +42,7 @@ def calcular_similaridade_cosseno(lista_1: list[float], idxlista_1: list[int], l
 
 #usando id ('u') de usuário de PP_users.csv
 #usar lista pré-carregada sempre que possível por favor
-def id_similaridade_cosseno(id_usuario_1: int, id_usuario_2: int, lista: DataFrame = None) -> float:
+def id_similaridade_cosseno(id_usuario_1: int, id_usuario_2: int, lista: DataFrame = DataFrame()) -> float:
     if lista is None:
         lista: DataFrame = pd.read_csv("backend/dataset/PP_users.csv")
     try:
@@ -122,7 +122,7 @@ def obter_recomendacoes(id: int, k: int = 3, limite: int = 50, valorizacao_de_fr
         else:
             receitas_valor[receita] = nota_prevista + (nota_prevista * valorizacao_de_frequencia * ((((frequencia - 1)/(maior_frequencia - 1)) ** 0.5)))
 
-    placar: DataFrame =  DataFrame((receitas_novas).items(), columns=['i', 'nota_esperada'])
+    placar: DataFrame = DataFrame((receitas_novas).items(), columns=['i', 'nota_esperada'])
     placar['quantidade de avaliacoes'] = placar['i'].map(receitas_frequencia)
     placar['valor interno de classificacao'] = placar['i'].map(receitas_valor)
     placar = placar.sort_values('valor interno de classificacao', ascending=False)
