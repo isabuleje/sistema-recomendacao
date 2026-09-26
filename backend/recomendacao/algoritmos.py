@@ -134,8 +134,11 @@ def obter_recomendacoes(id: int, k: int = 3, limite: int = 50, valorizacao_de_fr
     contador: int = 0
     contador_indice: int = 0
     while contador <= limite:
-        receita_raw = (raw_receitas.loc[(lista_receitas.at[placar.at[contador_indice, 'i'].item(), 'id']).item()])
-
+        try:
+            receita_raw = (raw_receitas.loc[(lista_receitas.at[placar.at[contador_indice, 'i'].item(), 'id']).item()])
+        except(KeyError):
+            break
+        
         ingredientes_receita = receita_raw['ingredients']
         check: bool = True
         for ingrediente in filtro_ingredientes:
