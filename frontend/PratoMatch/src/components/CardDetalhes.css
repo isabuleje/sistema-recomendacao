@@ -1,0 +1,14 @@
+.card-detalhes {
+  width: 100%;
+  max-width: 1000px;
+  height: 100%;
+  border: 1px solid var(--bege-borda);
+  max-height: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: var(--branco);
+  box-shadow: var(--sombra-card);
+}

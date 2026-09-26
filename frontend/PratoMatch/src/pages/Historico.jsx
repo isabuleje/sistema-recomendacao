@@ -1,5 +1,6 @@
 //Página do Histórico, onde o usuário vai poder ver os pratos que ele já avaliou e as avaliações que ele deu para cada prato
 import { NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styles from "../components/Historico/Card.module.css";
 import Card from "../components/Historico/Card.jsx";
 
@@ -17,6 +18,8 @@ const historicoPratos = Array.from({ length: 6 }, (_, indice) => ({
 }));
 
 const Historico = ({ favoritos = [], alternarFavorito = () => {} }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="home-page">
       <div className="user-greeting">
@@ -52,6 +55,9 @@ const Historico = ({ favoritos = [], alternarFavorito = () => {} }) => {
           {...prato}
           isFavorite={favoritos.some((favorito) => favorito.id === prato.id)}
           onToggleFavorite={alternarFavorito}
+          onOpenDetalhes={() =>
+            navigate(`/pratos/${prato.id}`, { state: { prato } })
+          }
         />
       ))}
     </div>

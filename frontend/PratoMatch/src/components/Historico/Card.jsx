@@ -12,9 +12,21 @@ const Card = ({
   data,
   isFavorite,
   onToggleFavorite,
+  onOpenDetalhes,
 }) => {
   return (
-    <div className={styles.cardContainer}>
+    <div
+      className={styles.cardContainer}
+      role="button"
+      tabIndex={0}
+      onClick={onOpenDetalhes}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpenDetalhes();
+        }
+      }}
+    >
       {/* Lado Esquerdo: Imagem e Badges */}
       <div className={styles.cardImageWrapper}>
         <div className={styles.badgeVisualizado}>
@@ -43,7 +55,8 @@ const Card = ({
           }
           aria-pressed={isFavorite}
           onPointerDown={(event) => event.stopPropagation()}
-          onClick={() =>
+          onClick={(event) => {
+            event.stopPropagation();
             onToggleFavorite({
               id,
               nome: titulo,
@@ -52,8 +65,8 @@ const Card = ({
               tempo_preparo: tempo,
               estrelas: nota,
               avaliacoes: numerosNota,
-            })
-          }
+            });
+          }}
         >
           <Heart
             fill={isFavorite ? "currentColor" : "none"}

@@ -10,9 +10,22 @@ const Card = ({
   rating,
   isFavorite,
   onToggleFavorite,
+  onOpenDetalhes,
 }) => {
   return (
-    <div className="card">
+    <div
+      className="card"
+      role="button"
+      tabIndex={0}
+      aria-label={`Abrir detalhes de ${title}`}
+      onClick={() => onOpenDetalhes?.()}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpenDetalhes?.();
+        }
+      }}
+    >
       <div className="card-image-wrapper">
         <img src={image} alt={title} className="card-image" />
         <button
@@ -25,7 +38,10 @@ const Card = ({
           }
           aria-pressed={isFavorite}
           onPointerDown={(event) => event.stopPropagation()}
-          onClick={onToggleFavorite}
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleFavorite();
+          }}
         >
           <Heart
             fill={isFavorite ? "currentColor" : "none"}

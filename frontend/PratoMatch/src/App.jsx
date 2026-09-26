@@ -8,6 +8,7 @@ import Perfil from "./pages/Perfil";
 import Historico from "./pages/Historico";
 import OnBoarding from "./pages/OnBoarding.jsx";
 import Favorito from "./pages/Favorito.jsx";
+import CardDetalhesPage from "./pages/CardDetalhesPage.jsx";
 
 export default function App() {
   const [favoritos, setFavoritos] = useState([]);
@@ -52,6 +53,7 @@ export default function App() {
           />
           <Route path="/perfil" element={<Perfil />} />
           <Route path="/onboarding" element={<OnBoarding />} />
+          <Route path="/pratos/:id" element={<CardDetalhesPage />} />
         </Routes>
       </MainLayout>
     </BrowserRouter>

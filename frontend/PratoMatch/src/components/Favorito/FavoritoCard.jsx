@@ -11,9 +11,21 @@ const FavoritoCard = ({
   numerosNota,
   isFavorite = true,
   onToggleFavorite,
+  onOpenDetalhes,
 }) => {
   return (
-    <div className={styles.cardContainer}>
+    <div
+      className={styles.cardContainer}
+      role="button"
+      tabIndex={0}
+      onClick={onOpenDetalhes}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpenDetalhes();
+        }
+      }}
+    >
       {/* Lado Esquerdo: Imagem e Badges */}
       <div className={styles.cardImageWrapper}>
         <button
@@ -26,7 +38,10 @@ const FavoritoCard = ({
           }
           aria-pressed={isFavorite}
           onPointerDown={(event) => event.stopPropagation()}
-          onClick={onToggleFavorite}
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleFavorite();
+          }}
         >
           <Heart
             fill={isFavorite ? "currentColor" : "none"}

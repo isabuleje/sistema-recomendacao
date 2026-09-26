@@ -248,6 +248,30 @@ def obter_pratos(limite=None):
                 if isinstance(prato["ingredients"], list)
                 else []
             ),
+            
+            "numero_ingredientes": (
+                int(prato["n_ingredients"])
+                if pd.notna(prato["n_ingredients"])
+                else 0
+            ),
+            
+            "nutricao": (
+                str(prato["nutrition"]).strip()
+                if pd.notna(prato["nutrition"])
+                else ""
+            ),
+            
+            "numero_passos": (
+                int(prato["n_steps"])
+                if pd.notna(prato["n_steps"])
+                else 0
+            ),
+            
+            "passos": (
+                prato["steps"]
+                if isinstance(prato["steps"], list)
+                else []
+            ),
         })
 
     return pratos

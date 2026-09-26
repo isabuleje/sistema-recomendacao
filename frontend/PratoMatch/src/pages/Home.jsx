@@ -12,6 +12,7 @@ import FilterSection from "../components/Home/Filtro.jsx";
 import Loading from "../components/Loading/Loading.jsx";
 
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { buscarPratos } from "../services/Pratos.js";
 
 const CategorySection = ({
@@ -40,9 +41,11 @@ const CategorySection = ({
 
 const CardRail = ({ pratos, favoritos, alternarFavorito }) => {
   const cardsRef = useRef(null);
+  const navigate = useNavigate();
 
   const dragState = useRef({
     isDragging: false,
+    isPointerDown: false,
     startX: 0,
     startScrollLeft: 0,
   });
@@ -60,19 +63,16 @@ const CardRail = ({ pratos, favoritos, alternarFavorito }) => {
     }
 
     dragState.current = {
-      isDragging: true,
+      isDragging: false,
+      isPointerDown: true,
       startX: event.clientX,
       startScrollLeft: container.scrollLeft,
     };
-
-    container.setPointerCapture(event.pointerId);
-
-    container.classList.add("is-dragging");
   };
 
   // Durante o arraste
   const handlePointerMove = (event) => {
-    if (!dragState.current.isDragging) {
+    if (!dragState.current.isPointerDown) {
       return;
     }
 
@@ -84,18 +84,29 @@ const CardRail = ({ pratos, favoritos, alternarFavorito }) => {
 
     const distance = event.clientX - dragState.current.startX;
 
+    if (!dragState.current.isDragging && Math.abs(distance) < 6) {
+      return;
+    }
+
+    if (!dragState.current.isDragging) {
+      dragState.current.isDragging = true;
+      container.setPointerCapture(event.pointerId);
+      container.classList.add("is-dragging");
+    }
+
     container.scrollLeft = dragState.current.startScrollLeft - distance;
   };
 
   // Para o arraste
   const stopDragging = (event) => {
-    if (!dragState.current.isDragging) {
+    if (!dragState.current.isPointerDown) {
       return;
     }
 
     const container = cardsRef.current;
 
     dragState.current.isDragging = false;
+    dragState.current.isPointerDown = false;
 
     if (container) {
       container.releasePointerCapture?.(event.pointerId);
@@ -127,6 +138,9 @@ const CardRail = ({ pratos, favoritos, alternarFavorito }) => {
             evaluations={prato.avaliacoes}
             isFavorite={favoritos.some((favorito) => favorito.id === prato.id)}
             onToggleFavorite={() => alternarFavorito(prato)}
+            onOpenDetalhes={() =>
+              navigate(`/pratos/${prato.id}`, { state: { prato } })
+            }
           />
         ))}
       </div>
