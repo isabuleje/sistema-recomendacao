@@ -1,101 +1,60 @@
-import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import OnBoardingHeader from "../components/OnBoarding/OnBoardingHeader";
 import RestricaoAlimentar from "../components/OnBoarding/RestricaoAlimentar";
 import EscolhaCulinaria from "../components/OnBoarding/EscolhaCulinaria";
 import EscolhaPratos from "../components/OnBoarding/EscolhaPratos";
-import {
-  MIN_PRATOS,
-  TOTAL_FASES,
-} from "../components/OnBoarding/onboardingData";
+
+import { TOTAL_FASES } from "../components/OnBoarding/onboardingData";
+
+import { useOnboarding } from "../hooks/useOnBoarding";
+
 import "../components/OnBoarding/OnBoardingLayout.css";
 import "../components/OnBoarding/OnBoardingFase1.css";
 import "../components/OnBoarding/OnBoardingFase2.css";
 import "../components/OnBoarding/OnBoardingFase3.css";
 
-import {
-  buscarCategorias,
-  buscarIngredientes,
-} from "../services/Ingredientes_Categorias.js";
+const OnBoarding = () => {
+  const navigate = useNavigate();
 
-const OnBoarding = ({ onConcluir }) => {
-  const [fase, setFase] = useState(1);
-  const [categorias, setCategorias] = useState([]);
-  const [ingredientes, setIngredientes] = useState([]);
-  const [restricao, setRestricao] = useState("nenhuma");
-  const [alergia, setAlergia] = useState("");
-  const [alergias, setAlergias] = useState([]);
-  const [culinariasSelecionadas, setCulinariasSelecionadas] = useState([]);
-  const [pratosSelecionados, setPratosSelecionados] = useState([]);
+  const {
+    fase,
 
-  useEffect(() => {
-    let ativo = true;
+    categorias,
+    ingredientes,
 
-    Promise.all([buscarCategorias(), buscarIngredientes()])
-      .then(([categoriasEncontradas, ingredientesEncontrados]) => {
-        if (!ativo) return;
+    restricao,
+    setRestricao,
 
-        setCategorias(
-          Array.isArray(categoriasEncontradas) ? categoriasEncontradas : [],
-        );
-        setIngredientes(
-          Array.isArray(ingredientesEncontrados) ? ingredientesEncontrados : [],
-        );
-      })
-      .catch((error) => {
-        console.error("Erro ao carregar dados do onboarding:", error);
-      });
+    alergia,
+    setAlergia,
 
-    return () => {
-      ativo = false;
-    };
-  }, []);
+    alergias,
+    adicionarAlergia,
+    removerAlergia,
 
-  const adicionarAlergia = (ingrediente) => {
-    setAlergias((anteriores) =>
-      anteriores.includes(ingrediente)
-        ? anteriores
-        : [...anteriores, ingrediente],
-    );
-    setAlergia("");
-  };
+    culinariasSelecionadas,
+    toggleCulinaria,
 
-  const removerAlergia = (ingrediente) => {
-    setAlergias((anteriores) =>
-      anteriores.filter((item) => item !== ingrediente),
-    );
-  };
+    pratosSelecionados,
+    togglePrato,
 
-  const toggleCulinaria = (item) => {
-    setCulinariasSelecionadas((atual) =>
-      atual.includes(item)
-        ? atual.filter((itemAtual) => itemAtual !== item)
-        : [...atual, item],
-    );
-  };
+    avancar,
+    voltar,
 
-  const togglePrato = (id) => {
-    setPratosSelecionados((atual) =>
-      atual.includes(id)
-        ? atual.filter((prato) => prato !== id)
-        : [...atual, id],
-    );
-  };
+    concluir,
 
-  const avancar = () => setFase((atual) => Math.min(atual + 1, TOTAL_FASES));
-  const voltar = () => setFase((atual) => Math.max(atual - 1, 1));
+    salvando,
+    erro,
 
-  const handleConcluir = () => {
-    const preferencias = {
-      restricao,
-      alergias,
-      culinarias: culinariasSelecionadas,
-      pratos: pratosSelecionados,
-    };
+    podeConcluir,
+  } = useOnboarding();
 
-    if (onConcluir) {
-      onConcluir(preferencias);
-    } else {
-      console.log("Preferências salvas:", preferencias);
+  const handleConcluir = async () => {
+    const sucesso = await concluir();
+
+    if (sucesso) {
+      navigate("/");
     }
   };
 
@@ -103,6 +62,8 @@ const OnBoarding = ({ onConcluir }) => {
     <section id="onboarding">
       <div className="onboarding-card">
         <OnBoardingHeader fase={fase} totalFases={TOTAL_FASES} />
+
+        {erro && <div className="onboarding-erro">{erro}</div>}
 
         {fase === 1 && (
           <RestricaoAlimentar
@@ -135,7 +96,8 @@ const OnBoarding = ({ onConcluir }) => {
             onToggle={togglePrato}
             onVoltar={voltar}
             onConcluir={handleConcluir}
-            podeConcluir={pratosSelecionados.length >= MIN_PRATOS}
+            podeConcluir={podeConcluir}
+            salvando={salvando}
           />
         )}
       </div>
