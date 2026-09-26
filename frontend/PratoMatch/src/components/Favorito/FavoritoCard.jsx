@@ -5,6 +5,7 @@ const FavoritoCard = ({
   titulo,
   descricao,
   imagem,
+  categorias = [],
   tempo,
   nota,
   numerosNota,
@@ -55,7 +56,7 @@ const FavoritoCard = ({
               <path d="M7 2v20"></path>
               <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>
             </svg>
-            Italiana
+            {categorias[0] || "Sem categoria"}
           </span>
           <span className={styles.metaDot}>•</span>
           <span className={styles.metaItem}>
@@ -72,19 +73,24 @@ const FavoritoCard = ({
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
-            {tempo}
+            {tempo} min
           </span>
         </div>
 
         <p className={styles.cardDescription}>{descricao}</p>
 
-        <div className={styles.cardTags}>
-          <span className={`${styles.tag} ${styles.tagGreen}`}>
-            Vegetariano
-          </span>
-          <span className={`${styles.tag} ${styles.tagGreen}`}>Sem Glúten</span>
-          <span className={`${styles.tag} ${styles.tagOrange}`}>Italiano</span>
-        </div>
+        {categorias.length > 0 && (
+          <div className={styles.cardTags}>
+            {categorias.slice(0, 3).map((categoria) => (
+              <span
+                key={categoria}
+                className={`${styles.tag} ${styles.tagGreen}`}
+              >
+                {categoria}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Lado Direito: Avaliações e Botão */}
@@ -104,7 +110,7 @@ const FavoritoCard = ({
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
             </svg>
             <span className={styles.ratingScore}>{nota}</span>
-            <span className={styles.ratingCount}>{numerosNota}</span>
+            <span className={styles.ratingCount}>({numerosNota})</span>
           </div>
         </div>
 

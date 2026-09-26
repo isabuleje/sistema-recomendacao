@@ -41,10 +41,14 @@ const Favorito = ({ favoritos = [], alternarFavorito = () => {} }) => {
             key={prato.id}
             titulo={prato.nome}
             descricao={prato.descricao || "Sem descrição disponível."}
-            imagem="/Pratos/pizzar.jpg"
-            tempo={`${prato.tempo_preparo || "--"} min`}
-            nota={prato.estrelas || "--"}
-            numerosNota={prato.avaliacoes ? `(${prato.avaliacoes})` : ""}
+            imagem={
+              prato.imagem || "src/assets/nova_comida_cansei_da_pizza.jpg"
+            }
+            categorias={prato.tags || []}
+            tempo={prato.tempo_preparo}
+            nota={prato.estrelas}
+            numerosNota={prato.avaliacoes}
+            isFavorite
             onToggleFavorite={() => alternarFavorito(prato)}
           />
         ))

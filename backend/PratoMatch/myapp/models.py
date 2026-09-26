@@ -68,6 +68,16 @@ class Interacao(models.Model):
         default=False
     )
     
+    #Status do prato pode ser "Vizualizado", "Favorito"
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("Vizualizado", "Vizualizado"),
+            ("Favorito", "Favorito")
+        ],
+        default=None,
+    )
+    
     class Meta:
         constraints = [
             models.UniqueConstraint(
