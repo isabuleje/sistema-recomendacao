@@ -3,16 +3,10 @@ from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 '''
-NÃO USAR O COMANDO DO MIGRATE PRO BANCO DE DADOS, porque eu ainda nao tenho certeza se os modelos finais vão ser esses
-E também é importante lembrar que o BD vai ter as avaliações e qntd_estrela no PRATO e não na interação, a interação vai ser apenas a nota q o usuario deu ao prato
+agr pode usar simr
 '''
 
-#Classe só para ingredientes, já que o prato vai ter uma lista de ingredientes, e é melhor criar uma tabela separada pra isso
-class Ingrediente(models.Model):
-    nome = models.CharField(max_length=100, unique=True)
-
-    def __str__(self):
-        return self.nome
+#eu ja tinha tirado os ingredientes de dentro do prato, mas esqueci de tirar isso kkkkk
     
 class Categoria(models.Model):
     nome = models.CharField(max_length=100, unique=True)
