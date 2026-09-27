@@ -3,6 +3,7 @@ import pandas as pd
 from pandas.core.frame import DataFrame
 import ast
 from decimal import Decimal
+import sqlite3
 
 #constantes
 #MINIMO_DE_RECEITAS_EM_COMUM_PARA_AVALIAR_SEMELHANCA = 5
@@ -155,7 +156,7 @@ def obter_recomendacoes(id: int, k: int = 3, limite: int = 50, valorizacao_de_fr
             placar.drop(contador_indice, inplace = True)
         contador_indice += 1
     return placar.head(limite)
-print(
+if False: print(
     obter_recomendacoes(
         id=1, k=100, limite=50, valorizacao_de_frequencia=0.2,
         lista=pd.read_csv("backend/dataset/PP_users.csv").set_index('u'),
@@ -163,9 +164,12 @@ print(
         raw_receitas=pd.read_csv("backend/dataset/RAW_recipes.csv").set_index('id')
         )
     )
-
-#se no final tiver só 1 banco de dados de receitas e não 2 vou ter que fazer umas alterações a mais
-#mas vai ser facil ent se precisar pode só avisar
-#o motivo de ter diferença de pp_recipes pra raw_recipes é que o PP é simplese o RAW tem
-#informações quase nunca usadas no backend entao usar só os arquivos marcados PP pra fazer esse acesso
-#sempre que não precisar de informação do RAW faz o código rodar mais rápido porque percorre uma lista mais simples
+print(pd.read_sql("SELECT * FROM myapp_prato", sqlite3.connect("backend/PratoMatch/db.sqlite3")))
+#myapp_alergia
+#myapp_categoria
+#myapp_ingrediente
+#myapp_prato
+#myapp_perfilusuario_alergias
+#myapp_perfilusuario_categorias_preferidas
+#myapp_perfilusuario_preferencias
+#myapp_interacao
