@@ -6,6 +6,7 @@ export async function salvarOnboarding(dados) {
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
     body: JSON.stringify(dados),
   });
 

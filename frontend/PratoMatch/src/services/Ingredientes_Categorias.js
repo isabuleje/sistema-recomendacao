@@ -7,6 +7,7 @@ export async function buscarCategorias() {
     throw new Error("Erro ao buscar categorias");
   }
 
+
   const data = await response.json();
 
   return data.categorias;

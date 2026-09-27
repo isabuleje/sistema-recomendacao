@@ -1,6 +1,5 @@
 from django.urls import path
-from .views import listar_pratos, categorias, ingredientes, pratos, salvar_onboarding
-
+from .views import listar_pratos, categorias, ingredientes, pratos, salvar_onboarding, cadastrar_usuario
 
 urlpatterns = [
     path('pratos/', listar_pratos),
@@ -12,4 +11,6 @@ urlpatterns = [
         salvar_onboarding,
         name="salvar_onboarding"
     ),
+    path("cadastro/", cadastrar_usuario, name="cadastro"),
+
 ]

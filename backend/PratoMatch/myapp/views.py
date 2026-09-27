@@ -6,6 +6,7 @@ from .models import Prato
 from .serializers import PratoSerializer
 from django.http import JsonResponse
 from django.contrib.auth.models import User
+from django.contrib.auth import login
 
 from recomendacao.main import obter_categorias, obter_ingredientes, obter_pratos
 from .models import (
@@ -13,6 +14,9 @@ from .models import (
     Alergia,
     PreferenciaAlimentar
 )
+
+from django.views.decorators.csrf import csrf_exempt
+from .models import PerfilUsuario
 
 
 
@@ -125,3 +129,66 @@ def obter_perfil(request):
             )
         ),
     })
+    
+@csrf_exempt
+def cadastrar_usuario(request):
+
+    if request.method != "POST":
+        return JsonResponse(
+            {"erro": "Método não permitido"},
+            status=405
+        )
+
+    try:
+        dados = json.loads(request.body)
+
+        username = dados.get("username")
+        password = dados.get("password")
+
+        if not username:
+            return JsonResponse(
+                {"erro": "Nome de usuário é obrigatório"},
+                status=400
+            )
+
+        if not password:
+            return JsonResponse(
+                {"erro": "Senha é obrigatória"},
+                status=400
+            )
+
+        if User.objects.filter(username=username).exists():
+            return JsonResponse(
+                {"erro": "Esse usuário já existe"},
+                status=400
+            )
+
+        usuario = User.objects.create_user(
+            username=username,
+            password=password
+        )
+
+        PerfilUsuario.objects.create(
+            usuario=usuario
+        )
+
+        # Mantém o usuário logado
+        login(request, usuario)
+
+        return JsonResponse({
+            "sucesso": True,
+            "usuario_id": usuario.pk,
+            "username": usuario.username
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {"erro": "JSON inválido"},
+            status=400
+        )
+
+    except Exception as e:
+        return JsonResponse(
+            {"erro": str(e)},
+            status=500
+        )

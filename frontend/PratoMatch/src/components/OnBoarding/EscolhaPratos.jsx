@@ -35,7 +35,7 @@ const EscolhaPratos = ({ selecionados, onToggle, onVoltar, podeConcluir }) => {
         <button
           type="button"
           className="botao botao-concluir"
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/home")}
           disabled={!podeConcluir}
         >
           <span className="botao-texto">Concluir</span>

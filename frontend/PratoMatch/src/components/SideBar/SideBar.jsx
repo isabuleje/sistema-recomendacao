@@ -2,18 +2,10 @@ import { NavLink, useLocation } from "react-router-dom";
 import diningImage from "../../assets/dining.png";
 import ShadowText from "../ShadowText/ShadowText";
 import "./SideBar.css";
-import {
-  Home,
-  Sparkles,
-  Heart,
-  History,
-  Star,
-  User,
-  Leaf
-} from "lucide-react";
+
 
 const menuItems = [
-  { label: "Home", icon: "bx-home", path: "/" },
+  { label: "Home", icon: "bx-home", path: "/home" },
   { label: "Histórico", icon: "bx-history", path: "/historico" },
   { label: "Favoritos", icon: "bx-heart", path: "/favoritos" },
 ];
