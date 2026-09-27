@@ -5,60 +5,62 @@
   --cor-texto-principal: #055746;
   --cor-texto-secundario: rgba(9, 95, 78, 0.979);
   --cor-destaque: #055746;
+
+  --verde-claro-bg: #eaf7ee;
+  --verde-claro-borda: #cdebd7;
+  --verde-claro-texto: #2f855a;
+
+  --creme-bg: #fffaf0;
+  --creme-borda: #f5e6c4;
+  --creme-texto: #b7791f;
+
+  --vermelho-bg: #fff5f2;
+  --vermelho-borda: #fed7cc;
+  --vermelho-texto: #c53030;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 .card-detalhes-pagina {
   position: relative;
-  min-height: 100vh;
-  padding-top: 1rem;
-}
-
-.card-detalhes-voltar {
-  position: absolute;
-  top: 1rem;
-  left: 2.5rem;
-  z-index: 1;
-  padding: 0.6rem 1rem;
-  border: 1px solid var(--cor-destaque);
-  border-radius: 999px;
-  background: var(--branco);
-  color: var(--cor-destaque);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.card-detalhes-voltar:hover {
-  background: #e6f4ed;
-}
-
-.card-detalhes {
-  width: 95%;
-  height: 100%;
-  max-height: 70vh;
-  margin-top: 6rem;
-  margin-left: 2.5rem;
-  margin-right: 2rem;
-  border: 1px solid var(--bege-borda);
-  border-radius: 1rem;
-  background-color: var(--branco);
-  box-shadow: var(--sombra-card);
+  height: 100vh;
+  padding: 1.5rem 2rem;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   font-family: "Inter", "Segoe UI", sans-serif;
+  overflow: hidden;
+}
+
+
+
+.card-detalhes-corpo {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+
+.card-detalhes-principal {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 @media (min-width: 992px) {
-  .card-detalhes {
+  .card-detalhes-principal {
     flex-direction: row;
-    align-items: stretch; /* Faz a imagem e o conteúdo terem a mesma altura */
+    align-items: stretch;
   }
 }
 
 .card-detalhes-imagem-container {
   flex: 1;
-  min-height: 300px;
+  min-height: 0;
 }
 
 .card-detalhes-imagem {
@@ -66,17 +68,19 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: 16px;
 }
 
 .card-detalhes-conteudo {
   flex: 1.5;
-  padding: 3rem;
+  min-height: 0;
+  padding: clamp(1.25rem, 3vh, 3rem) clamp(1.25rem, 3vw, 3rem);
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: clamp(0.6rem, 1.5vh, 1.25rem);
+  overflow: hidden;
 }
 
-/* Header (Título e Avaliações) */
 .card-detalhes-header {
   display: flex;
   flex-direction: column;
@@ -85,10 +89,11 @@
 
 .card-detalhes-titulo {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 30px;
   color: var(--cor-texto-principal);
   font-weight: 700;
   line-height: 1.2;
+  font-family: "Courier New", Courier, monospace;
 }
 
 .card-detalhes-avaliacoes-container {
@@ -99,7 +104,7 @@
 }
 
 .card-detalhes-estrelas {
-  color: #f6e05e;
+  color: #f6b800;
   font-weight: bold;
 }
 
@@ -155,21 +160,24 @@
 /* Descrição */
 .card-detalhes-descricao {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: clamp(0.8rem, 1.6vh, 0.95rem);
   color: var(--cor-texto-secundario);
-  line-height: 1;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-/* Tags (Tempo, Calorias, Categorias) com cores diferentes */
 .card-detalhes-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--bege-borda);
+  gap: 0.75rem;
+  padding-top: 0.5rem;
 }
 
 .tag {
+  padding: 0.5rem 1rem;
   border-radius: 2rem;
   font-size: 0.8rem;
   font-weight: 600;
@@ -177,55 +185,197 @@
   align-items: center;
   gap: 0.4rem;
   border: 1px solid transparent;
+  white-space: nowrap;
 }
 
-/* Cor específica para Categoria (Azul) */
 .tag.categoria {
-  background-color: #ebf8ff;
-  color: #2b6cb0;
-  border-color: #bee3f8;
+  background-color: var(--verde-claro-bg);
+  color: var(--verde-claro-texto);
+  border-color: var(--verde-claro-borda);
 }
 
-/* Cor específica para Tempo (Verde) */
 .tag.tempo {
-  background-color: #f0fff4;
-  color: #2f855a;
-  border-color: #c6f6d5;
+  background-color: #fdf0e2;
+  color: var(--creme-texto);
+  border-color: var(--creme-borda);
 }
 
-/* Cor específica para Calorias (Laranja/Vermelho) */
 .tag.calorias {
-  background-color: #fffaf0;
-  color: #c05621;
-  border-color: #feebc8;
+  background-color: var(--vermelho-bg);
+  color: var(--vermelho-texto);
+  border-color: var(--vermelho-borda);
 }
 
-/* Corpo das Informações (Ingredientes, Passos, Nutrição) */
-.card-detalhes-secoes {
+
+.card-secao {
+  min-height: 0;
+  background-color: #fff5f2;
+  padding: clamp(0.5rem, 1.2vh, 1.25rem) clamp(1.25rem, 3vw, 2.5rem);
+  border-top: 1px solid var(--bege-borda);
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  overflow: hidden;
 }
 
-.secao h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1rem;
-  color: var(--cor-destaque);
-  font-weight: 700;
+.card-secao--ingredientes {
+  flex: 0 0 auto;
+  margin: 0 1.5rem 1rem 1.5rem;
+  border-radius: 32px;
+  background-color: var(--verde-claro-bg);
 }
 
-.secao p {
-  margin: 0;
+
+.card-secao--passos {
+  background-color: #fffadf;
+  flex: 1;
+  margin: 0 1.5rem 1rem 1.5rem;
+  min-height: 0;
+  border-radius: 32px;
+}
+
+.card-secao-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: clamp(0.5rem, 1.5vh, 1.25rem);
+  flex-shrink: 0;
   color: var(--cor-texto-principal);
 }
 
-.texto-formatado {
-  white-space: pre-line;
-  font-size: small;
+.card-secao-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: clamp(0.5rem, 1.5vh, 1.25rem);
+  flex-shrink: 0;
 }
 
-@media (max-width: 991px) {
-  .card-detalhes-voltar {
-    left: 1rem;
+.card-secao-cabecalho .card-secao-titulo {
+  margin-bottom: 0;
+}
+
+.badge-passos {
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--bege-borda);
+  background: var(--branco);
+  color: var(--cor-texto-secundario);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ingredientes-grid {
+  margin: 0;
+  padding-bottom: 40px;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-auto-rows: min-content;
+  row-gap: clamp(0.4rem, 1vh, 0.85rem);
+  column-gap: clamp(1rem, 2vw, 2rem);
+}
+
+.ingrediente-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--cor-texto-principal);
+  font-size: clamp(0.8rem, 1.6vh, 0.95rem);
+}
+
+.ingrediente-check {
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background-color: var(--cor-destaque);
+  color: var(--branco);
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.passos-colunas {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  gap: clamp(0.4rem, 1vh, 0.85rem);
+  padding-right: 0.25rem; /* evita que a barra de rolagem cole no texto */
+}
+
+@media (min-width: 768px) {
+  .passos-colunas {
+    flex-direction: row;
+    gap: clamp(0.75rem, 2vw, 1.5rem);
+    align-items: stretch;
   }
+}
+
+.passos-coluna {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.4rem, 1vh, 0.85rem);
+}
+
+.passo-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: clamp(0.5rem, 1.2vh, 0.9rem) clamp(0.85rem, 1.5vw, 1.25rem);
+  border-radius: 0.85rem;
+  border: 1px solid var(--bege-borda);
+  background-color: white;
+  flex: 0 0 auto;
+}
+
+.passo-numero {
+  flex: 0 0 auto;
+  width: clamp(1.5rem, 3vh, 2rem);
+  height: clamp(1.5rem, 3vh, 2rem);
+  border-radius: 50%;
+  background-color: var(--cor-destaque);
+  color: var(--branco);
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.passo-texto {
+  color: var(--cor-texto-principal);
+  font-size: clamp(0.8rem, 1.6vh, 0.95rem);
+}
+
+.card-detalhes-voltar {
+  position: absolute;
+  left: 2.5rem;
+  top: 1rem;
+  z-index: 1;
+  width: 7rem;
+  border: 1px solid var(--cor-destaque);
+  border-radius: 999px;
+  background: var(--branco);
+  color: var(--cor-destaque);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.card-detalhes-voltar:hover {
+  background: #e6f4ed;
 }

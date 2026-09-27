@@ -29,7 +29,9 @@ const CardDetalhesPage = () => {
       <CardDetalhes
         titulo={prato.nome}
         descricao={prato.descricao || "Sem descrição disponível."}
-        imagem={prato.imagem || "/Pratos/prato1.webp"}
+        imagem={
+          prato.imagem || "/Pratos/pizzar.jpg"
+        }
         categorias={(prato.tags || []).join(", ") || "Sem categoria"}
         tempo={`${prato.tempo_preparo || 0} min`}
         calorias={prato.calorias || "Não informado"}
