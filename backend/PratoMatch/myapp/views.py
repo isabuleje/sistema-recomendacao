@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import json
 
-from .models import Prato
+from .models import Prato, Interacao
 from .serializers import PratoSerializer
 from django.http import JsonResponse
 from django.contrib.auth.models import User
@@ -27,6 +27,36 @@ def listar_pratos(request):
     serializer = PratoSerializer(pratos, many=True)
 
     return Response(serializer.data)
+
+
+@api_view(['GET'])
+def listar_avaliados(request):
+    if not request.user.is_authenticated:
+        return Response({"erro": "Usuário não autenticado"}, status=401)
+
+    dados_pratos = {
+        prato["id"]: prato
+        for prato in obter_pratos()
+    }
+
+    interacoes = (
+        Interacao.objects
+        .filter(usuario=request.user, nota__gte=1, nota__lte=5)
+        .select_related("prato")
+        .order_by("-data")
+    )
+
+    avaliados = []
+    for interacao in interacoes:
+        dados = dados_pratos.get(interacao.prato_id, {})
+        avaliados.append({
+            **dados,
+            "id": interacao.prato_id,
+            "nome": dados.get("nome", interacao.prato.nome),
+            "nota_usuario": interacao.nota,
+        })
+
+    return Response(avaliados)
 
 from django.http import JsonResponse
 

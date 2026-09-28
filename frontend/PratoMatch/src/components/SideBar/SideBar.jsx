@@ -7,7 +7,7 @@ import "./SideBar.css";
 const menuItems = [
   { label: "Home", icon: "bx-home", path: "/home" },
   { label: "Histórico", icon: "bx-history", path: "/historico" },
-  { label: "Favoritos", icon: "bx-heart", path: "/favoritos" },
+  { label: "Avaliados", icon: "bx-heart", path: "/avaliados" },
 ];
 const profileItem = { label: "Perfil", icon: "bx-user", path: "/perfil" };
 

@@ -15,13 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { buscarPratos } from "../services/Pratos.js";
 
-const CategorySection = ({
-  title,
-  description,
-  pratos,
-  favoritos,
-  alternarFavorito,
-}) => (
+const CategorySection = ({ title, description, pratos }) => (
   <section className="category-section">
     <div className="category-heading">
       <h2 className="category-title" style={{ color: "#055746" }}>
@@ -31,15 +25,11 @@ const CategorySection = ({
       <p>{description}</p>
     </div>
 
-    <CardRail
-      pratos={pratos}
-      favoritos={favoritos}
-      alternarFavorito={alternarFavorito}
-    />
+    <CardRail pratos={pratos} />
   </section>
 );
 
-const CardRail = ({ pratos, favoritos, alternarFavorito }) => {
+const CardRail = ({ pratos}) => {
   const cardsRef = useRef(null);
   const navigate = useNavigate();
 
@@ -136,8 +126,6 @@ const CardRail = ({ pratos, favoritos, alternarFavorito }) => {
             prepTime={prato.tempo_preparo}
             rating={prato.estrelas}
             evaluations={prato.avaliacoes}
-            isFavorite={favoritos.some((favorito) => favorito.id === prato.id)}
-            onToggleFavorite={() => alternarFavorito(prato)}
             onOpenDetalhes={() =>
               navigate(`/pratos/${prato.id}`, { state: { prato } })
             }
@@ -252,16 +240,12 @@ const Home = ({ favoritos, alternarFavorito }) => {
               pratos={[...pratos]
                 .sort((a, b) => b.avaliacoes - a.avaliacoes)
                 .slice(0, 10)}
-              favoritos={favoritos}
-              alternarFavorito={alternarFavorito}
             />
 
             <CategorySection
               title="Novidades"
               description="Descubra os novos pratos que chegaram."
               pratos={pratos.slice(-10)}
-              favoritos={favoritos}
-              alternarFavorito={alternarFavorito}
             />
           </>
         )}

@@ -1,8 +1,17 @@
 from django.urls import path
-from .views import listar_pratos, categorias, ingredientes, pratos, salvar_onboarding, cadastrar_usuario
+from .views import (
+    listar_pratos,
+    listar_avaliados,
+    categorias,
+    ingredientes,
+    pratos,
+    salvar_onboarding,
+    cadastrar_usuario,
+)
 
 urlpatterns = [
     path('pratos/', listar_pratos),
+    path('avaliados/', listar_avaliados),
     path("categorias/", categorias),
     path("ingredientes/", ingredientes),
     path("pratos_data/", pratos),

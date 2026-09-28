@@ -136,7 +136,7 @@ const CardDetalhes = ({
                 ))}
                 {temTempo && (
                   <span className="tag tempo">
-                    ⏱ {typeof tempo === "number" ? `${tempo} min` : tempo}
+                    🕜 {typeof tempo === "number" ? `${tempo} min` : tempo}
                   </span>
                 )}
                 <span className="tag calorias">

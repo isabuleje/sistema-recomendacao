@@ -11,3 +11,15 @@ export async function buscarPratos() {
 
   return data.pratos;
 }
+
+export async function buscarPratosAvaliados() {
+  const response = await fetch(`${API_URL}/avaliados/`, {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Erro ao buscar pratos avaliados");
+  }
+
+  return response.json();
+}

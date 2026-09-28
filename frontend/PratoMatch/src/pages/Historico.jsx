@@ -16,7 +16,7 @@ const historicoPratos = Array.from({ length: 6 }, (_, indice) => ({
   data: "21 de setembro de 2025",
 }));
 
-const Historico = ({ favoritos = [], alternarFavorito = () => {} }) => {
+const Historico = () => {
   const navigate = useNavigate();
 
   return (
@@ -39,12 +39,12 @@ const Historico = ({ favoritos = [], alternarFavorito = () => {} }) => {
           Histórico
         </NavLink>
         <NavLink
-          to="/favoritos"
+          to="/avaliados"
           className={({ isActive }) =>
             `${styles["page-toggle-button"]} ${isActive ? styles["page-toggle-button-active"] : ""}`
           }
         >
-          Favoritos
+          Avaliados
         </NavLink>
       </div>
 
@@ -52,8 +52,6 @@ const Historico = ({ favoritos = [], alternarFavorito = () => {} }) => {
         <Card
           key={prato.id}
           {...prato}
-          isFavorite={favoritos.some((favorito) => favorito.id === prato.id)}
-          onToggleFavorite={alternarFavorito}
           onOpenDetalhes={() =>
             navigate(`/pratos/${prato.id}`, { state: { prato } })
           }
