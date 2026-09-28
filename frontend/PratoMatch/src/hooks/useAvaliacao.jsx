@@ -7,6 +7,7 @@ export function useAvaliacao(pratoId, notaInicial = 0) {
   const [erro, setErro] = useState("");
 
   const avaliar = async (novaNota) => {
+    if (salvando) return;
     const notaAnterior = nota;
     setNota(novaNota);
     setSalvando(true);

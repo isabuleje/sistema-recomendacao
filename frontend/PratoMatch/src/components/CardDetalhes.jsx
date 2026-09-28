@@ -1,7 +1,6 @@
 import "./CardDetalhes.css";
 import { useState } from "react";
 
-
 const normalizarLista = (valor) => {
   if (Array.isArray(valor)) {
     return valor.filter(
@@ -22,6 +21,7 @@ const dividirEmDuasColunas = (lista) => {
   return [lista.slice(0, metade), lista.slice(metade)];
 };
 
+
 const CardDetalhes = ({
   titulo,
   descricao,
@@ -33,7 +33,7 @@ const CardDetalhes = ({
   passos,
   avaliacoes = 0,
   estrelas = 0,
-  avaliacaoUsuario: avaliacaoUsuarioProp,
+  avaliacaoUsuario: avaliacaoUsuarioProp, salvando,
   onAvaliar,
 }) => {
   const [avaliacaoInterna, setAvaliacaoInterna] = useState(0);
@@ -76,115 +76,111 @@ const CardDetalhes = ({
 
   return (
     <div className="card-detalhes-pagina">
+      <div className="card-detalhes-corpo">
+        <div className="card-detalhes-principal">
+          <div className="card-detalhes-imagem-container">
+            <img className="card-detalhes-imagem" src={imagem} alt={titulo} />
+          </div>
 
-        <div className="card-detalhes-corpo">
-          <div className="card-detalhes-principal">
-            <div className="card-detalhes-imagem-container">
-              <img className="card-detalhes-imagem" src={imagem} alt={titulo} />
-            </div>
+          <div className="card-detalhes-conteudo">
+            <div className="card-detalhes-header">
+              <h1 className="card-detalhes-titulo">{titulo}</h1>
 
-            <div className="card-detalhes-conteudo">
-              <div className="card-detalhes-header">
-                <h1 className="card-detalhes-titulo">{titulo}</h1>
-
-                <div className="card-detalhes-avaliacoes-container">
-                  <span className="card-detalhes-estrelas">
-                    {"★".repeat(estrelasCheias)}
-                    {"☆".repeat(Math.max(0, 5 - estrelasCheias))}{" "}
-                    <span>({mediaEstrelas})</span>
-                  </span>
-                  <span className="card-detalhes-qtd-avaliacoes">
-                    {avaliacoes} avaliaç{avaliacoes === 1 ? "ão" : "ões"}
-                  </span>
-                </div>
-
-                <div className="card-detalhes-avaliacao-usuario">
-                  <span style={{ fontWeight: "600" }}>Sua avaliação:</span>
-                  <div
-                    className="card-detalhes-estrelas-interativas"
-                    role="group"
-                    aria-label="Avalie este prato de 1 a 5 estrelas"
-                  >
-                    {[1, 2, 3, 4, 5].map((estrela) => (
-                      <button
-                        key={estrela}
-                        type="button"
-                        className={estrela <= avaliacaoUsuario ? "ativa" : ""}
-                        aria-label={`${estrela} estrela${estrela > 1 ? "s" : ""}`}
-                        aria-pressed={estrela === avaliacaoUsuario}
-                        onClick={() => handleAvaliar(estrela)}
-                      >
-                        ★
-                      </button>
-                    ))}
-                  </div>
-                  {avaliacaoUsuario > 0 && (
-                    <span className="card-detalhes-avaliacao-confirmada">
-                      {avaliacaoUsuario}/5
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <p className="card-detalhes-descricao">{descricao}</p>
-
-              <div className="card-detalhes-tags">
-                {listaCategorias.map((categoria) => (
-                  <span className="tag categoria" key={categoria}>
-                    🍲 {categoria}
-                  </span>
-                ))}
-                {temTempo && (
-                  <span className="tag tempo">
-                    🕜 {typeof tempo === "number" ? `${tempo} min` : tempo}
-                  </span>
-                )}
-                <span className="tag calorias">
-                  🔥 {temCalorias ? `${calorias} kcal` : "Não informado kcal"}
+              <div className="card-detalhes-avaliacoes-container">
+                <span className="card-detalhes-estrelas">
+                  {"★".repeat(estrelasCheias)}
+                  {"☆".repeat(Math.max(0, 5 - estrelasCheias))}{" "}
+                  <span>({mediaEstrelas})</span>
+                </span>
+                <span className="card-detalhes-qtd-avaliacoes">
+                  {avaliacoes} avaliaç{avaliacoes === 1 ? "ão" : "ões"}
                 </span>
               </div>
-            </div>
-          </div>
 
-          <div className="card-secao card-secao--ingredientes">
-            <h3 className="card-secao-titulo">🛒 Ingredientes</h3>
-            <ul className="ingredientes-grid">
-              {listaIngredientes.map((ingrediente, indice) => (
-                <li
-                  className="ingrediente-item"
-                  key={`${ingrediente}-${indice}`}
+              <div className="card-detalhes-avaliacao-usuario">
+                <span style={{ fontWeight: "600" }}>Sua avaliação:</span>
+                <div
+                  className="card-detalhes-estrelas-interativas"
+                  role="group"
+                  aria-label="Avalie este prato de 1 a 5 estrelas"
                 >
-                  <span className="ingrediente-check" aria-hidden="true">
-                    ✓
+                  {[1, 2, 3, 4, 5].map((estrela) => (
+                    <button
+                      key={estrela}
+                      type="button"
+                      disabled={salvando}
+                      className={estrela <= avaliacaoUsuario ? "ativa" : ""}
+                      aria-label={`${estrela} estrela${estrela > 1 ? "s" : ""}`}
+                      aria-pressed={estrela === avaliacaoUsuario}
+                      onClick={() => handleAvaliar(estrela)}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+                {avaliacaoUsuario > 0 && (
+                  <span className="card-detalhes-avaliacao-confirmada">
+                    {avaliacaoUsuario}/5
                   </span>
-                  {ingrediente}
-                </li>
-              ))}
-            </ul>
-          </div>
+                )}
+              </div>
+            </div>
 
-          <div className="card-secao card-secao--passos">
-            <div className="card-secao-cabecalho">
-              <h3 className="card-secao-titulo">📝 Modo de Preparo</h3>
-              <span className="badge-passos">
-                {listaPassos.length} passo{listaPassos.length === 1 ? "" : "s"}
+            <p className="card-detalhes-descricao">{descricao}</p>
+
+            <div className="card-detalhes-tags">
+              {listaCategorias.map((categoria) => (
+                <span className="tag categoria" key={categoria}>
+                  🍲 {categoria}
+                </span>
+              ))}
+              {temTempo && (
+                <span className="tag tempo">
+                  🕜 {typeof tempo === "number" ? `${tempo} min` : tempo}
+                </span>
+              )}
+              <span className="tag calorias">
+                🔥 {temCalorias ? `${calorias} kcal` : "Não informado kcal"}
               </span>
             </div>
-
-
-            <div className="passos-colunas">
-              <ol className="passos-coluna" start={1}>
-                {colunaEsquerdaPassos.map((passo, indice) =>
-                  renderizarPasso(passo, indice),
-                )}
-              </ol>
-              <ol className="passos-coluna">
-                {colunaDireitaPassos.map((passo, indice) =>
-                  renderizarPasso(passo, colunaEsquerdaPassos.length + indice),
-                )}
-              </ol>
-            </div>
           </div>
+        </div>
+
+        <div className="card-secao card-secao--ingredientes">
+          <h3 className="card-secao-titulo">🛒 Ingredientes</h3>
+          <ul className="ingredientes-grid">
+            {listaIngredientes.map((ingrediente, indice) => (
+              <li className="ingrediente-item" key={`${ingrediente}-${indice}`}>
+                <span className="ingrediente-check" aria-hidden="true">
+                  ✓
+                </span>
+                {ingrediente}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="card-secao card-secao--passos">
+          <div className="card-secao-cabecalho">
+            <h3 className="card-secao-titulo">📝 Modo de Preparo</h3>
+            <span className="badge-passos">
+              {listaPassos.length} passo{listaPassos.length === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          <div className="passos-colunas">
+            <ol className="passos-coluna" start={1}>
+              {colunaEsquerdaPassos.map((passo, indice) =>
+                renderizarPasso(passo, indice),
+              )}
+            </ol>
+            <ol className="passos-coluna">
+              {colunaDireitaPassos.map((passo, indice) =>
+                renderizarPasso(passo, colunaEsquerdaPassos.length + indice),
+              )}
+            </ol>
+          </div>
+        </div>
       </div>
     </div>
   );

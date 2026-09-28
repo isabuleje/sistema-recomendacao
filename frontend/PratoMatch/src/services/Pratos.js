@@ -1,7 +1,9 @@
 import { API_URL, prepararCsrf } from "./api.js";
 
 export async function buscarPratos() {
-  const response = await fetch(`${API_URL}/pratos_data/`);
+  const response = await fetch(`${API_URL}/pratos_data/`, {
+    credentials: "include",
+  });
 
   if (!response.ok) {
     throw new Error("Erro ao buscar pratos");

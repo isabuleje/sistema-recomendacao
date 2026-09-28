@@ -196,98 +196,53 @@ df = RECEITAS.merge(
     how="left"
 )
 
+#Obter pratos com limite ou ids específicos, e montar o dict de cada prato pq tava demorando horrores no frontend
+def _montar_prato(prato):
+    """Converte uma linha do DataFrame em dict — chamado só 1x por prato, no import."""
+    prato_id = int(prato["id"]) if pd.notna(prato["id"]) else None
+
+    steps = prato["steps"]
+    if isinstance(steps, str):
+        try:
+            steps = ast.literal_eval(steps)
+        except (ValueError, SyntaxError):
+            steps = []
+    if not isinstance(steps, list):
+        steps = []
+
+    return {
+        "id": prato_id,
+        "nome": str(prato["name"]).strip().capitalize() if pd.notna(prato["name"]) else "Prato sem nome",
+        "descricao": str(prato["description"]).strip().capitalize() if pd.notna(prato["description"]) else "",
+        "tempo_preparo": int(prato["minutes"]) if pd.notna(prato["minutes"]) else 0,
+        "estrelas": round(float(prato["estrelas"]), 1) if pd.notna(prato["estrelas"]) else 0,
+        "avaliacoes": int(prato["avaliacoes"]) if pd.notna(prato["avaliacoes"]) else 0,
+        "tags": [t.capitalize() for t in prato["categorias"]] if isinstance(prato["categorias"], list) else [],
+        "ingredientes": [i.capitalize() for i in prato["ingredients"]] if isinstance(prato["ingredients"], list) else [],
+        "numero_ingredientes": int(prato["n_ingredients"]) if pd.notna(prato["n_ingredients"]) else 0,
+        "numero_passos": int(prato["n_steps"]) if pd.notna(prato["n_steps"]) else 0,
+        "passos": [p.capitalize() for p in steps],
+    }
+
+
+# Monta o índice UMA VEZ, no import do módulo — não a cada request
+#ele tava fazendo o processo a cada resquest, agr vai super rapido
+_PRATOS_POR_ID = {
+    montado["id"]: montado
+    for _, linha in df.iterrows()
+    for montado in [_montar_prato(linha)]
+    if montado["id"] is not None
+}
+_PRATOS_LISTA = list(_PRATOS_POR_ID.values())
+
+
 def obter_pratos(limite=None, ids=None):
-    pratos = []
-    ids_filtrados = set(ids) if ids is not None else None
+    if ids is not None:
+        # lookup O(1) por id, sem varrer nada
+        return [_PRATOS_POR_ID[i] for i in ids if i in _PRATOS_POR_ID]
 
-    for _, prato in df.iterrows():
-        prato_id = int(prato["id"]) if pd.notna(prato["id"]) else None
+    if limite is not None:
+        return _PRATOS_LISTA[:limite]
 
-        if ids_filtrados is not None and prato_id not in ids_filtrados:
-            continue
-
-        if limite is not None and len(pratos) >= limite:
-            break
-
-        pratos.append({
-            "id": prato_id,
-
-            "nome": (
-                str(prato["name"]).strip().capitalize()
-                if pd.notna(prato["name"])
-                else "Prato sem nome"
-            ),
-
-            "descricao": (
-                str(prato["description"]).strip().capitalize()
-                if pd.notna(prato["description"])
-                else ""
-            ),
-
-            "tempo_preparo": (
-                int(prato["minutes"])
-                if pd.notna(prato["minutes"])
-                else 0
-            ),
-
-            "estrelas": (
-                round(float(prato["estrelas"]), 1)
-                if pd.notna(prato["estrelas"])
-                else 0
-            ),
-
-            "avaliacoes": (
-                int(prato["avaliacoes"])
-                if pd.notna(prato["avaliacoes"])
-                else 0
-            ),
-
-            "tags": (
-                [tag.capitalize() for tag in prato["categorias"]]
-                if isinstance(prato["categorias"], list)
-                else []
-            ),
-
-            "ingredientes": (
-                [
-                    ingrediente.capitalize()
-                    for ingrediente in prato["ingredients"]
-                ]
-                if isinstance(prato["ingredients"], list)
-                else []
-            ),
-            
-            "numero_ingredientes": (
-                int(prato["n_ingredients"])
-                if pd.notna(prato["n_ingredients"])
-                else 0
-            ),
-            
-            "nutricao": (
-                str(prato["nutrition"]).strip()
-                if pd.notna(prato["nutrition"])
-                else ""
-            ),
-            
-            "numero_passos": (
-                int(prato["n_steps"])
-                if pd.notna(prato["n_steps"])
-                else 0
-            ),
-            
-            "passos": (
-    [
-        passo.capitalize()
-            for passo in ast.literal_eval(prato["steps"])
-            ]
-            if isinstance(prato["steps"], str)
-            else [
-                passo.capitalize()
-                for passo in prato["steps"]
-            ]
-            if isinstance(prato["steps"], list)
-            else []
-        ),
-        })
-
+    return _PRATOS_LISTA
     return pratos

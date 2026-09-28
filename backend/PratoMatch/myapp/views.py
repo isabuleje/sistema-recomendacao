@@ -93,10 +93,8 @@ def salvar_avaliacao(request):
             status=400,
         )
 
-    dados_prato = next(
-        (prato for prato in obter_pratos() if prato["id"] == prato_id),
-        None,
-    )
+    pratos_encontrados = obter_pratos(ids=[prato_id])
+    dados_prato = pratos_encontrados[0] if pratos_encontrados else None
     if dados_prato is None:
         return Response({"erro": "Prato não encontrado"}, status=404)
 
@@ -135,8 +133,29 @@ def ingredientes(request):
     })
     
 def pratos(request):
+    dados_pratos = obter_pratos(limite=100)
+
+    if request.user.is_authenticated:
+        notas_por_prato = dict(
+            Interacao.objects
+            .filter(
+                usuario=request.user,
+                prato_id__in=[prato["id"] for prato in dados_pratos],
+                nota__gte=1,
+                nota__lte=5,
+            )
+            .values_list("prato_id", "nota")
+        )
+        dados_pratos = [
+            {
+                **prato,
+                "nota_usuario": notas_por_prato.get(prato["id"]),
+            }
+            for prato in dados_pratos
+        ]
+
     return JsonResponse({
-        "pratos": obter_pratos(limite=100)
+        "pratos": dados_pratos
     })
     
 def salvar_onboarding(request):
