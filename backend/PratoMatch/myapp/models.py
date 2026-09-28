@@ -50,12 +50,14 @@ class Interacao(models.Model):
         default=False
     )
     
-    #Status do prato pode ser "Vizualizado", "Avaliado"
+    #Status do prato pode ser "Vizualizado", "Avaliado", "Favoritado"
+    #Vai ter favorito sim na real, lembrei q tem o coração no front
     status = models.CharField(
         max_length=20,
         choices=[
             ("visualizado", "Visualizado"),
-            ("avaliado", "Avaliado"),
+            ("Avaliado", "Avaliado"),
+            ("Favoritado", "Favoritado"),
         ],
         null=True,
         blank=True,

@@ -1,27 +1,60 @@
 import os
 import sys
+import subprocess
 from pathlib import Path
 
-
-#Configurações de diretório porque o seed.py n ta dentro do Django em si
+'''#
+dps a gnt nao pode esquecer de tirar isso daq do codigo kkkkkkkkkkkkk
+meu grande mano gepete dando uma ajuda pra gnt, valeu mano
+'''
 BASE_DIR = Path(__file__).resolve().parent
-
 PRATOMATCH_DIR = BASE_DIR / "PratoMatch"
 
 sys.path.insert(0, str(PRATOMATCH_DIR))
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "configs.settings")
 
-os.environ.setdefault(
-    "DJANGO_SETTINGS_MODULE",
-    "configs.settings"
-)
+# ============================================================
+# DJANGO: MIGRAÇÕES AUTOMÁTICAS
+# ============================================================
+# Assim você não precisa ficar executando os comandos manualmente
+# sempre que alterar os models.
+#
+# Equivale a:
+#   python manage.py makemigrations
+#   python manage.py migrate
+# ============================================================
+
+def preparar_banco():
+    print("\nVerificando alterações nos models...")
+
+    subprocess.run(
+        [sys.executable, "manage.py", "makemigrations"],
+        cwd=PRATOMATCH_DIR,
+        check=True,
+    )
+
+    print("\nAplicando migrações...")
+    subprocess.run(
+        [sys.executable, "manage.py", "migrate"],
+        cwd=PRATOMATCH_DIR,
+        check=True,
+    )
+
+    print("\nBanco pronto!")
+
+
+preparar_banco()
 
 import django
 
 django.setup()
 
+# ============================================================
+# MODELS
+# ============================================================
 
-#modelos dentro do django
 from django.contrib.auth.models import User
+from django.db.models import Count
 from myapp.models import (
     Categoria,
     Prato,
@@ -31,36 +64,34 @@ from myapp.models import (
     PerfilUsuario,
 )
 
-
-#já tá pegando de dentro do sistema de recomendação
 from recomendacao.main import (
     obter_categorias,
     obter_pratos,
     INTERACOES,
 )
 
+# ============================================================
+# CONFIGURAÇÕES DO SEED
+# ============================================================
 
-#dá pra ajustar mas n precisa
-LIMITE_PRATOS = None
-
-#10 só pra teste
 LIMITE_USUARIOS = 10
 
+USUARIOS_CANDIDATOS = 100
 
-#Aq meu mano gepete fez já que é só pra teste
+LIMITE_PRATOS = None
+
+LIMITE_CATEGORIAS = 10
+# ============================================================
+# LIMPAR DADOS GERADOS PELO SEED
+# ============================================================
+
 def limpar_banco():
-
     print("\nLimpando dados antigos...")
 
     Interacao.objects.all().delete()
     PerfilUsuario.objects.all().delete()
-
-    # Não apagamos o User inteiro porque ele pode
-    # estar sendo usado pelo sistema de login.
-
     Prato.objects.all().delete()
     Categoria.objects.all().delete()
-
     Alergia.objects.all().delete()
     PreferenciaAlimentar.objects.all().delete()
 
@@ -68,100 +99,236 @@ def limpar_banco():
 
 
 # ============================================================
+# ESCOLHER USUÁRIOS COM RECEITAS EM COMUM
+# ============================================================
+# ============================================================
+# ESCOLHER POUCOS USUÁRIOS COM RECEITAS EM COMUM
+# ============================================================
+
+def selecionar_usuarios_comuns():
+
+    print("\nProcurando poucos usuários com receitas em comum...")
+
+    # --------------------------------------------------------
+    # PEGAMOS SOMENTE UMA PEQUENA PARTE DOS USUÁRIOS
+    # --------------------------------------------------------
+
+    usuarios_disponiveis = (
+        INTERACOES["user_id"]
+        .dropna()
+        .astype(int)
+        .drop_duplicates()
+        .tolist()
+    )
+
+    candidatos_ids = usuarios_disponiveis[:USUARIOS_CANDIDATOS]
+
+    print(
+        f"Analisando somente {len(candidatos_ids)} "
+        f"usuários candidatos..."
+    )
+
+    # --------------------------------------------------------
+    # FILTRA O DATAFRAME
+    # --------------------------------------------------------
+
+    dados = INTERACOES[
+        INTERACOES["user_id"].isin(candidatos_ids)
+    ][
+        ["user_id", "recipe_id"]
+    ].dropna()
+
+    dados["user_id"] = dados["user_id"].astype(int)
+    dados["recipe_id"] = dados["recipe_id"].astype(int)
+
+    # --------------------------------------------------------
+    # RECEITAS DE CADA USUÁRIO
+    # --------------------------------------------------------
+
+    receitas_por_usuario = (
+        dados.groupby("user_id")["recipe_id"]
+        .agg(set)
+        .to_dict()
+    )
+
+    usuarios = list(receitas_por_usuario.keys())
+
+    if len(usuarios) < 2:
+        raise RuntimeError(
+            "Não existem usuários suficientes para o teste."
+        )
+
+    # --------------------------------------------------------
+    # PROCURA UM GRUPO PEQUENO
+    # --------------------------------------------------------
+
+    for referencia in usuarios:
+
+        receitas_referencia = receitas_por_usuario[referencia]
+
+        selecionados = [referencia]
+
+        for usuario_id in usuarios:
+
+            if usuario_id == referencia:
+                continue
+
+            receitas_usuario = receitas_por_usuario[usuario_id]
+
+            comuns = receitas_referencia & receitas_usuario
+
+            if comuns:
+
+                selecionados.append(usuario_id)
+
+                print(
+                    f"Usuário {usuario_id}: "
+                    f"{len(comuns)} receitas em comum"
+                )
+
+            # Já temos usuários suficientes
+            if len(selecionados) >= LIMITE_USUARIOS:
+                break
+
+        if len(selecionados) >= LIMITE_USUARIOS:
+
+            print(
+                f"\nGrupo encontrado!"
+            )
+
+            print(
+                f"Usuário de referência: {referencia}"
+            )
+
+            print(
+                f"Usuários selecionados: "
+                f"{len(selecionados)}"
+            )
+
+            return selecionados
+
+    # --------------------------------------------------------
+    # CASO NÃO ENCONTRE
+    # --------------------------------------------------------
+
+    raise RuntimeError(
+        "Não foram encontrados usuários suficientes "
+        "com receitas em comum dentro dos candidatos."
+    )
+
+# ============================================================
 # CRIAR CATEGORIAS
 # ============================================================
 
 def criar_categorias():
+    """
+    Não cadastra todas as categorias do CSV.
 
-    print("\nCriando categorias...")
+    Apenas algumas categorias são necessárias para montar os
+    perfis de teste.
+    """
 
-    categorias = obter_categorias()
+    print("\nCriando categorias de exemplo...")
+
+    categorias_csv = obter_categorias()
+
+    # Mantém somente uma pequena quantidade.
+    categorias = list(categorias_csv)[:LIMITE_CATEGORIAS]
 
     categorias_obj = {}
 
     for nome in categorias:
-
-        categoria, _ = Categoria.objects.get_or_create(
-            nome=nome
-        )
-
+        categoria, _ = Categoria.objects.get_or_create(nome=nome)
         categorias_obj[nome] = categoria
 
-    print(
-        f"{len(categorias_obj)} categorias criadas."
-    )
+    print(f"{len(categorias_obj)} categorias criadas.")
 
     return categorias_obj
-
-
 
 
 # ============================================================
 # CRIAR PRATOS
 # ============================================================
 
-def criar_pratos(usuarios):
-    print("\nCriando somente os pratos dos usuários selecionados...")
+def criar_pratos(usuarios_ids):
+    print("\nCriando pratos dos usuários selecionados...")
 
-    # IDs dos usuários que realmente serão cadastrados
-    user_ids = list(usuarios.keys())
+    user_ids = set(usuarios_ids)
 
-    # Pega somente as interações desses usuários
+    # Apenas interações dos usuários escolhidos.
     interacoes = INTERACOES[
         INTERACOES["user_id"].isin(user_ids)
     ].copy()
 
-    # IDs dos pratos avaliados por esses usuários
+    interacoes["recipe_id"] = interacoes["recipe_id"].astype(int)
+
+    # Mantemos somente receitas avaliadas por pelo menos 2 dos
+    # usuários selecionados. Assim o banco fica menor e os usuários
+    # realmente possuem receitas em comum.
     ids_pratos = (
-        interacoes["recipe_id"]
-        .dropna()
-        .astype(int)
-        .unique()
+        interacoes.groupby("recipe_id")["user_id"]
+        .nunique()
     )
+    ids_pratos = ids_pratos[ids_pratos >= 2].index
+
+    if LIMITE_PRATOS is not None:
+        ids_pratos = ids_pratos[:LIMITE_PRATOS]
+
+    ids_pratos = set(int(id_prato) for id_prato in ids_pratos)
 
     print(
-        f"Encontrados {len(ids_pratos)} pratos "
-        f"avaliados pelos {len(user_ids)} usuários."
+        f"Encontrados {len(ids_pratos)} pratos compartilhados "
+        f"por pelo menos 2 usuários."
     )
 
-    # Busca os dados dos pratos no CSV
+    # O CSV de receitas é lido uma vez.
     pratos_dados = obter_pratos()
 
-    # Mantém somente os pratos que esses usuários avaliaram
     pratos_dados = [
         prato
         for prato in pratos_dados
         if prato["id"] in ids_pratos
     ]
 
-    pratos_obj = {}
+    # Como o banco foi limpo, bulk_create é muito mais rápido
+    # do que fazer update_or_create para cada receita.
+    pratos_obj = []
 
     for dados in pratos_dados:
-
         if dados["id"] is None:
             continue
 
-        prato, _ = Prato.objects.update_or_create(
-            id=dados["id"],
-            defaults={
-                "nome": dados["nome"]
-            }
+        pratos_obj.append(
+            Prato(
+                id=int(dados["id"]),
+                nome=dados["nome"],
+            )
         )
 
-        pratos_obj[prato.id] = prato
+    if pratos_obj:
+        Prato.objects.bulk_create(
+            pratos_obj,
+            batch_size=1000,
+            ignore_conflicts=True,
+        )
 
-    print(
-        f"{len(pratos_obj)} pratos cadastrados no banco."
-    )
+    pratos_obj = {
+        prato.id: prato
+        for prato in Prato.objects.filter(
+            id__in=ids_pratos
+        )
+    }
+
+    print(f"{len(pratos_obj)} pratos cadastrados.")
 
     return pratos_obj
+
 
 # ============================================================
 # CRIAR ALERGIAS
 # ============================================================
 
 def criar_alergias():
-
     print("\nCriando alergias...")
 
     nomes = [
@@ -175,17 +342,20 @@ def criar_alergias():
 
     alergias = {}
 
-    for nome in nomes:
+    objetos = [
+        Alergia(nome=nome)
+        for nome in nomes
+    ]
 
-        alergia, _ = Alergia.objects.get_or_create(
-            nome=nome
-        )
-
-        alergias[nome] = alergia
-
-    print(
-        f"{len(alergias)} alergias criadas."
+    Alergia.objects.bulk_create(
+        objetos,
+        ignore_conflicts=True,
     )
+
+    for alergia in Alergia.objects.filter(nome__in=nomes):
+        alergias[alergia.nome] = alergia
+
+    print(f"{len(alergias)} alergias criadas.")
 
     return alergias
 
@@ -195,7 +365,6 @@ def criar_alergias():
 # ============================================================
 
 def criar_preferencias():
-
     print("\nCriando preferências alimentares...")
 
     nomes = [
@@ -207,19 +376,24 @@ def criar_preferencias():
         "Sem Lactose",
     ]
 
-    preferencias = {}
+    objetos = [
+        PreferenciaAlimentar(nome=nome)
+        for nome in nomes
+    ]
 
-    for nome in nomes:
-
-        preferencia, _ = PreferenciaAlimentar.objects.get_or_create(
-            nome=nome
-        )
-
-        preferencias[nome] = preferencia
-
-    print(
-        f"{len(preferencias)} preferências criadas."
+    PreferenciaAlimentar.objects.bulk_create(
+        objetos,
+        ignore_conflicts=True,
     )
+
+    preferencias = {
+        preferencia.nome: preferencia
+        for preferencia in PreferenciaAlimentar.objects.filter(
+            nome__in=nomes
+        )
+    }
+
+    print(f"{len(preferencias)} preferências criadas.")
 
     return preferencias
 
@@ -228,48 +402,29 @@ def criar_preferencias():
 # CRIAR USUÁRIOS
 # ============================================================
 
-def criar_usuarios():
-
+def criar_usuarios(usuarios_ids):
     print("\nCriando usuários de demonstração...")
-
-    # Pegamos somente usuários que realmente aparecem
-    # no arquivo RAW_interactions.csv
-
-    usuarios_csv = (
-        INTERACOES["user_id"]
-        .dropna()
-        .drop_duplicates()
-        .tolist()
-    )
-
-    usuarios_csv = usuarios_csv[:LIMITE_USUARIOS]
 
     usuarios = {}
 
-    for numero in usuarios_csv:
-
+    for numero in usuarios_ids:
         numero = int(numero)
-
-        #Acho q era isso aq vc queria saber, os IDs estao sendo criados com base com oq ta no CSV, mas e mudavel
         username = f"usuario_{numero}"
 
         usuario, created = User.objects.get_or_create(
             username=username,
             defaults={
                 "email": f"usuario{numero}@pratomatch.com"
-            }
+            },
         )
 
-        # Senha para poder testar o login
         if created:
             usuario.set_password("123456")
             usuario.save()
 
         usuarios[numero] = usuario
 
-    print(
-        f"{len(usuarios)} usuários criados."
-    )
+    print(f"{len(usuarios)} usuários preparados.")
 
     return usuarios
 
@@ -282,98 +437,53 @@ def criar_perfis(
     usuarios,
     alergias,
     preferencias,
-    categorias
+    categorias,
 ):
-
     print("\nCriando perfis dos usuários...")
 
-    preferencias_lista = list(
-        preferencias.values()
+    preferencias_lista = list(preferencias.values())
+    alergias_lista = list(alergias.values())
+    categorias_lista = list(categorias.values())
+
+    perfis = []
+
+    for usuario in usuarios.values():
+        perfil = PerfilUsuario(usuario=usuario)
+        perfis.append(perfil)
+
+    # Como os perfis acabaram de ser apagados, podemos inserir em lote.
+    PerfilUsuario.objects.bulk_create(
+        perfis,
+        batch_size=100,
     )
 
-    alergias_lista = list(
-        alergias.values()
-    )
-
-    categorias_lista = list(
-        categorias.values()
-    )
-
-    for contador, usuario in enumerate(
-        usuarios.values()
-    ):
-
-        perfil, _ = PerfilUsuario.objects.get_or_create(
-            usuario=usuario
+    # Precisamos buscar os objetos criados para os relacionamentos M2M.
+    perfis = list(
+        PerfilUsuario.objects.filter(
+            usuario__in=usuarios.values()
         )
+    )
 
-        # ----------------------------------------------------
-        # Preferências
-        # ----------------------------------------------------
-
+    for contador, perfil in enumerate(perfis):
+        # Preferência
         if preferencias_lista:
-
-            if contador % 3 == 0:
-
-                perfil.preferencias.add(
-                    preferencias_lista[0]
-                )
-
-            elif contador % 3 == 1:
-
-                perfil.preferencias.add(
-                    preferencias_lista[1]
-                )
-
-            else:
-
-                perfil.preferencias.add(
-                    preferencias_lista[2]
-                )
-
-        # ----------------------------------------------------
-        # Alergias
-        # ----------------------------------------------------
-
-        if alergias_lista:
-
-            # Alguns usuários terão alergias
-            if contador % 2 == 0:
-
-                perfil.alergias.add(
-                    alergias_lista[
-                        contador % len(alergias_lista)
-                    ]
-                )
-
-        # ----------------------------------------------------
-        # Categorias preferidas
-        # ----------------------------------------------------
-
-        if categorias_lista:
-
-            # Cada usuário recebe até 2 categorias
-            indice = contador % len(categorias_lista)
-
-            perfil.categorias_preferidas.add(
-                categorias_lista[indice]
+            perfil.preferencias.add(
+                preferencias_lista[contador % len(preferencias_lista)]
             )
 
-            if len(categorias_lista) > 1:
+        # Alergia
+        if alergias_lista and contador % 2 == 0:
+            perfil.alergias.add(
+                alergias_lista[contador % len(alergias_lista)]
+            )
 
-                segundo_indice = (
-                    indice + 1
-                ) % len(categorias_lista)
+        # Categoria: somente entre as poucas categorias cadastradas.
+        if categorias_lista:
+            perfil.categorias_preferidas.add(
+                categorias_lista[contador % len(categorias_lista)]
+            )
 
-                perfil.categorias_preferidas.add(
-                    categorias_lista[
-                        segundo_indice
-                    ]
-                )
-
-    print(
-        f"{len(usuarios)} perfis configurados."
-    )
+    print(f"{len(perfis)} perfis configurados.")
 
 
 # ============================================================
@@ -382,139 +492,72 @@ def criar_perfis(
 
 def criar_interacoes(
     usuarios,
-    pratos
+    pratos,
 ):
-
     print("\nCriando interações...")
 
-    # --------------------------------------------------------
-    # Filtrar somente os usuários que criamos
-    # --------------------------------------------------------
-
-    user_ids = list(
-        usuarios.keys()
-    )
+    user_ids = list(usuarios.keys())
 
     interacoes = INTERACOES[
         INTERACOES["user_id"].isin(user_ids)
     ].copy()
 
-    # --------------------------------------------------------
-    # Converter datas
-    # --------------------------------------------------------
-
-    interacoes["date"] = (
-        __import__("pandas")
-        .to_datetime(
-            interacoes["date"],
-            errors="coerce"
-        )
+    interacoes["date"] = __import__("pandas").to_datetime(
+        interacoes["date"],
+        errors="coerce",
     )
-
-    # --------------------------------------------------------
-    # Somente notas válidas de 1 a 5
-    # --------------------------------------------------------
 
     interacoes = interacoes[
         interacoes["rating"].between(1, 5)
-    ]
+    ].copy()
 
-    # --------------------------------------------------------
-    # Seu model permite apenas uma interação
-    # por usuário + prato.
-    #
-    # Então, se o CSV tiver várias interações
-    # para a mesma combinação, pegamos a mais recente.
-    # --------------------------------------------------------
-
+    # Uma interação por usuário + prato.
     interacoes = (
         interacoes
         .sort_values("date")
         .drop_duplicates(
-            subset=[
-                "user_id",
-                "recipe_id"
-            ],
-            keep="last"
+            subset=["user_id", "recipe_id"],
+            keep="last",
         )
     )
 
-    quantidade = 0
+    objetos = []
 
     for _, linha in interacoes.iterrows():
+        user_id = int(linha["user_id"])
+        recipe_id = int(linha["recipe_id"])
+        rating = int(linha["rating"])
 
-        user_id = int(
-            linha["user_id"]
-        )
-
-        recipe_id = int(
-            linha["recipe_id"]
-        )
-
-        rating = int(
-            linha["rating"]
-        )
-
-        # Verifica se o usuário existe
         if user_id not in usuarios:
             continue
 
-        # Verifica se o prato existe
         if recipe_id not in pratos:
             continue
 
-        usuario = usuarios[user_id]
-
-        prato = pratos[recipe_id]
-
-        # Interesse baseado na nota
-        interesse = rating >= 4
-
-        # Status baseado na nota
-        if rating == 5:
-
-            status = "favorito"
-
-        else:
-
-            status = "visualizado"
-
-        # Data
         data = linha["date"]
 
         if __import__("pandas").isna(data):
             data = None
 
-        # ----------------------------------------------------
-        # Como existe UniqueConstraint(usuario, prato),
-        # usamos update_or_create.
-        # ----------------------------------------------------
-
-        interacao, created = Interacao.objects.update_or_create(
-
-            usuario=usuario,
-
-            prato=prato,
-
-            defaults={
-                "nota": rating,
-                "interesse": interesse,
-                "status": status,
-
-                # Só colocamos a data se ela existir.
-                **(
-                    {"data": data}
-                    if data is not None
-                    else {}
-                )
-            }
+        objetos.append(
+            Interacao(
+                usuario=usuarios[user_id],
+                prato=pratos[recipe_id],
+                nota=rating,
+                interesse=rating >= 4,
+                status="favorito" if rating == 5 else "visualizado",
+                **({"data": data} if data is not None else {}),
+            )
         )
 
-        quantidade += 1
+    if objetos:
+        Interacao.objects.bulk_create(
+            objetos,
+            batch_size=1000,
+            ignore_conflicts=True,
+        )
 
-    print(
-        f"{quantidade} interações criadas."
-    )
+    print(f"{len(objetos)} interações criadas.")
 
 
 # ============================================================
@@ -522,101 +565,76 @@ def criar_interacoes(
 # ============================================================
 
 def main():
-
-    print("\n")
-    print("=" * 60)
+    print("\n" + "=" * 60)
     print("        POPULANDO BANCO - PRATOMATCH")
     print("=" * 60)
 
     limpar_banco()
 
+    # Primeiro escolhemos usuários que realmente possuem
+    # receitas em comum.
+    usuarios_ids = selecionar_usuarios_comuns()
+
     categorias = criar_categorias()
-
     alergias = criar_alergias()
-
     preferencias = criar_preferencias()
 
-    usuarios = criar_usuarios()
+    usuarios = criar_usuarios(usuarios_ids)
 
-    pratos = criar_pratos(usuarios)
+    pratos = criar_pratos(usuarios_ids)
 
     criar_perfis(
         usuarios,
         alergias,
         preferencias,
-        categorias
+        categorias,
     )
 
     criar_interacoes(
         usuarios,
-        pratos
+        pratos,
     )
 
-    print("\n")
-    print("=" * 60)
+    print("\n" + "=" * 60)
     print("        BANCO POPULADO COM SUCESSO!")
     print("=" * 60)
 
     print("\nResumo:")
-
-    print(
-        f"Usuários: {User.objects.count()}"
-    )
-
-    print(
-        f"Perfis: {PerfilUsuario.objects.count()}"
-    )
-
-    print(
-        f"Pratos: {Prato.objects.count()}"
-    )
-
-
-    print(
-        f"Categorias: {Categoria.objects.count()}"
-    )
-
-    print(
-        f"Alergias: {Alergia.objects.count()}"
-    )
-
-    print(
-        f"Preferências: {PreferenciaAlimentar.objects.count()}"
-    )
-
-    print(
-        f"Interações: {Interacao.objects.count()}"
-    )
+    print(f"Usuários: {User.objects.count()}")
+    print(f"Perfis: {PerfilUsuario.objects.count()}")
+    print(f"Pratos: {Prato.objects.count()}")
+    print(f"Categorias: {Categoria.objects.count()}")
+    print(f"Alergias: {Alergia.objects.count()}")
+    print(f"Preferências: {PreferenciaAlimentar.objects.count()}")
+    print(f"Interações: {Interacao.objects.count()}")
 
     print("\nUsuários de teste:")
 
     for usuario in usuarios.values():
-
         print(
             f"  {usuario.username} "
             f"(senha: 123456)"
         )
 
-    print("\nInterações do usuário:")
+    print("\nReceitas compartilhadas:")
 
+    # Mostra apenas algumas receitas que aparecem para mais
+    # de um usuário, sem imprimir milhares de linhas.
+    comuns = (
+        Interacao.objects
+        .values("prato")
+        .annotate(qtd=Count("usuario"))
+        .filter(qtd__gt=1)
+        .order_by("-qtd")[:10]
+    )
 
-    print(usuario.interacoes.all())
-    
-    print("\nInterações do usuário:")
+    for item in comuns:
+        prato = Prato.objects.get(id=item["prato"])
+        print(
+            f"  {prato.nome} -> "
+            f"{item['qtd']} usuários"
+        )
 
-    for usuario in usuarios.values():
-        print(f"\nUsuário: {usuario.username}")
-
-        for interacao in usuario.interacoes.all():
-            print(
-                interacao.prato.nome,
-                interacao.nota,
-                interacao.status
-            )
-
-    print("\n")
-    
-    
 
 if __name__ == "__main__":
     main()
