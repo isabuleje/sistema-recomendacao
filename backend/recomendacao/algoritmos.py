@@ -25,7 +25,6 @@ def calcular_similaridade_cosseno(lista_1: list[float], idxlista_1: list[int], l
         if idx in mapa2:
             lista_1_comum.append(nota)
             lista_2_comum.append(mapa2[idx])
-
     if len(lista_1_comum) < MINIMO_EM_COMUM:
         return 0.0
 
@@ -46,12 +45,28 @@ def calcular_similaridade_cosseno(lista_1: list[float], idxlista_1: list[int], l
 def id_similaridade_cosseno(id_usuario_1: int, id_usuario_2: int, lista: DataFrame = DataFrame()) -> float:
     if lista is None:
         lista: DataFrame = pd.read_csv("backend/dataset/PP_users.csv")
+    #print(lista.loc[id_usuario_1])
     try:
         usuario1 = lista.loc[id_usuario_1]
         usuario2 = lista.loc[id_usuario_2]
     except (KeyError):
+        print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbb")
         return 0.0
     
+    #DEPOIS COMENTAR TODOS ESSES PRINTS MAS NAO APAGAR CASO EU PRECISE CAÇAR MAIS BUG
+    print('\n\n')
+    #print(f'tipo de dado dos elementos da lista só pra ter certeza que n é por isso algum problema: {type(usuario1['items'][0])}')
+    print(f'testando interseção nas receitas avaliadas pelos usuarios com ids {id_usuario_1} x {id_usuario_2}:')
+    #print(f'ids de receita que {id_usuario_1} avaliou: {usuario1['items']}')
+    #print(f'ids de receita que {id_usuario_2} avaliou: {usuario2['items']}')
+    n = 0
+    for item in (usuario1['items']):
+        if item in usuario2['items'] and not id_usuario_1 == id_usuario_2:
+            n+=1
+            print(f'usuario com id {id_usuario_1} e usuario com id {id_usuario_2} tinham em comum o item {item} avaliado')
+    print(f'eles tinham {n} ite{'m' if (n == 1) else 'ns'} avaliado{'' if (n == 1) else 's'} em comum')
+    #FIM DA PARTE PRA DEIXAR COMENTADA
+
     return calcular_similaridade_cosseno(
         (usuario1['ratings']),
         (usuario1['items']),
@@ -61,9 +76,11 @@ def id_similaridade_cosseno(id_usuario_1: int, id_usuario_2: int, lista: DataFra
 
 def lista_vizinhos(id: int, lista: DataFrame = DataFrame(), fazer_print: bool = False) -> DataFrame:
     final: dict = {'u': [], 'similaridade': []}
-    for id2 in range(len(lista)):
+    for id2 in lista.index:
+        #print("buhuajfjii:", id2)
+        #print(lista.loc[id2])
         similaridade: float = id_similaridade_cosseno(id, id2, lista)
-        print(similaridade)
+        #print(similaridade)
         if similaridade > 0.0:
             if id != id2:
                 if fazer_print:
@@ -99,7 +116,8 @@ def obter_recomendacoes(id: int, k: int = 3, limite: int = 50, valorizacao_de_fr
 
     lista = lista.set_index('usuario_id')
     if not id in lista.index:
-        raise ValueError(f'Usuário com id {id} não encontrado ou não existe')
+        print(lista)
+        raise ValueError(f'Usuário com id {id} não encontrado ou não existe. ids na lista: {lista.index}')
     
     receitas_usuario: list[int] = (lista.at[id, 'items'])
     tabela_vizinhos: DataFrame = k_nn(id, k, lista)
@@ -167,9 +185,14 @@ def obter_recomendacoes(id: int, k: int = 3, limite: int = 50, valorizacao_de_fr
             placar.drop(contador_indice, inplace = True)
         contador_indice += 1
     return placar.head(limite)
-if True: print(
+
+
+conexao = sqlite3.connect("backend/PratoMatch/db.sqlite3")
+lista: DataFrame = (pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao)).set_index('usuario_id')
+print(lista)
+for usuario in lista.index: print(
     obter_recomendacoes(
-        id=1, k=100, limite=50, valorizacao_de_frequencia=0.2,
+        id=usuario, k=100, limite=50, valorizacao_de_frequencia=0.2,
         conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"),
         raw_receitas=pd.read_csv("backend/dataset/RAW_recipes.csv").set_index('id')
         )
