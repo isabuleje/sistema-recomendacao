@@ -28,7 +28,8 @@ class Interacao(models.Model):
 
     usuario = models.ForeignKey(
         User,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name="interacoes"
     )
 
     prato = models.ForeignKey(
@@ -92,12 +93,11 @@ class PreferenciaAlimentar(models.Model):
 #O Django já cria um modelo de usuário, mas esse é um modelo complementar pq tem q guardar o ESTILO DE VIDA e as ALERGIAS
 class PerfilUsuario(models.Model):
     #ele vai ter uma relação de um pra um com o modelo de usuário do Django
-    usuario = models.OneToOneField(
+    usuario = models.ForeignKey(
         User,
         on_delete=models.CASCADE
     )
     
-
     #Prefrencias pq a pessoa pode ser low_carb + vegano, ou sem gluten e onivoro ou sei la, pode ser varias combinações
     preferencias = models.ManyToManyField(
         PreferenciaAlimentar,

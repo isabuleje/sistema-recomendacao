@@ -597,7 +597,25 @@ def main():
             f"(senha: 123456)"
         )
 
+    print("\nInterações do usuário:")
+
+
+    print(usuario.interacoes.all())
+    
+    print("\nInterações do usuário:")
+
+    for usuario in usuarios.values():
+        print(f"\nUsuário: {usuario.username}")
+
+        for interacao in usuario.interacoes.all():
+            print(
+                interacao.prato.nome,
+                interacao.nota,
+                interacao.status
+            )
+
     print("\n")
+    
     
 
 if __name__ == "__main__":
