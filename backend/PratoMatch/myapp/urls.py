@@ -9,9 +9,11 @@ from .views import (
     salvar_onboarding,
     cadastrar_usuario,
     entrar_usuario,
+    csrf_token,
 )
 
 urlpatterns = [
+    path("csrf/", csrf_token, name="csrf_token"),
     path('pratos/', listar_pratos),
     path('avaliados/', listar_avaliados),
     path('avaliacoes/', salvar_avaliacao),

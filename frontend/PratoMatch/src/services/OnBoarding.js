@@ -1,10 +1,12 @@
-const API_URL = "http://127.0.0.1:8000/api";
+import { API_URL, prepararCsrf } from "./api.js";
 
 export async function salvarOnboarding(dados) {
+  const csrfToken = await prepararCsrf();
   const resposta = await fetch(`${API_URL}/onboarding/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken,
     },
     credentials: "include",
     body: JSON.stringify(dados),

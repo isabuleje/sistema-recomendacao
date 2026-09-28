@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000/api";
+import { API_URL } from "./api.js";
 
 export async function buscarCategorias() {
   const response = await fetch(`${API_URL}/categorias/`);

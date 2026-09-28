@@ -196,16 +196,21 @@ df = RECEITAS.merge(
     how="left"
 )
 
-def obter_pratos(limite=None):
+def obter_pratos(limite=None, ids=None):
     pratos = []
+    ids_filtrados = set(ids) if ids is not None else None
 
     for _, prato in df.iterrows():
+        prato_id = int(prato["id"]) if pd.notna(prato["id"]) else None
+
+        if ids_filtrados is not None and prato_id not in ids_filtrados:
+            continue
 
         if limite is not None and len(pratos) >= limite:
             break
 
         pratos.append({
-            "id": int(prato["id"]) if pd.notna(prato["id"]) else None,
+            "id": prato_id,
 
             "nome": (
                 str(prato["name"]).strip().capitalize()

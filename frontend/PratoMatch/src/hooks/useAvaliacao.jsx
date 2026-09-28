@@ -1,14 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { salvarAvaliacao } from "../services/Pratos.js";
 
 export function useAvaliacao(pratoId, notaInicial = 0) {
   const [nota, setNota] = useState(Number(notaInicial) || 0);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
-
-  useEffect(() => {
-    setNota(Number(notaInicial) || 0);
-  }, [pratoId, notaInicial]);
 
   const avaliar = async (novaNota) => {
     const notaAnterior = nota;

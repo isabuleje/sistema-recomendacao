@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000/api";
+import { API_URL, prepararCsrf } from "./api.js";
 
 export async function buscarPratos() {
   const response = await fetch(`${API_URL}/pratos_data/`);
@@ -25,10 +25,12 @@ export async function buscarPratosAvaliados() {
 }
 
 export async function salvarAvaliacao(pratoId, nota) {
+  const csrfToken = await prepararCsrf();
   const response = await fetch(`${API_URL}/avaliacoes/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken,
     },
     credentials: "include",
     body: JSON.stringify({ prato_id: pratoId, nota }),

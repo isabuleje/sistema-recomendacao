@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import styles from "../components/Cadastro/Cadastro.module.css";
+import { API_URL } from "../services/api.js";
 
 function Cadastro() {
   const [username, setUsername] = useState("");
@@ -15,7 +16,7 @@ function Cadastro() {
     e.preventDefault();
     setErro("");
     try {
-      const resposta = await fetch("http://127.0.0.1:8000/api/cadastro/", {
+      const resposta = await fetch(`${API_URL}/cadastro/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -45,7 +46,7 @@ function Cadastro() {
     setErro("");
 
     try {
-      const resposta = await fetch("http://127.0.0.1:8000/api/login/", {
+      const resposta = await fetch(`${API_URL}/login/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

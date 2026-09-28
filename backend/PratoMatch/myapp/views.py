@@ -15,8 +15,14 @@ from .models import (
     PreferenciaAlimentar
 )
 
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from .models import PerfilUsuario
+
+
+@ensure_csrf_cookie
+@api_view(["GET"])
+def csrf_token(request):
+    return Response({"sucesso": True})
 
 
 
@@ -34,17 +40,19 @@ def listar_avaliados(request):
     if not request.user.is_authenticated:
         return Response({"erro": "Usuário não autenticado"}, status=401)
 
-    dados_pratos = {
-        prato["id"]: prato
-        for prato in obter_pratos()
-    }
-
     interacoes = (
         Interacao.objects
         .filter(usuario=request.user, nota__gte=1, nota__lte=5)
         .select_related("prato")
         .order_by("-data")
     )
+
+    dados_pratos = {
+        prato["id"]: prato
+        for prato in obter_pratos(
+            ids=[interacao.prato_id for interacao in interacoes]
+        )
+    }
 
     avaliados = []
     for interacao in interacoes:
@@ -77,15 +85,28 @@ def salvar_avaliacao(request):
         )
 
     try:
+        prato_id = int(prato_id)
         nota = int(nota)
-        prato = Prato.objects.get(pk=prato_id)
     except (TypeError, ValueError):
-        return Response({"erro": "A nota deve ser um número inteiro"}, status=400)
-    except Prato.DoesNotExist:
+        return Response(
+            {"erro": "prato_id e nota devem ser números inteiros"},
+            status=400,
+        )
+
+    dados_prato = next(
+        (prato for prato in obter_pratos() if prato["id"] == prato_id),
+        None,
+    )
+    if dados_prato is None:
         return Response({"erro": "Prato não encontrado"}, status=404)
 
     if nota < 1 or nota > 5:
         return Response({"erro": "A nota deve estar entre 1 e 5"}, status=400)
+
+    prato, _ = Prato.objects.get_or_create(
+        id=prato_id,
+        defaults={"nome": dados_prato["nome"]},
+    )
 
     interacao, _ = Interacao.objects.update_or_create(
         usuario=request.user,
