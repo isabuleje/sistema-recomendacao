@@ -7,7 +7,7 @@ import sqlite3
 
 #constantes
 #MINIMO_DE_RECEITAS_EM_COMUM_PARA_AVALIAR_SEMELHANCA = 5
-MINIMO_EM_COMUM = 3
+MINIMO_EM_COMUM = 1
 
 def obter_receita(id: int) -> dict:
     lista: dict = pd.read_csv("backend/dataset/PP_recipes.csv")
@@ -53,18 +53,17 @@ def id_similaridade_cosseno(id_usuario_1: int, id_usuario_2: int, lista: DataFra
         return 0.0
     
     return calcular_similaridade_cosseno(
-        ast.literal_eval(usuario1['ratings']),
-        ast.literal_eval(usuario1['items']),
-        ast.literal_eval(usuario2['ratings']),
-        ast.literal_eval(usuario2['items'])
+        (usuario1['ratings']),
+        (usuario1['items']),
+        (usuario2['ratings']),
+        (usuario2['items'])
     )
 
 def lista_vizinhos(id: int, lista: DataFrame = DataFrame(), fazer_print: bool = False) -> DataFrame:
     final: dict = {'u': [], 'similaridade': []}
-    if lista is None:
-        lista: DataFrame = pd.read_csv("backend/dataset/PP_users.csv")
     for id2 in range(len(lista)):
         similaridade: float = id_similaridade_cosseno(id, id2, lista)
+        print(similaridade)
         if similaridade > 0.0:
             if id != id2:
                 if fazer_print:
@@ -84,21 +83,33 @@ def k_nn(id: int, k: int = 3, lista: DataFrame = DataFrame(), fazer_print: bool 
         tabela_influencia['influencia'].append(vizinhos.loc[vizinhos['u'] == linha, 'similaridade'].item() / total)
     return DataFrame(tabela_influencia)
 
-def obter_recomendacoes(id: int, k: int = 3, limite: int = 50, valorizacao_de_frequencia: float = 0.1, lista: DataFrame = DataFrame(), lista_receitas: DataFrame = DataFrame(), raw_receitas: DataFrame = DataFrame()):
-    if lista is None:
-            lista: DataFrame = pd.read_csv("backend/dataset/PP_users.csv")
+def obter_recomendacoes(id: int, k: int = 3, limite: int = 50, valorizacao_de_frequencia: float = 0.1, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame()):
+    if conexao is None:
+        return None
+    lista: DataFrame = (pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao))
+    lista_receitas: DataFrame = pd.read_sql("SELECT * FROM myapp_prato", con=conexao)
+    lista['interacoes_ids'] = [[] for _ in range(len(lista))]
+    interacoes: DataFrame = pd.read_sql("SELECT * FROM myapp_interacao", con=conexao)
+    
+    #parte que seria mt mais facil se cada usuario na tabela usuario guardasse uma lista com as interacoes que ele fez
+    interacoes_por_id_de_usuario: DataFrame = interacoes.groupby('usuario_id')['id'].apply(list)
+    notas_por_id_de_usuario: DataFrame = interacoes.groupby('usuario_id')['nota'].apply(list)
+    lista['items'] = lista.apply(lambda linha: interacoes_por_id_de_usuario.get(linha['usuario_id'], []), axis = 1)
+    lista['ratings'] = lista.apply(lambda linha: notas_por_id_de_usuario.get(linha['usuario_id'], []), axis=1)
+
+    lista = lista.set_index('usuario_id')
     if not id in lista.index:
         raise ValueError(f'Usuário com id {id} não encontrado ou não existe')
     
-    receitas_usuario: list[int] = ast.literal_eval(lista.at[id, 'items'])
+    receitas_usuario: list[int] = (lista.at[id, 'items'])
     tabela_vizinhos: DataFrame = k_nn(id, k, lista)
     receitas_novas: dict[int, list] = {} #{id da receita ('i') : [quantas vezes apareceu, soma da nota recebida]}
     receitas_frequencia: dict[int, int] = {}
     receitas_valor: dict[int, int] = {}
     maior_frequencia: int = 0
     for vizinho, influencia in zip(tabela_vizinhos['u'], tabela_vizinhos['influencia']):
-        possiveis_receitas = ast.literal_eval(lista.at[vizinho, 'items'])
-        receitas_notas = zip(possiveis_receitas, ast.literal_eval(lista.at[vizinho, 'ratings']))
+        possiveis_receitas = (lista.at[vizinho, 'items'])
+        receitas_notas = zip(possiveis_receitas, (lista.at[vizinho, 'ratings']))
         for receita, nota in receitas_notas:
             if not receita in receitas_usuario:
                 if receita in receitas_novas:
@@ -156,15 +167,28 @@ def obter_recomendacoes(id: int, k: int = 3, limite: int = 50, valorizacao_de_fr
             placar.drop(contador_indice, inplace = True)
         contador_indice += 1
     return placar.head(limite)
-if False: print(
+if True: print(
     obter_recomendacoes(
         id=1, k=100, limite=50, valorizacao_de_frequencia=0.2,
-        lista=pd.read_csv("backend/dataset/PP_users.csv").set_index('u'),
-        lista_receitas=pd.read_csv("backend/dataset/PP_recipes.csv").set_index('i'),
+        conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"),
         raw_receitas=pd.read_csv("backend/dataset/RAW_recipes.csv").set_index('id')
         )
     )
-print(pd.read_sql("SELECT * FROM myapp_prato", sqlite3.connect("backend/PratoMatch/db.sqlite3")))
+
+#con = sqlite3.connect("backend/PratoMatch/db.sqlite3")
+#usuarios = (pd.read_sql("SELECT * FROM myapp_perfilusuario", con=con))
+#interacoes = (pd.read_sql("SELECT * FROM myapp_interacao", con=con))
+#print(usuarios.loc[7])
+#interacoes['interacoes_ids'] = [[] for _ in range(len(interacoes))]
+#for interacao in interacoes['id']:
+#lista = usuarios
+#interacoes_por_id_de_usuario: DataFrame = interacoes.groupby('usuario_id')['id'].apply(list)
+#notas_por_id_de_usuario: DataFrame = interacoes.groupby('usuario_id')['nota'].apply(list)
+#lista['items'] = lista.apply(lambda linha: interacoes_por_id_de_usuario.get(linha['usuario_id'], []), axis = 1)
+#lista['items'] = lista.apply(lambda linha: interacoes_por_id_de_usuario.get(linha['usuario_id'], []), axis = 1)
+#lista['ratings'] = lista.apply(lambda linha: notas_por_id_de_usuario.get(linha['usuario_id'], []), axis=1)
+#print(usuarios)
+
 #myapp_alergia
 #myapp_categoria
 #myapp_ingrediente
