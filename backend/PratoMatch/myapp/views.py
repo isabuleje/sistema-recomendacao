@@ -6,7 +6,7 @@ from .models import Prato, Interacao
 from .serializers import PratoSerializer
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-from django.contrib.auth import login
+from django.contrib.auth import authenticate, login
 
 from recomendacao.main import obter_categorias, obter_ingredientes, obter_pratos
 from .models import (
@@ -54,9 +54,50 @@ def listar_avaliados(request):
             "id": interacao.prato_id,
             "nome": dados.get("nome", interacao.prato.nome),
             "nota_usuario": interacao.nota,
+            "avaliacoes": dados.get("avaliacoes", 0),
+            "estrelas": dados.get("estrelas", 0),
         })
 
     return Response(avaliados)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def salvar_avaliacao(request):
+    if not request.user.is_authenticated:
+        return Response({"erro": "Usuário não autenticado"}, status=401)
+
+    prato_id = request.data.get("prato_id")
+    nota = request.data.get("nota")
+
+    if prato_id is None or nota is None:
+        return Response(
+            {"erro": "prato_id e nota são obrigatórios"},
+            status=400,
+        )
+
+    try:
+        nota = int(nota)
+        prato = Prato.objects.get(pk=prato_id)
+    except (TypeError, ValueError):
+        return Response({"erro": "A nota deve ser um número inteiro"}, status=400)
+    except Prato.DoesNotExist:
+        return Response({"erro": "Prato não encontrado"}, status=404)
+
+    if nota < 1 or nota > 5:
+        return Response({"erro": "A nota deve estar entre 1 e 5"}, status=400)
+
+    interacao, _ = Interacao.objects.update_or_create(
+        usuario=request.user,
+        prato=prato,
+        defaults={"nota": nota, "status": "Avaliado"},
+    )
+
+    return Response({
+        "prato_id": interacao.prato_id,
+        "nota": interacao.nota,
+        "status": interacao.status,
+    })
 
 from django.http import JsonResponse
 
@@ -222,3 +263,33 @@ def cadastrar_usuario(request):
             {"erro": str(e)},
             status=500
         )
+
+
+@csrf_exempt
+def entrar_usuario(request):
+    if request.method != "POST":
+        return JsonResponse(
+            {"erro": "Método não permitido"},
+            status=405,
+        )
+
+    try:
+        dados = json.loads(request.body)
+        username = dados.get("username")
+        password = dados.get("password")
+        usuario = authenticate(request, username=username, password=password)
+
+        if usuario is None:
+            return JsonResponse(
+                {"erro": "Usuário ou senha inválidos"},
+                status=401,
+            )
+
+        login(request, usuario)
+        return JsonResponse({
+            "sucesso": True,
+            "usuario_id": usuario.pk,
+            "username": usuario.username,
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({"erro": "JSON inválido"}, status=400)

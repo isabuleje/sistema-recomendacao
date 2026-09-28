@@ -23,3 +23,22 @@ export async function buscarPratosAvaliados() {
 
   return response.json();
 }
+
+export async function salvarAvaliacao(pratoId, nota) {
+  const response = await fetch(`${API_URL}/avaliacoes/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ prato_id: pratoId, nota }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.erro || "Erro ao salvar avaliação");
+  }
+
+  return data;
+}
