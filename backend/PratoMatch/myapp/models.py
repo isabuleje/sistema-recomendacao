@@ -93,7 +93,7 @@ class PreferenciaAlimentar(models.Model):
 #O Django já cria um modelo de usuário, mas esse é um modelo complementar pq tem q guardar o ESTILO DE VIDA e as ALERGIAS
 class PerfilUsuario(models.Model):
     #ele vai ter uma relação de um pra um com o modelo de usuário do Django
-    usuario = models.ForeignKey(
+    usuario = models.OneToOneField(
         User,
         on_delete=models.CASCADE
     )
@@ -118,3 +118,4 @@ class PerfilUsuario(models.Model):
 
     def __str__(self):
         return self.usuario.username
+    
