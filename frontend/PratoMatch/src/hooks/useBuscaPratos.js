@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { pesquisarPratos } from "../services/Pratos.js";
 
 const ATRASO_DEBOUNCE = 300;
+export const POR_PAGINA_BUSCA = 24; //pra ficar igual a do home
 
-export function useBuscaPratos(termo) {
+export function useBuscaPratos(termo, pagina = 1) {
   const [resultados, setResultados] = useState([]);
+  const [total, setTotal] = useState(0);
   const [buscando, setBuscando] = useState(false);
   const [erroBusca, setErroBusca] = useState(null);
 
-  // evita que uma resposta antiga e lenta sobrescreva uma busca mais nova
   const idRequisicaoAtual = useRef(0);
 
   useEffect(() => {
@@ -16,6 +17,7 @@ export function useBuscaPratos(termo) {
 
     if (!termoLimpo) {
       setResultados([]);
+      setTotal(0);
       setBuscando(false);
       setErroBusca(null);
       return;
@@ -27,10 +29,15 @@ export function useBuscaPratos(termo) {
 
     const timer = setTimeout(async () => {
       try {
-        const dados = await pesquisarPratos(termoLimpo, 1, 20);
+        const dados = await pesquisarPratos(
+          termoLimpo,
+          pagina,
+          POR_PAGINA_BUSCA,
+        );
 
         if (idRequisicao === idRequisicaoAtual.current) {
           setResultados(dados.pratos);
+          setTotal(dados.total);
         }
       } catch (error) {
         if (idRequisicao === idRequisicaoAtual.current) {
@@ -45,9 +52,9 @@ export function useBuscaPratos(termo) {
     }, ATRASO_DEBOUNCE);
 
     return () => clearTimeout(timer);
-  }, [termo]);
+  }, [termo, pagina]);
 
   const emBusca = termo.trim().length > 0;
 
-  return { resultados, buscando, erroBusca, emBusca };
+  return { resultados, total, buscando, erroBusca, emBusca };
 }

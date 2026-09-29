@@ -180,9 +180,14 @@ def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_d
     placar = placar.sort_values('valor interno de classificacao', ascending=False)
 
     if len(placar) == 0:
-        for _ in range(limite):
-            sorteio = random.sample(list(lista_receitas.index), len(lista_receitas))
-            placar = pd.concat([placar, DataFrame({'prato_id': sorteio, 'nota_esperada': 5.0, 'quantidade de avaliacoes': 1, 'valor interno de classificacao': 1.0,})], ignore_index=True)
+        quantidade = min(limite * 2, len(lista_receitas))  
+        sorteio = random.sample(list(lista_receitas.index), quantidade)
+        placar = DataFrame({
+            'prato_id': sorteio,
+            'nota_esperada': 5.0,
+            'quantidade de avaliacoes': 1,
+            'valor interno de classificacao': 1.0,
+        })
 #IMPORTANTE trocar a(s) proxima(s) linha(s) pela forma de obter os filtros de remoção pessoais do usuário quando a gente tiver o modelo do banco de dados
     filtro_ingredientes: list = ['egg']
     #filtro_valor_nutricional
@@ -221,28 +226,29 @@ def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_d
     return placar.head(limite)
 
 
-
-
-conexao = sqlite3.connect("backend/PratoMatch/db.sqlite3")
-
 verificados = [33]
 #descomentar pra testar com todos os usuarios que existem
 #verificados = pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao).set_index('usuario_id')
 #print(verificados)
 #verificados = [16]
-for usuario in verificados: print(f'\nid:{usuario}\n',
-    obter_recomendacoes(
-        id=usuario, k=100, limite=3, valorizacao_de_frequencia=0.2,
-        conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"),
-        raw_receitas=pd.read_csv("backend/dataset/RAW_recipes.csv"),
-        minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=1,
-        imprimir_metricas=True,
-        minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding=5
+if __name__ == "__main__":
+    verificados = [33]
+
+    for usuario in verificados:
+        print(
+            f"\nid:{usuario}\n",
+            obter_recomendacoes(
+                id=usuario,
+                k=100,
+                limite=3,
+                valorizacao_de_frequencia=0.2,
+                conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"),
+                raw_receitas=pd.read_csv("backend/dataset/RAW_recipes.csv").set_index("id"),
+                minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=1,
+                imprimir_metricas=True,
+                minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding=5,
+            ),
         )
-    )
-
-#print(pd.read_pickle("backend/dataset/ingr_map.pkl"))
-
 #lista_escolhas_onboarding: DataFrame = pd.read_sql("SELECT * FROM myapp_onboardingprato", con=conexao)
 #lista_escolhas_onboarding['prato_id'] = [1, 2, 3, 1, 2, 3]
 #lista_escolhas_onboarding['perfil_id'] = [1, 1, 1, 2, 2, 2]
@@ -256,3 +262,30 @@ for usuario in verificados: print(f'\nid:{usuario}\n',
 #myapp_perfilusuario_categorias_preferidas
 #myapp_perfilusuario_preferencias
 #myapp_interacao
+
+
+#isso daq é oq importa pro views
+from functools import lru_cache #guarda o cache pra n precisar ler o csv toda vez, mt mais rapido
+from pathlib import Path 
+from django.db import connection
+
+CAMINHO_RAW = Path(__file__).resolve().parents[1] / "dataset" / "RAW_recipes.csv"
+
+#vai deixar guardado no cache apenas 1 resultado
+@lru_cache(maxsize=1)
+def _raw_receitas():
+    return pd.read_csv(CAMINHO_RAW).set_index("id")
+
+
+#chama a funçaõ principal de reocmendação, recomendar_para é a função chamadao pelo VIEWS do Django
+def recomendar_para(usuario_id: int, limite: int = 60):
+    connection.ensure_connection()
+    return obter_recomendacoes(
+        id=usuario_id,
+        k=100,
+        limite=limite,
+        valorizacao_de_frequencia=0.2,
+        conexao=connection.connection,   
+        raw_receitas=_raw_receitas(),
+        minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=1,
+    )

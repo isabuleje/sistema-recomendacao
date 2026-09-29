@@ -1,4 +1,5 @@
 import styles from "./AvaliadoCard.module.css";
+import { Heart } from "lucide-react";
 
 const AvaliadoCard = ({
   titulo,
@@ -8,6 +9,8 @@ const AvaliadoCard = ({
   tempo,
   nota,
   onOpenDetalhes,
+  isFavorite,
+  onToggleFavorite,
 }) => {
   return (
     <div
@@ -25,6 +28,27 @@ const AvaliadoCard = ({
       {/* Lado Esquerdo: Imagem e Badges */}
       <div className={styles.cardImageWrapper}>
         <img src={imagem} alt={titulo} className={styles.cardImage} />
+
+        <button
+          className={`${styles.favoriteButton} ${isFavorite ? styles.favoriteButtonActive : ""}`}
+          type="button"
+          aria-label={
+            isFavorite
+              ? `Remover ${titulo} dos favoritos`
+              : `Adicionar ${titulo} aos favoritos`
+          }
+          aria-pressed={isFavorite}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleFavorite?.();
+          }}
+        >
+          <Heart
+            fill={isFavorite ? "currentColor" : "none"}
+            aria-hidden="true"
+          />
+        </button>
       </div>
 
       {/* Centro: Informações da Pizza */}

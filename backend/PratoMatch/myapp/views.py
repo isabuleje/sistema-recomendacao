@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import json
 
+from django.core.cache import cache
 from .models import Prato, Interacao
 from .serializers import PratoSerializer
 from django.http import JsonResponse
@@ -9,6 +10,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 
 from recomendacao.main import obter_categorias, obter_ingredientes, obter_pratos, buscar_pratos
+from recomendacao.algoritmos import recomendar_para
 from .models import (
     PerfilUsuario,
     Alergia,
@@ -17,8 +19,9 @@ from .models import (
 
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from .models import PerfilUsuario
+from recomendacao.main import _PRATOS_POR_ID
 
-
+#esses imports estao uma bagunça XD
 @ensure_csrf_cookie
 @api_view(["GET"])
 def csrf_token(request):
@@ -68,6 +71,85 @@ def listar_avaliados(request):
 
     return Response(avaliados)
 
+@api_view(['GET'])   
+def listar_favoritos(request):
+    if not request.user.is_authenticated:
+        return Response({"erro": "Usuário não autenticado"}, status=401)
+
+    interacoes = (
+        Interacao.objects
+        .filter(usuario=request.user, status="Favoritado")
+        .select_related("prato")
+        .order_by("-data")
+    )
+
+    dados_pratos = {
+        prato["id"]: prato
+        for prato in obter_pratos(
+            ids=[interacao.prato_id for interacao in interacoes]
+        )
+    }
+
+    favoritos = []
+    for interacao in interacoes:
+        dados = dados_pratos.get(interacao.prato_id, {})
+        favoritos.append({
+            **dados,
+            "id": interacao.prato_id,
+            "nome": dados.get("nome", interacao.prato.nome),
+            "nota_usuario": interacao.nota,
+            "avaliacoes": dados.get("avaliacoes", 0),
+            "estrelas": dados.get("estrelas", 0),
+        })
+
+    return Response(favoritos)
+
+@api_view(["POST"])
+def salvar_favoritos(request):
+    if not request.user.is_authenticated:
+        return Response({"erro": "Usuário não autenticado"}, status=401)
+
+    prato_id = request.data.get("prato_id")
+    status = request.data.get("status")
+
+    if prato_id is None or status is None:
+        return Response(
+            {"erro": "prato_id e status são obrigatórios"},
+            status=400,
+        )
+
+    try:
+        prato_id = int(prato_id)
+    except (TypeError, ValueError):
+        return Response(
+            {"erro": "prato_id deve ser um número inteiro"},
+            status=400,
+        )
+
+    pratos_encontrados = obter_pratos(ids=[prato_id])
+    dados_prato = pratos_encontrados[0] if pratos_encontrados else None
+    if dados_prato is None:
+        return Response({"erro": "Prato não encontrado"}, status=404)
+
+    prato, _ = Prato.objects.get_or_create(
+        id=prato_id,
+        defaults={"nome": dados_prato["nome"]},
+    )
+
+    interacao, criada = Interacao.objects.get_or_create(
+        usuario=request.user,
+        prato=prato,
+        defaults={"status": status, "nota": 0},
+    )
+
+    if not criada and interacao.status != status:
+        interacao.status = status
+        interacao.save(update_fields=["status"])
+
+    return Response({
+        "prato_id": interacao.prato_id,
+        "status": interacao.status,
+    })
 
 @csrf_exempt
 @api_view(['POST'])
@@ -112,6 +194,8 @@ def salvar_avaliacao(request):
         defaults={"nota": nota, "status": "Avaliado"},
     )
 
+    #deletar o cache logo dps pq eu quero ver a lista de recomendacao atualizando
+    cache.delete(f"recomendados:{request.user.id}")
     return Response({
         "prato_id": interacao.prato_id,
         "nota": interacao.nota,
@@ -349,3 +433,23 @@ def pesquisar_pratos(request):
     resultado = buscar_pratos(query, pagina, por_pagina)
     return Response(resultado)
 
+@api_view(['GET'])
+def recomendados(request):
+    if not request.user.is_authenticated:
+        return Response({"erro": "não autenticado"}, status=401)
+
+    usuario_id = request.user.id
+    chave = f"recomendados:{usuario_id}"
+
+    ids = cache.get(chave)
+    if ids is None:
+        try:
+            placar = recomendar_para(usuario_id, limite=60)
+            ids = placar["prato_id"].astype(int).tolist()
+        except Exception as e:
+            print("Erro no algoritmo de recomendação:", e)
+            return Response({"erro": "não foi possível gerar recomendações"}, status=500)
+        cache.set(chave, ids, 60 * 10)   # 10 minutos
+
+    pratos = [_PRATOS_POR_ID[i] for i in ids if i in _PRATOS_POR_ID]
+    return Response({"pratos": pratos})

@@ -1,5 +1,8 @@
 /* From Uiverse.io by vamsidevendrakumar */
 .card {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   height: 400px;
   overflow: hidden;
   border-radius: 14px;
