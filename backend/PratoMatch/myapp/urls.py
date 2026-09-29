@@ -12,7 +12,8 @@ from .views import (
     csrf_token,
     pesquisar_pratos,
     listar_favoritos,
-    salvar_favoritos
+    salvar_favoritos,
+    recomendados
 )
 
 #fico imaginando como deve ser em projetos enormes, como q eles organizam esses paths
@@ -30,5 +31,5 @@ urlpatterns = [
     path('pesquisar/', pesquisar_pratos),
     path("favoritos/", listar_favoritos),
     path("favoritos/salvar/", salvar_favoritos),
-
+    path("recomendados/", recomendados),
 ]

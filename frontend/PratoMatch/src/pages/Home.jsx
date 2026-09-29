@@ -14,7 +14,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   buscarPratoFavoritados,
-  buscarPratos,
+  buscarRecomendados,
   salvarFavoritos,
 } from "../services/Pratos.js";
 import { useBuscaPratos, POR_PAGINA_BUSCA } from "../hooks/useBuscaPratos.js";
@@ -164,8 +164,7 @@ const Home = () => {
         setCarregando(true);
         setErro(null);
 
-        const dados = await buscarPratos();
-
+        const dados = await buscarRecomendados();
         setPratos(dados);
       } catch (error) {
         console.error("Erro ao carregar pratos:", error);

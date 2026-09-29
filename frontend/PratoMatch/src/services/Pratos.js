@@ -105,3 +105,17 @@ export async function pesquisarPratos(
 
   return response.json(); // { pratos, total, pagina, por_pagina, tem_mais }
 }
+
+//Finalmente, pega os pratos recomendados pelo sistema de reocmendação 
+export async function buscarRecomendados() {
+  const response = await fetch(`${API_URL}/recomendados/`, {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Erro ao buscar recomendações");
+  }
+
+  const data = await response.json();
+  return data.pratos;
+}
