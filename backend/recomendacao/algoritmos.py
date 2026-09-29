@@ -189,27 +189,32 @@ def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_d
     #filtro_data_de_publicacao_maxima_sei_la
     contador: int = 0
     contador_indice: int = 0
-    while contador <= limite:
+    passa: bool = True
+    lista_trocas = pd.read_pickle("backend/dataset/ingr_map.pkl")
+    trocas_agrupadas = lista_trocas.groupby('replaced')['raw_ingr'].apply(list)
+    print(trocas_agrupadas)
+    while contador <= len(placar) and passa:
         try:
-            receita_raw = (raw_receitas.loc[(lista_receitas.at[placar.at[contador_indice, 'prato_id'].item(), 'id']).item()])
-        except(KeyError):
+            receita = raw_receitas.at[placar.at[contador_indice, 'prato_id'], 'ingredients']
+        except(Exception):
+            passa = False
             break
-        
-        ingredientes_receita = receita_raw['ingredients']
-        check: bool = True
-        for ingrediente in filtro_ingredientes:
-            if ingrediente in ingredientes_receita:
-                check = False
-                break
-            #if ingrediente in lista_de_seila_alguma_outra_coisa
-                #check = False
-                #break
-        if check:
-            contador += 1
-        else:
-            print('tinha ovo nessa receita e ela foi pulada por causa da sua alergia\n', ingredientes_receita, '\nna verdade foi acidente a lista registrar como string mas serve pra coisas funcionarem no plural como egg ser parte de eggs. a receita era essa: id', placar.at[contador_indice, 'prato_id'].item(), '\n')
-            placar.drop(contador_indice, inplace = True)
-        contador_indice += 1
+        if passa:
+            print(receita)
+            check: bool = True
+            for ingrediente in filtro_ingredientes:
+                if ingrediente in receita:
+                    check = False
+                    break
+                #if ingrediente in lista_de_seila_alguma_outra_coisa
+                    #check = False
+                    #break
+            if check:
+                contador += 1
+            else:
+                print('tinha ovo nessa receita e ela foi pulada por causa da sua alergia\n', receita, '\nna verdade foi acidente a lista registrar como string mas serve pra coisas funcionarem no plural como egg ser parte de eggs. a receita era essa: id', placar.at[contador_indice, 'prato_id'].item(), '\n')
+                placar.drop(contador_indice, inplace = True)
+            contador_indice += 1
 
     if imprimir_metricas:
         print(f'{time.perf_counter() - inicio}s: FILTROS FINAIS EXECUTADOS E ORGANIZAÇÃO DA LISTA FINAL DE RESPOSTAS PREPARADA. PROCESSO FINALIZADO')
@@ -229,12 +234,15 @@ for usuario in verificados: print(f'\nid:{usuario}\n',
     obter_recomendacoes(
         id=usuario, k=100, limite=3, valorizacao_de_frequencia=0.2,
         conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"),
-        raw_receitas=pd.read_csv("backend/dataset/RAW_recipes.csv").set_index('id'),
+        raw_receitas=pd.read_csv("backend/dataset/RAW_recipes.csv"),
         minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=1,
         imprimir_metricas=True,
         minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding=5
         )
     )
+
+#print(pd.read_pickle("backend/dataset/ingr_map.pkl"))
+
 #lista_escolhas_onboarding: DataFrame = pd.read_sql("SELECT * FROM myapp_onboardingprato", con=conexao)
 #lista_escolhas_onboarding['prato_id'] = [1, 2, 3, 1, 2, 3]
 #lista_escolhas_onboarding['perfil_id'] = [1, 1, 1, 2, 2, 2]
