@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 
-from recomendacao.main import obter_categorias, obter_ingredientes, obter_pratos
+from recomendacao.main import obter_categorias, obter_ingredientes, obter_pratos, buscar_pratos
 from .models import (
     PerfilUsuario,
     Alergia,
@@ -333,3 +333,18 @@ def entrar_usuario(request):
         })
     except json.JSONDecodeError:
         return JsonResponse({"erro": "JSON inválido"}, status=400)
+    
+    
+
+#Função para buscar os pratos com paginação pra quando usarem a barra de pesquisa, não ficar pesado e demorado
+@api_view(['GET'])
+def pesquisar_pratos(request):
+    query = request.GET.get('q', '')
+    try:
+        pagina = int(request.GET.get('pagina', 1))
+        por_pagina = int(request.GET.get('por_pagina', 20))
+    except ValueError:
+        return Response({"erro": "pagina e por_pagina devem ser números"}, status=400)
+
+    resultado = buscar_pratos(query, pagina, por_pagina)
+    return Response(resultado)

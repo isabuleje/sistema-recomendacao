@@ -10,6 +10,7 @@ from .views import (
     cadastrar_usuario,
     entrar_usuario,
     csrf_token,
+    pesquisar_pratos
 )
 
 urlpatterns = [
@@ -20,12 +21,9 @@ urlpatterns = [
     path("categorias/", categorias),
     path("ingredientes/", ingredientes),
     path("pratos_data/", pratos),
-    path(
-        "api/onboarding/",
-        salvar_onboarding,
-        name="salvar_onboarding"
-    ),
+    path("onboarding/", salvar_onboarding, name="salvar_onboarding"),
     path("cadastro/", cadastrar_usuario, name="cadastro"),
     path("login/", entrar_usuario, name="login"),
+    path('pesquisar/', pesquisar_pratos),
 
 ]

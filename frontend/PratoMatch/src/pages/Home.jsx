@@ -11,9 +11,10 @@ import Card from "../components/Home/Card";
 import FilterSection from "../components/Home/Filtro.jsx";
 import Loading from "../components/Loading/Loading.jsx";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { buscarPratos } from "../services/Pratos.js";
+import { useBuscaPratos } from "../hooks/useBuscaPratos.js";
 
 const CategorySection = ({ title, description, pratos }) => (
   <section className="category-section">
@@ -25,98 +26,28 @@ const CategorySection = ({ title, description, pratos }) => (
       <p>{description}</p>
     </div>
 
-    <CardRail pratos={pratos} />
+    <CardGrid pratos={pratos} />
   </section>
 );
 
-const CardRail = ({ pratos}) => {
-  const cardsRef = useRef(null);
+const ITENS_POR_PAGINA = 24;
+
+const CardGrid = ({ pratos }) => {
   const navigate = useNavigate();
+  const [quantidadeVisivel, setQuantidadeVisivel] = useState(ITENS_POR_PAGINA);
 
-  const dragState = useRef({
-    isDragging: false,
-    isPointerDown: false,
-    startX: 0,
-    startScrollLeft: 0,
-  });
+  // some se a lista de pratos mudar (ex: nova busca)
+  useEffect(() => {
+    setQuantidadeVisivel(ITENS_POR_PAGINA);
+  }, [pratos]);
 
-  // Começa o arraste
-  const handlePointerDown = (event) => {
-    if (event.pointerType === "mouse" && event.button !== 0) {
-      return;
-    }
-
-    const container = cardsRef.current;
-
-    if (!container) {
-      return;
-    }
-
-    dragState.current = {
-      isDragging: false,
-      isPointerDown: true,
-      startX: event.clientX,
-      startScrollLeft: container.scrollLeft,
-    };
-  };
-
-  // Durante o arraste
-  const handlePointerMove = (event) => {
-    if (!dragState.current.isPointerDown) {
-      return;
-    }
-
-    const container = cardsRef.current;
-
-    if (!container) {
-      return;
-    }
-
-    const distance = event.clientX - dragState.current.startX;
-
-    if (!dragState.current.isDragging && Math.abs(distance) < 6) {
-      return;
-    }
-
-    if (!dragState.current.isDragging) {
-      dragState.current.isDragging = true;
-      container.setPointerCapture(event.pointerId);
-      container.classList.add("is-dragging");
-    }
-
-    container.scrollLeft = dragState.current.startScrollLeft - distance;
-  };
-
-  // Para o arraste
-  const stopDragging = (event) => {
-    if (!dragState.current.isPointerDown) {
-      return;
-    }
-
-    const container = cardsRef.current;
-
-    dragState.current.isDragging = false;
-    dragState.current.isPointerDown = false;
-
-    if (container) {
-      container.releasePointerCapture?.(event.pointerId);
-
-      container.classList.remove("is-dragging");
-    }
-  };
+  const pratosVisiveis = pratos.slice(0, quantidadeVisivel);
+  const temMais = quantidadeVisivel < pratos.length;
 
   return (
-    <div className="card-rail">
-      <div
-        className="cards-container"
-        ref={cardsRef}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={stopDragging}
-        onPointerCancel={stopDragging}
-        onPointerLeave={stopDragging}
-      >
-        {pratos.map((prato) => (
+    <>
+      <div className="cards-grid">
+        {pratosVisiveis.map((prato) => (
           <Card
             key={prato.id}
             image="public/Pratos/pizzar.jpg"
@@ -132,15 +63,32 @@ const CardRail = ({ pratos}) => {
           />
         ))}
       </div>
-    </div>
+
+      {temMais && (
+        <div className="mostrar-mais-wrapper">
+          <button
+            type="button"
+            className="mostrar-mais-botao"
+            onClick={() =>
+              setQuantidadeVisivel((atual) => atual + ITENS_POR_PAGINA)
+            }
+          >
+            Mostrar mais
+          </button>
+        </div>
+      )}
+    </>
   );
 };
 
 const Home = ({ favoritos, alternarFavorito }) => {
   const [pratos, setPratos] = useState([]);
   const [carregando, setCarregando] = useState(true);
-
   const [erro, setErro] = useState(null);
+
+  const [termoBusca, setTermoBusca] = useState("");
+  const { resultados, buscando, erroBusca, emBusca } =
+    useBuscaPratos(termoBusca);
 
   useEffect(() => {
     const carregarPratos = async () => {
@@ -198,55 +146,76 @@ const Home = ({ favoritos, alternarFavorito }) => {
               placeholder="O que você quer comer hoje?"
               name="text"
               className="input"
+              value={termoBusca}
+              onChange={(e) => setTermoBusca(e.target.value)}
             />
 
-            <button
-              className="send-button"
-              type="button"
-              aria-label="Pesquisar"
-            >
-              <Send />
-            </button>
+            {termoBusca && (
+              <button
+                className="send-button"
+                type="button"
+                aria-label="Limpar pesquisa"
+                onClick={() => setTermoBusca("")}
+              >
+                <Send />
+              </button>
+            )}
           </div>
 
-          <FilterSection />
+          {!emBusca && <FilterSection />}
         </div>
 
-        {carregando && (
-          <div className="pratos-loading">
-            <Loading />
-          </div>
-        )}
-
-        {!carregando && erro && (
-          <div className="pratos-error">
-            <p>{erro}</p>
-          </div>
-        )}
-
-        {!carregando && !erro && (
+        {emBusca ? (
           <>
-            <CategorySection
-              title="Recomendados para você"
-              description="Encontre os pratos mais indicados para o seu gosto."
-              pratos={pratos.slice(0, 10)}
-              favoritos={favoritos}
-              alternarFavorito={alternarFavorito}
-            />
+            {buscando && (
+              <div className="pratos-loading">
+                <Loading />
+              </div>
+            )}
 
-            <CategorySection
-              title="Pratos populares"
-              description="Os pratos mais pedidos pelos nossos usuários."
-              pratos={[...pratos]
-                .sort((a, b) => b.avaliacoes - a.avaliacoes)
-                .slice(0, 10)}
-            />
+            {!buscando && erroBusca && (
+              <div className="pratos-error">
+                <p>{erroBusca}</p>
+              </div>
+            )}
 
-            <CategorySection
-              title="Novidades"
-              description="Descubra os novos pratos que chegaram."
-              pratos={pratos.slice(-10)}
-            />
+            {!buscando && !erroBusca && (
+              <CategorySection
+                title={`Resultados para "${termoBusca}"`}
+                description={
+                  resultados.length > 0
+                    ? `${resultados.length} prato(s) encontrado(s).`
+                    : "Nenhum prato encontrado com esse termo."
+                }
+                pratos={resultados}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            {carregando && (
+              <div className="pratos-loading">
+                <Loading />
+              </div>
+            )}
+
+            {!carregando && erro && (
+              <div className="pratos-error">
+                <p>{erro}</p>
+              </div>
+            )}
+
+            {!carregando && !erro && (
+              <>
+                <CategorySection
+                  title="Recomendados para você"
+                  description="Encontre os pratos mais indicados para o seu gosto."
+                  pratos={pratos.slice(0, 20)}
+                  favoritos={favoritos}
+                  alternarFavorito={alternarFavorito}
+                />
+              </>
+            )}
           </>
         )}
       </section>

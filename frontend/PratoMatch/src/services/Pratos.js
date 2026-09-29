@@ -46,3 +46,16 @@ export async function salvarAvaliacao(pratoId, nota) {
 
   return data;
 }
+
+export async function pesquisarPratos(query, pagina = 1, porPagina = 20) {
+  const params = new URLSearchParams({ q: query, pagina, por_pagina: porPagina });
+  const response = await fetch(`${API_URL}/pesquisar/?${params}`, {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Erro ao pesquisar pratos");
+  }
+
+  return response.json(); // { pratos, total, pagina, por_pagina, tem_mais }
+}

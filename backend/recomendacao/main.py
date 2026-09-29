@@ -245,4 +245,34 @@ def obter_pratos(limite=None, ids=None):
         return _PRATOS_LISTA[:limite]
 
     return _PRATOS_LISTA
-    return pratos
+
+# Série auxiliar para busca por texto (montada 1x, no import)
+_NOMES_LOWER = df["name"].astype(str).str.lower()
+_IDS_DF = df["id"]
+
+
+def buscar_pratos(query="", pagina=1, por_pagina=20):
+    query = (query or "").strip().lower()
+    por_pagina = max(1, min(por_pagina, 50))  # trava um teto, evita abuso
+    pagina = max(1, pagina)
+
+    if query:
+        mascara = _NOMES_LOWER.str.contains(query, na=False, regex=False)
+        ids_correspondentes = _IDS_DF[mascara].dropna().astype(int).tolist()
+    else:
+        ids_correspondentes = _IDS_DF.dropna().astype(int).tolist()
+
+    total = len(ids_correspondentes)
+    inicio = (pagina - 1) * por_pagina
+    fim = inicio + por_pagina
+    ids_pagina = ids_correspondentes[inicio:fim]
+
+    pratos = [_PRATOS_POR_ID[i] for i in ids_pagina if i in _PRATOS_POR_ID]
+
+    return {
+        "pratos": pratos,
+        "total": total,
+        "pagina": pagina,
+        "por_pagina": por_pagina,
+        "tem_mais": fim < total,
+    }

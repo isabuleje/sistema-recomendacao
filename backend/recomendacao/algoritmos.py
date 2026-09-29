@@ -200,7 +200,7 @@ def obter_recomendacoes(id: int, k: int = 3, limite: int = 50, valorizacao_de_fr
 
 conexao = sqlite3.connect("backend/PratoMatch/db.sqlite3")
 
-verificados = [12]
+verificados = [31]
 #descomentar pra testar com todos os usuarios que existem
 #verificados = pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao).set_index('usuario_id')
 for usuario in verificados: print(f'\nid:{usuario}\n',
