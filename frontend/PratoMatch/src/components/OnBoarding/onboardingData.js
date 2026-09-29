@@ -92,32 +92,32 @@ export const PRATOS = [
     imagem: "/public/Pratos/pizzar.jpg",
   },
   {
-    id: "prato6",
+    id: "prato7",
     nome: "Risoto de Cogumelos",
     imagem: "/public/Pratos/pizzar.jpg",
   },
   {
-    id: "prato6",
+    id: "prato8",
     nome: "Risoto de Cogumelos",
     imagem: "/public/Pratos/pizzar.jpg",
   },
   {
-    id: "prato6",
+    id: "prato9",
     nome: "Risoto de Cogumelos",
     imagem: "/public/Pratos/pizzar.jpg",
   },
   {
-    id: "prato6",
+    id: "prato10",
     nome: "Risoto de Cogumelos",
     imagem: "/public/Pratos/pizzar.jpg",
   },
   {
-    id: "prato6",
+    id: "prato11",
     nome: "Risoto de Cogumelos",
     imagem: "/public/Pratos/pizzar.jpg",
   },
   {
-    id: "prato6",
+    id: "prato12",
     nome: "Risoto de Cogumelos",
     imagem: "/public/Pratos/pizzar.jpg",
   },

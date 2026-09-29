@@ -32,15 +32,18 @@ const Perfil = () => {
 
   return (
     <div className="perfil-page">
-      <div className="perfil-tudo-esquerda">
-        <div className="perfil-coluna-esquerda">
+      {/*Coluna esquerda: avatar, nome, alergias e preferências*/}
+      <div className="perfil-esquerda">
+        <div className="perfil-identidade">
           <div className="perfil-avatar" aria-hidden="true">
             {gerarIniciais(perfil.username)}
           </div>
           <h1 className="perfil-nome">{perfil.username}</h1>
         </div>
+
         <div className="perfil-coluna-alergia-preferencia">
-          <section className="perfil-secao">
+          {/*-------------- ALERGIAS --------------*/}
+          <div className="perfil-alergias">
             <h2>Alergias</h2>
             {alergias.length > 0 ? (
               <ul className="perfil-tags">
@@ -53,9 +56,10 @@ const Perfil = () => {
             ) : (
               <p className="perfil-vazio">Nenhuma alergia cadastrada.</p>
             )}
-          </section>
+          </div>
 
-          <section className="perfil-secao">
+          {/*-------------- PREFERÊNCIAS --------------*/}
+          <div className="perfil-preferencias">
             <h2>Preferências alimentares</h2>
             {preferencias.length > 0 ? (
               <ul className="perfil-tags">
@@ -68,28 +72,12 @@ const Perfil = () => {
             ) : (
               <p className="perfil-vazio">Nenhuma preferência cadastrada.</p>
             )}
-          </section>
+          </div>
+
         </div>
       </div>
 
-      <div className="perfil-acoes">
-        <button type="button" className="perfil-botao">
-          Mudar perfil
-        </button>
-        <button type="button" className="perfil-botao">
-          Mudar preferências
-        </button>
-        <button type="button" className="perfil-botao">
-          Mudar alergias
-        </button>
-        <button type="button" className="perfil-botao">
-          Mudar senha
-        </button>
-        <button type="button" className="perfil-botao perfil-botao-perigo">
-          Deletar conta
-        </button>
-      </div>
-
+      {/*Coluna direita: estatísticas e ações*/}
       <div className="perfil-coluna-direita">
         <div className="perfil-stats">
           <div className="perfil-stat">
@@ -107,7 +95,20 @@ const Perfil = () => {
           </div>
         </div>
 
-        {/* botões de ação: iguais aos seus */}
+        <div className="perfil-acoes">
+          <button type="button" className="perfil-botao">
+            Mudar alergias
+          </button>
+          <button type="button" className="perfil-botao">
+            Mudar preferências
+          </button>
+          <button type="button" className="perfil-botao">
+            Mudar senha
+          </button>
+          <button type="button" className="perfil-botao perfil-botao-perigo">
+            Deletar conta
+          </button>
+        </div>
       </div>
     </div>
   );
