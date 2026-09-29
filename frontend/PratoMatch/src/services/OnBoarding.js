@@ -15,9 +15,7 @@ export async function salvarOnboarding(dados) {
   const resultado = await resposta.json();
 
   if (!resposta.ok) {
-    throw new Error(
-      resultado.erro || "Erro ao salvar o onboarding."
-    );
+    throw new Error(resultado.erro || "Erro ao salvar o onboarding.");
   }
 
   return resultado;

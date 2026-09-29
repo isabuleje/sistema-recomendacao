@@ -1,6 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import json
+from django.db import transaction
 
 from django.core.cache import cache
 from .models import Prato, Interacao
@@ -14,7 +15,8 @@ from recomendacao.algoritmos import recomendar_para
 from .models import (
     PerfilUsuario,
     Alergia,
-    PreferenciaAlimentar
+    PreferenciaAlimentar,
+    OnBoardingPrato
 )
 
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
@@ -245,10 +247,10 @@ def pratos(request):
 def salvar_onboarding(request):
 
     if request.method != "POST":
-        return JsonResponse(
-            {"erro": "Método não permitido"},
-            status=405
-        )
+        return JsonResponse({"erro": "Método não permitido"}, status=405)
+    
+    if not request.user.is_authenticated:
+        return JsonResponse({"erro": "Não autenticado"}, status=401)
 
     try:
         dados = json.loads(request.body)
@@ -256,32 +258,43 @@ def salvar_onboarding(request):
         usuario_id = dados.get("usuario_id")
         preferencias = dados.get("preferencias", [])
         alergias = dados.get("alergias", [])
+        pratos = dados.get("pratos", []) 
 
         usuario = User.objects.get(id=usuario_id)
 
-        perfil, _ = PerfilUsuario.objects.get_or_create(
-            usuario=usuario
-        )
+        with transaction.atomic():
 
-        # Preferências
-        perfil.preferencias.clear()
+            perfil, _ = PerfilUsuario.objects.get_or_create(usuario=usuario)
 
-        for nome in preferencias:
-            preferencia, _ = PreferenciaAlimentar.objects.get_or_create(
-                nome=nome
+            perfil.preferencias.clear()
+            for nome in preferencias:
+                preferencia, _ = PreferenciaAlimentar.objects.get_or_create(nome=nome)
+                perfil.preferencias.add(preferencia)
+
+            perfil.alergias.clear()
+            for nome in alergias:
+                alergia, _ = Alergia.objects.get_or_create(nome=nome)
+                perfil.alergias.add(alergia)
+
+            ids_enviados = [p.get("prato_id") for p in pratos]
+            ids_validos = set(
+                Prato.objects.filter(id__in=ids_enviados)
+                .values_list("id", flat=True)
             )
 
-            perfil.preferencias.add(preferencia)
+            # como o no front o usuário pode usar o OnBoarding mais de uma vez acessando a URL ent limpa os pratos antigos e salva os novos
+            #acho q vou mudar isso dps se der tempo, mas se acabar ficando assim no final ta td bem
+            OnBoardingPrato.objects.filter(perfil=perfil).delete()
 
-        # Alergias
-        perfil.alergias.clear()
-
-        for nome in alergias:
-            alergia, _ = Alergia.objects.get_or_create(
-                nome=nome
-            )
-
-            perfil.alergias.add(alergia)
+            OnBoardingPrato.objects.bulk_create([
+                OnBoardingPrato(
+                    perfil=perfil,
+                    prato_id=p["prato_id"],
+                    interesse=bool(p.get("interesse", False)),
+                )
+                for p in pratos
+                if p.get("prato_id") in ids_validos
+            ])
 
         return JsonResponse({
             "sucesso": True,
@@ -289,18 +302,11 @@ def salvar_onboarding(request):
         })
 
     except User.DoesNotExist:
-        return JsonResponse(
-            {"erro": "Usuário não encontrado"},
-            status=404
-        )
+        return JsonResponse({"erro": "Usuário não encontrado"}, status=404)
 
     except Exception as e:
-        return JsonResponse(
-            {"erro": str(e)},
-            status=500
-        )
-        
-        
+        return JsonResponse({"erro": str(e)}, status=500)
+    
 def obter_perfil(request):
     #o cara tem q ta autenticado neh
     if not request.user.is_authenticated:

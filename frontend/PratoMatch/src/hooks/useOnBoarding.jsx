@@ -110,25 +110,22 @@ export function useOnboarding() {
   };
 
   //Aqui é a parte mais importante pro backend
-  const concluir = async () => {
-    if (pratosSelecionados.length < MIN_PRATOS) {
-      return;
-    }
 
+  const concluir = async () => {
     setSalvando(true);
     setErro(null);
 
     try {
-      const dados = obterDados();
+      await salvarOnboarding({
+        preferencias: restricao ? [restricao] : [],
+        alergias: alergias, // lista de nomes
+        categorias: culinariasSelecionadas, // lista de nomes das culinárias
+        pratos_curtidos: pratosSelecionados, // lista de ids dos pratos
+      });
 
-      await salvarOnboarding(dados);
-
-      return true;
-    } catch (error) {
-      console.error("Erro ao salvar onboarding:", error);
-
-      setErro(error.message || "Erro ao salvar suas preferências.");
-
+      return true; 
+    } catch (e) {
+      setErro(e.message);
       return false;
     } finally {
       setSalvando(false);

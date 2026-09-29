@@ -62,6 +62,7 @@ from myapp.models import (
     Alergia,
     PreferenciaAlimentar,
     PerfilUsuario,
+    OnBoardingPrato
 )
 
 from recomendacao.main import (
@@ -94,6 +95,7 @@ def limpar_banco():
     Categoria.objects.all().delete()
     Alergia.objects.all().delete()
     PreferenciaAlimentar.objects.all().delete()
+    OnBoardingPrato.objects.all().delete()
 
     print("Banco limpo!")
 
@@ -560,6 +562,39 @@ def criar_interacoes(
     print(f"{len(objetos)} interações criadas.")
 
 
+#popular a tabela OnBoarding 
+def criar_onboarding(usuarios, qtd_por_usuario=8):
+    print("\nCriando dados de onboarding...")
+
+    perfis = PerfilUsuario.objects.filter(
+        usuario__in=usuarios.values()
+    ).select_related("usuario")
+
+    objetos = []
+
+    for perfil in perfis:
+        interacoes = (
+            Interacao.objects
+            .filter(usuario=perfil.usuario)
+            .order_by("prato_id")[:qtd_por_usuario]
+        )
+
+        for interacao in interacoes:
+            objetos.append(
+                OnBoardingPrato(
+                    perfil=perfil,
+                    prato=interacao.prato,
+                    interesse=interacao.interesse
+                )
+            )
+
+    OnBoardingPrato.objects.bulk_create(
+        objetos,
+        batch_size=1000,
+        ignore_conflicts=True,  # respeita a UniqueConstraint
+    )
+
+    print(f"{len(objetos)} respostas de onboarding criadas.")
 # ============================================================
 # EXECUÇÃO
 # ============================================================
@@ -593,6 +628,9 @@ def main():
     criar_interacoes(
         usuarios,
         pratos,
+    )
+    criar_onboarding(
+        usuarios,
     )
 
     print("\n" + "=" * 60)
