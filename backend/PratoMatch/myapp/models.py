@@ -75,6 +75,7 @@ class Interacao(models.Model):
         auto_now_add=True
     )
 
+
 #Classe Alergia a parte pois o usuário pode ter várias alergias, então é melhor criar uma tabela separada pra isso
 class Alergia(models.Model):
     nome = models.CharField(max_length=100, unique=True)
@@ -91,6 +92,8 @@ class PreferenciaAlimentar(models.Model):
     def __str__(self):
         return self.nome
     
+    
+
 #O Django já cria um modelo de usuário, mas esse é um modelo complementar pq tem q guardar o ESTILO DE VIDA e as ALERGIAS
 class PerfilUsuario(models.Model):
     #ele vai ter uma relação de um pra um com o modelo de usuário do Django
@@ -115,8 +118,40 @@ class PerfilUsuario(models.Model):
         Categoria,
         blank=True
     )
+    
+    pratos_onboarding = models.ManyToManyField(
+        Prato,
+        through="OnBoardingPrato",
+        blank=True,
+    )
 
 
     def __str__(self):
         return self.usuario.username
+    
+#Tabela de apoio, aq dentro tá o INTERESSE do usuário
+#dá pra pegar os IDs e Nomes do prato de boa, por causa da chave estrangeira
+class OnBoardingPrato(models.Model):
+    perfil = models.ForeignKey(
+        PerfilUsuario,
+        on_delete=models.CASCADE,
+        related_name="onboarding_pratos",
+    )
+    prato = models.ForeignKey(
+        Prato,
+        on_delete=models.CASCADE,
+        related_name="onboarding_pratos",
+    )
+    interesse = models.BooleanField(default=False)  # True = gostou
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["perfil", "prato"],
+                name="onboarding_perfil_prato_unico",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.perfil} - {self.prato.nome} - Interesse: {self.interesse}"
     

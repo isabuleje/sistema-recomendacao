@@ -17,6 +17,8 @@ from .models import (
 
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from .models import PerfilUsuario
+from recomendacao.algoritmos import recomendar_ids_para_usuario
+
 
 
 @ensure_csrf_cookie
@@ -348,3 +350,23 @@ def pesquisar_pratos(request):
 
     resultado = buscar_pratos(query, pagina, por_pagina)
     return Response(resultado)
+
+@api_view(['GET'])
+def recomendar_pratos(request):
+    if not request.user.is_authenticated:
+        return Response({"erro": "Usuário não autenticado"}, status=401)
+
+    ids_recomendados = recomendar_ids_para_usuario(request.user.id, k=50, limite=10)
+
+    if not ids_recomendados:
+        return Response({"pratos": [], "cold_start": True})
+
+    pratos = obter_pratos(ids=ids_recomendados)
+    pratos_por_id = {p["id"]: p for p in pratos}
+
+    # obter_pratos(ids=...) não garante ordem, então reordena pela relevância do algoritmo
+    pratos_ordenados = [
+        pratos_por_id[i] for i in ids_recomendados if i in pratos_por_id
+    ]
+
+    return Response({"pratos": pratos_ordenados, "cold_start": False})
