@@ -189,36 +189,54 @@ def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_d
             'quantidade de avaliacoes': 1,
             'valor interno de classificacao': 1.0,
         })
-#IMPORTANTE trocar a(s) proxima(s) linha(s) pela forma de obter os filtros de remoção pessoais do usuário quando a gente tiver o modelo do banco de dados
-    filtro_ingredientes: list = ['egg']
+
+    try:
+        alergias = pd.read_sql("SELECT * FROM myapp_perfilusuario_alergias", con=conexao).groupby('perfilusuario_id')['alergia_id'].apply(list)[(lista.at[id, 'id'])]
+    except (KeyError):
+        alergias = []
+    alergias.append(1)
+    lista_trocas = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl").set_index('raw_ingr')
+    #print(lista_trocas)
+    alergias_dict: dict = pd.read_sql("SELECT * FROM myapp_alergia", con=conexao).set_index('id').to_dict()['nome']
+    alergias_dict[1] = 'iceberg lettuce leaf'
+    #print(alergias_dict)
+    #print(lista_trocas.loc['iceberg lettuce leaf']['replaced'])
+    filtro_ingredientes: list = [lista_trocas.loc[alergias_dict[chave]]['replaced'] if alergias_dict[chave] in lista_trocas.index else alergias_dict[chave] for chave in alergias]
+    #print(filtro_ingredientes)
     #filtro_valor_nutricional
     #filtro_data_de_publicacao_maxima_sei_la
     contador: int = 0
     contador_indice: int = 0
-    passa: bool = True
-    lista_trocas = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl")
-    trocas_agrupadas = lista_trocas.groupby('replaced')['raw_ingr'].apply(list)
-    print(trocas_agrupadas)
+    passa: bool = len(filtro_ingredientes) > 0
+    #print(lista_trocas)
+    #trocas_agrupadas = lista_trocas.groupby('replaced')['raw_ingr'].apply(list)
+    #print(trocas_agrupadas)
     while contador <= len(placar) and passa:
         try:
-            receita = raw_receitas.at[placar.at[contador_indice, 'prato_id'], 'ingredients']
+            receita: list = ast.literal_eval(raw_receitas.at[placar.at[contador_indice, 'prato_id'], 'ingredients'])
+            #print(receita)
+            receita = [lista_trocas.loc[chave]['replaced'] if chave in lista_trocas.index else chave for chave in receita]
+            #print(receita)
         except(Exception):
             passa = False
             break
         if passa:
-            print(receita)
+            #print(receita)
             check: bool = True
             for ingrediente in filtro_ingredientes:
                 if ingrediente in receita:
                     check = False
                     break
+                else:
+                    #print("passou")
+                    pass
                 #if ingrediente in lista_de_seila_alguma_outra_coisa
                     #check = False
                     #break
             if check:
                 contador += 1
             else:
-                print('tinha ovo nessa receita e ela foi pulada por causa da sua alergia\n', receita, '\nna verdade foi acidente a lista registrar como string mas serve pra coisas funcionarem no plural como egg ser parte de eggs. a receita era essa: id', placar.at[contador_indice, 'prato_id'].item(), '\n')
+                #print('tinha ovo nessa receita e ela foi pulada por causa da sua alergia\n', receita, '\nna verdade foi acidente a lista registrar como string mas serve pra coisas funcionarem no plural como egg ser parte de eggs. a receita era essa: id', placar.at[contador_indice, 'prato_id'].item(), '\n')
                 placar.drop(contador_indice, inplace = True)
             contador_indice += 1
 
