@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import styles from "../components/Avaliados/AvaliadoCard.module.css";
 import AvaliadoCard from "../components/Avaliados/AvaliadoCard.jsx";
-import { buscarPratosAvaliados } from "../services/Pratos.js";
+import { buscarPratosAvaliados, salvarFavoritos } from "../services/Pratos.js";
 
 const Avaliado = () => {
   const navigate = useNavigate();
@@ -12,10 +12,33 @@ const Avaliado = () => {
 
   useEffect(() => {
     buscarPratosAvaliados()
-      .then(setAvaliados)
+      .then((dados) =>
+        setAvaliados(Array.isArray(dados) ? dados : (dados?.pratos ?? [])),
+      )
       .catch(() => setErro("Não foi possível carregar seus pratos avaliados."))
       .finally(() => setCarregando(false));
   }, []);
+
+  const alternarFavorito = async (prato) => {
+    const novo = !prato.is_favorito;
+
+    // otimista: atualiza só esse prato na lista
+    setAvaliados((atuais) =>
+      atuais.map((p) => (p.id === prato.id ? { ...p, is_favorito: novo } : p)),
+    );
+
+    try {
+      await salvarFavoritos(prato.id, novo);
+    } catch (error) {
+      // reverte se a API falhar
+      setAvaliados((atuais) =>
+        atuais.map((p) =>
+          p.id === prato.id ? { ...p, is_favorito: !novo } : p,
+        ),
+      );
+      console.error("Erro ao atualizar favorito:", error);
+    }
+  };
 
   return (
     <div className="home-page">
@@ -34,7 +57,7 @@ const Avaliado = () => {
             `${styles["page-toggle-button"]} ${isActive ? styles["page-toggle-button-active"] : ""}`
           }
         >
-          Histórico
+          Favoritos
         </NavLink>
         <NavLink
           to="/avaliados"
@@ -63,6 +86,8 @@ const Avaliado = () => {
             tempo={prato.tempo_preparo}
             nota={prato.nota_usuario}
             numerosNota={prato.avaliacoes}
+            isFavorite
+            onToggleFavorite={() => alternarFavorito(prato)}
             onOpenDetalhes={() =>
               navigate(`/pratos/${prato.id}`, { state: { prato } })
             }

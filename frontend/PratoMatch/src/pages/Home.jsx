@@ -1,22 +1,36 @@
-// Página inicial, onde o usuário vai poder ver os pratos
-// recomendados, populares e novidades
+// Página inicial, onde o usuário vai poder ver os pratos recomendados
 
 import "../components/Home/Placa.css";
 import "../components/Home/Categorias.css";
 import "../components/Home/Input.css";
 
-import { Search, Send } from "lucide-react";
+import { Search, Send, ChevronLeft, ChevronRight } from "lucide-react";
 
 import Card from "../components/Home/Card";
 import FilterSection from "../components/Home/Filtro.jsx";
 import Loading from "../components/Loading/Loading.jsx";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { buscarPratos } from "../services/Pratos.js";
-import { useBuscaPratos } from "../hooks/useBuscaPratos.js";
+import {
+  buscarPratoFavoritados,
+  buscarPratos,
+  salvarFavoritos,
+} from "../services/Pratos.js";
+import { useBuscaPratos, POR_PAGINA_BUSCA } from "../hooks/useBuscaPratos.js";
 
-const CategorySection = ({ title, description, pratos }) => (
+const ITENS_POR_PAGINA = 24;
+
+const CategorySection = ({
+  title,
+  description,
+  pratos,
+  paginaAtual,
+  totalPaginas,
+  onMudarPagina,
+  favoritos,
+  onToggleFavorite,
+}) => (
   <section className="category-section">
     <div className="category-heading">
       <h2 className="category-title" style={{ color: "#055746" }}>
@@ -26,27 +40,58 @@ const CategorySection = ({ title, description, pratos }) => (
       <p>{description}</p>
     </div>
 
-    <CardGrid pratos={pratos} />
+    <CardGrid
+      pratos={pratos}
+      paginaAtual={paginaAtual} //temos páginas :D e nem demora pra carregar
+      totalPaginas={totalPaginas}
+      onMudarPagina={onMudarPagina}
+      favoritos={favoritos}
+      onToggleFavorite={onToggleFavorite}
+    />
   </section>
 );
 
-const ITENS_POR_PAGINA = 24;
-
-const CardGrid = ({ pratos }) => {
+const CardGrid = ({
+  pratos,
+  paginaAtual: paginaExterna,
+  totalPaginas: totalExterno,
+  onMudarPagina,
+  favoritos = new Set(),
+  onToggleFavorite,
+}) => {
   const navigate = useNavigate();
-  const [quantidadeVisivel, setQuantidadeVisivel] = useState(ITENS_POR_PAGINA);
+  const [paginaInterna, setPaginaInterna] = useState(1);
+  const topoRef = useRef(null); //pra rolar pro topo da lista de pratos quando mudar de página
 
-  // some se a lista de pratos mudar (ex: nova busca)
+  // true quando a paginação é feita pela API (busca)
+  const servidor = onMudarPagina !== undefined;
+
+  // no modo local, volta para a página 1 se a lista mudar
   useEffect(() => {
-    setQuantidadeVisivel(ITENS_POR_PAGINA);
-  }, [pratos]);
+    if (!servidor) setPaginaInterna(1);
+  }, [pratos, servidor]);
 
-  const pratosVisiveis = pratos.slice(0, quantidadeVisivel);
-  const temMais = quantidadeVisivel < pratos.length;
+  const paginaAtual = servidor ? paginaExterna : paginaInterna;
+  const totalPaginas = servidor
+    ? totalExterno
+    : Math.max(1, Math.ceil(pratos.length / ITENS_POR_PAGINA));
+
+  // na API a lista já vem cortada
+  const pratosVisiveis = servidor
+    ? pratos
+    : pratos.slice(
+        (paginaAtual - 1) * ITENS_POR_PAGINA,
+        paginaAtual * ITENS_POR_PAGINA,
+      );
+
+  const irParaPagina = (numero) => {
+    (servidor ? onMudarPagina : setPaginaInterna)(numero);
+    topoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <>
-      <div className="cards-grid">
+      <div ref={topoRef} className="cards-grid">
         {pratosVisiveis.map((prato) => (
           <Card
             key={prato.id}
@@ -57,6 +102,8 @@ const CardGrid = ({ pratos }) => {
             prepTime={prato.tempo_preparo}
             rating={prato.estrelas}
             evaluations={prato.avaliacoes}
+            isFavorite={favoritos.has(prato.id)}
+            onToggleFavorite={() => onToggleFavorite?.(prato.id)}
             onOpenDetalhes={() =>
               navigate(`/pratos/${prato.id}`, { state: { prato } })
             }
@@ -64,31 +111,52 @@ const CardGrid = ({ pratos }) => {
         ))}
       </div>
 
-      {temMais && (
-        <div className="mostrar-mais-wrapper">
+      {totalPaginas > 1 && (
+        <nav className="paginacao" aria-label="Paginação de pratos">
           <button
             type="button"
-            className="mostrar-mais-botao"
-            onClick={() =>
-              setQuantidadeVisivel((atual) => atual + ITENS_POR_PAGINA)
-            }
+            className="paginacao-botao"
+            onClick={() => irParaPagina(paginaAtual - 1)}
+            disabled={paginaAtual === 1}
+            aria-label="Página anterior"
           >
-            Mostrar mais
+            <ChevronLeft size={18} />
           </button>
-        </div>
+
+          <span className="paginacao-info">
+            Página {paginaAtual} de {totalPaginas}
+          </span>
+
+          <button
+            type="button"
+            className="paginacao-botao"
+            onClick={() => irParaPagina(paginaAtual + 1)}
+            disabled={paginaAtual === totalPaginas}
+            aria-label="Próxima página"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </nav>
       )}
     </>
   );
 };
 
-const Home = ({ favoritos, alternarFavorito }) => {
+const Home = () => {
   const [pratos, setPratos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
+  const [favoritos, setFavoritos] = useState(new Set());
 
   const [termoBusca, setTermoBusca] = useState("");
-  const { resultados, buscando, erroBusca, emBusca } =
-    useBuscaPratos(termoBusca);
+  const [paginaBusca, setPaginaBusca] = useState(1);
+
+  const { resultados, total, buscando, erroBusca, emBusca } = useBuscaPratos(
+    termoBusca,
+    paginaBusca,
+  );
+
+  const totalPaginasBusca = Math.max(1, Math.ceil(total / POR_PAGINA_BUSCA));
 
   useEffect(() => {
     const carregarPratos = async () => {
@@ -110,6 +178,32 @@ const Home = ({ favoritos, alternarFavorito }) => {
 
     carregarPratos();
   }, []);
+
+  useEffect(() => {
+    buscarPratoFavoritados()
+      .then((dados) => setFavoritos(new Set(dados.map((prato) => prato.id))))
+      .catch((error) => console.error("Erro ao carregar favoritos:", error));
+  }, []);
+
+  const alternarFavorito = async (pratoId) => {
+    const eraFavorito = favoritos.has(pratoId);
+    setFavoritos((atuais) => {
+      const atualizados = new Set(atuais);
+      eraFavorito ? atualizados.delete(pratoId) : atualizados.add(pratoId);
+      return atualizados;
+    });
+
+    try {
+      await salvarFavoritos(pratoId, !eraFavorito);
+    } catch (error) {
+      setFavoritos((atuais) => {
+        const revertidos = new Set(atuais);
+        eraFavorito ? revertidos.add(pratoId) : revertidos.delete(pratoId);
+        return revertidos;
+      });
+      console.error("Erro ao atualizar favorito:", error);
+    }
+  };
 
   return (
     <div className="home-page">
@@ -147,7 +241,10 @@ const Home = ({ favoritos, alternarFavorito }) => {
               name="text"
               className="input"
               value={termoBusca}
-              onChange={(e) => setTermoBusca(e.target.value)}
+              onChange={(e) => {
+                setTermoBusca(e.target.value);
+                setPaginaBusca(1);
+              }}
             />
 
             {termoBusca && (
@@ -155,7 +252,10 @@ const Home = ({ favoritos, alternarFavorito }) => {
                 className="send-button"
                 type="button"
                 aria-label="Limpar pesquisa"
-                onClick={() => setTermoBusca("")}
+                onClick={() => {
+                  setTermoBusca("");
+                  setPaginaBusca(1);
+                }}
               >
                 <Send />
               </button>
@@ -167,7 +267,8 @@ const Home = ({ favoritos, alternarFavorito }) => {
 
         {emBusca ? (
           <>
-            {buscando && (
+            {/* loading só na primeira carga; ao trocar de página a lista antiga fica visível */}
+            {buscando && resultados.length === 0 && (
               <div className="pratos-loading">
                 <Loading />
               </div>
@@ -179,15 +280,20 @@ const Home = ({ favoritos, alternarFavorito }) => {
               </div>
             )}
 
-            {!buscando && !erroBusca && (
+            {!erroBusca && (resultados.length > 0 || !buscando) && (
               <CategorySection
                 title={`Resultados para "${termoBusca}"`}
                 description={
-                  resultados.length > 0
-                    ? `${resultados.length} prato(s) encontrado(s).`
+                  total > 0
+                    ? `${total} prato(s) encontrado(s).`
                     : "Nenhum prato encontrado com esse termo."
                 }
                 pratos={resultados}
+                paginaAtual={paginaBusca}
+                totalPaginas={totalPaginasBusca}
+                onMudarPagina={setPaginaBusca}
+                favoritos={favoritos}
+                onToggleFavorite={alternarFavorito}
               />
             )}
           </>
@@ -206,15 +312,13 @@ const Home = ({ favoritos, alternarFavorito }) => {
             )}
 
             {!carregando && !erro && (
-              <>
-                <CategorySection
-                  title="Recomendados para você"
-                  description="Encontre os pratos mais indicados para o seu gosto."
-                  pratos={pratos.slice(0, 20)}
-                  favoritos={favoritos}
-                  alternarFavorito={alternarFavorito}
-                />
-              </>
+              <CategorySection
+                title="Recomendados para você"
+                description="Encontre os pratos mais indicados para o seu gosto."
+                pratos={pratos}
+                favoritos={favoritos}
+                onToggleFavorite={alternarFavorito}
+              />
             )}
           </>
         )}

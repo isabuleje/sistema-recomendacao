@@ -31,24 +31,27 @@ const Card = ({
       {/* Lado Esquerdo: Imagem e Badges */}
       <div className={styles.cardImageWrapper}>
         <img src={imagem} alt={titulo} className={styles.cardImage} />
+        <button
+          className={`${styles.favoriteButton} ${isFavorite ? styles.favoriteButtonActive : ""}`}
+          type="button"
+          aria-label={
+            isFavorite
+              ? `Remover ${titulo} dos favoritos`
+              : `Adicionar ${titulo} aos favoritos`
+          }
+          aria-pressed={isFavorite}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleFavorite?.();
+          }}
+        >
+          <Heart
+            fill={isFavorite ? "currentColor" : "none"}
+            aria-hidden="true"
+          />
+        </button>
       </div>
-
-      <div className={styles.badgeVisualizado}>
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-          Visualizado
-        </div>
 
       {/* Centro: Informações da Pizza */}
       <div className={styles.cardContent}>
