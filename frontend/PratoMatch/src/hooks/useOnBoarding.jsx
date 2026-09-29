@@ -3,18 +3,15 @@ import {
   MIN_PRATOS,
   TOTAL_FASES,
 } from "../components/OnBoarding/onboardingData";
-import {
-  buscarCategorias,
-  buscarIngredientes,
-} from "../services/Ingredientes_Categorias.js";
+import { buscarCategorias } from "../services/Ingredientes_Categorias.js";
 
-import { salvarOnboarding } from "../services/OnBoarding.js";
+import { salvarOnboarding, listar_alergias } from "../services/OnBoarding.js";
 
 export function useOnboarding() {
   const [fase, setFase] = useState(1);
 
   const [categorias, setCategorias] = useState([]);
-  const [ingredientes, setIngredientes] = useState([]);
+  const [listaAlergias, setListaAlergias] = useState([]);
 
   const [restricao, setRestricao] = useState("nenhuma");
 
@@ -31,30 +28,30 @@ export function useOnboarding() {
     let ativo = true;
 
     async function carregarDados() {
-      try {
-        const [categoriasEncontradas, ingredientesEncontrados] =
-          await Promise.all([buscarCategorias(), buscarIngredientes()]);
+      const [categoriasRes, alergiasRes] = await Promise.allSettled([
+        buscarCategorias(),
+        listar_alergias(),
+      ]);
 
-        if (!ativo) return;
+      if (!ativo) return;
 
+      if (categoriasRes.status === "fulfilled") {
         setCategorias(
-          Array.isArray(categoriasEncontradas) ? categoriasEncontradas : [],
+          Array.isArray(categoriasRes.value) ? categoriasRes.value : [],
         );
+      }
 
-        setIngredientes(
-          Array.isArray(ingredientesEncontrados) ? ingredientesEncontrados : [],
+      if (alergiasRes.status === "fulfilled") {
+        setListaAlergias(
+          Array.isArray(alergiasRes.value) ? alergiasRes.value : [],
         );
-      } catch (error) {
-        console.error("Erro ao carregar dados do onboarding:", error);
-
-        if (ativo) {
-          setErro("Não foi possível carregar os dados.");
-        }
+      } else {
+        console.error("Erro ao buscar alergias:", alergiasRes.reason);
+        setErro("Não foi possível carregar a lista de alergias.");
       }
     }
 
     carregarDados();
-
     return () => {
       ativo = false;
     };
@@ -117,13 +114,13 @@ export function useOnboarding() {
 
     try {
       await salvarOnboarding({
-        preferencias: restricao ? [restricao] : [],
-        alergias: alergias, // lista de nomes
-        categorias: culinariasSelecionadas, // lista de nomes das culinárias
-        pratos_curtidos: pratosSelecionados, // lista de ids dos pratos
+        preferencias: restricao && restricao !== "nenhuma" ? [restricao] : [],
+        alergias,
+        categorias: culinariasSelecionadas,
+        pratos_curtidos: pratosSelecionados,
       });
 
-      return true; 
+      return true;
     } catch (e) {
       setErro(e.message);
       return false;
@@ -135,7 +132,7 @@ export function useOnboarding() {
   return {
     fase,
     categorias,
-    ingredientes,
+    listaAlergias,
     restricao,
     setRestricao,
     alergia,

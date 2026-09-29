@@ -20,3 +20,14 @@ export async function salvarOnboarding(dados) {
 
   return resultado;
 }
+
+export async function listar_alergias() {
+  const response = await fetch(`${API_URL}/alergias/`);
+
+  if (!response.ok) {
+    throw new Error(`Erro ao buscar alergias: ${response.status}`);
+  }
+
+  const alergias = await response.json();
+  return alergias;
+}

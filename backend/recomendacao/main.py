@@ -276,3 +276,9 @@ def buscar_pratos(query="", pagina=1, por_pagina=20):
         "por_pagina": por_pagina,
         "tem_mais": fim < total,
     }
+    
+alergias_df = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl")
+
+def obter_alergias():
+    return alergias_df["replaced"].drop_duplicates().tolist()
+

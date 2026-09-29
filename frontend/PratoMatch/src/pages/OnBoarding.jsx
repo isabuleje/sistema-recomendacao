@@ -21,7 +21,7 @@ const OnBoarding = () => {
     fase,
 
     categorias,
-    ingredientes,
+    listaAlergias,
 
     restricao,
     setRestricao,
@@ -75,7 +75,7 @@ const OnBoarding = () => {
             adicionarAlergia={adicionarAlergia}
             removerAlergia={removerAlergia}
             onAvancar={avancar}
-            ingredientes={ingredientes}
+            opcoesAlergias={listaAlergias}
           />
         )}
 

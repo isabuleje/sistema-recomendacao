@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 
-from recomendacao.main import obter_categorias, obter_ingredientes, obter_pratos, buscar_pratos
+from recomendacao.main import obter_categorias, obter_ingredientes, obter_pratos, buscar_pratos, obter_alergias
 from recomendacao.algoritmos import recomendar_para
 from .models import (
     PerfilUsuario,
@@ -28,7 +28,6 @@ from recomendacao.main import _PRATOS_POR_ID
 @api_view(["GET"])
 def csrf_token(request):
     return Response({"sucesso": True})
-
 
 
 @api_view(['GET'])
@@ -72,6 +71,11 @@ def listar_avaliados(request):
         })
 
     return Response(avaliados)
+
+
+@api_view(["GET"])
+def listar_alergias(request):
+    return Response(obter_alergias())
 
 @api_view(['GET'])   
 def listar_favoritos(request):
@@ -244,68 +248,87 @@ def pratos(request):
         "pratos": dados_pratos
     })
     
+@api_view(["POST"])
 def salvar_onboarding(request):
-
-    if request.method != "POST":
-        return JsonResponse({"erro": "Método não permitido"}, status=405)
-    
     if not request.user.is_authenticated:
-        return JsonResponse({"erro": "Não autenticado"}, status=401)
+        return Response({"erro": "Usuário não autenticado"}, status=401)
+
+    dados = request.data
+
+    preferencias = dados.get("preferencias", [])
+    alergias = dados.get("alergias", [])
+    categorias = dados.get("categorias", [])
+    pratos_curtidos = dados.get("pratos_curtidos", [])
+
+    for nome_campo, valor in (
+        ("preferencias", preferencias),
+        ("alergias", alergias),
+        ("categorias", categorias),
+        ("pratos_curtidos", pratos_curtidos),
+    ):
+        if not isinstance(valor, list):
+            return Response({"erro": f"{nome_campo} deve ser uma lista"}, status=400)
+
+    ids_pratos = []
+    for valor in pratos_curtidos:
+        try:
+            ids_pratos.append(int(valor))
+        except (TypeError, ValueError):
+            continue
+
+    ids_pratos = [i for i in dict.fromkeys(ids_pratos) if i in _PRATOS_POR_ID]
 
     try:
-        dados = json.loads(request.body)
-
-        usuario_id = dados.get("usuario_id")
-        preferencias = dados.get("preferencias", [])
-        alergias = dados.get("alergias", [])
-        pratos = dados.get("pratos", []) 
-
-        usuario = User.objects.get(id=usuario_id)
-
         with transaction.atomic():
-
-            perfil, _ = PerfilUsuario.objects.get_or_create(usuario=usuario)
+            perfil, _ = PerfilUsuario.objects.get_or_create(usuario=request.user)
 
             perfil.preferencias.clear()
             for nome in preferencias:
-                preferencia, _ = PreferenciaAlimentar.objects.get_or_create(nome=nome)
-                perfil.preferencias.add(preferencia)
+                if isinstance(nome, str) and nome.strip():
+                    preferencia, _ = PreferenciaAlimentar.objects.get_or_create(
+                        nome=nome.strip()
+                    )
+                    perfil.preferencias.add(preferencia)
 
             perfil.alergias.clear()
             for nome in alergias:
-                alergia, _ = Alergia.objects.get_or_create(nome=nome)
-                perfil.alergias.add(alergia)
+                if isinstance(nome, str) and nome.strip():
+                    alergia, _ = Alergia.objects.get_or_create(nome=nome.strip())
+                    perfil.alergias.add(alergia)
 
-            ids_enviados = [p.get("prato_id") for p in pratos]
-            ids_validos = set(
-                Prato.objects.filter(id__in=ids_enviados)
-                .values_list("id", flat=True)
-            )
+            ModeloCategoria = perfil.categorias_preferidas.model
+            perfil.categorias_preferidas.clear()
+            for nome in categorias:
+                if isinstance(nome, str) and nome.strip():
+                    categoria, _ = ModeloCategoria.objects.get_or_create(
+                        nome=nome.strip()
+                    )
+                    perfil.categorias_preferidas.add(categoria)
 
-            # como o no front o usuário pode usar o OnBoarding mais de uma vez acessando a URL ent limpa os pratos antigos e salva os novos
-            #acho q vou mudar isso dps se der tempo, mas se acabar ficando assim no final ta td bem
             OnBoardingPrato.objects.filter(perfil=perfil).delete()
 
-            OnBoardingPrato.objects.bulk_create([
-                OnBoardingPrato(
-                    perfil=perfil,
-                    prato_id=p["prato_id"],
-                    interesse=bool(p.get("interesse", False)),
+            objetos = []
+            for prato_id in ids_pratos:
+                prato, _ = Prato.objects.get_or_create(
+                    id=prato_id,
+                    defaults={"nome": _PRATOS_POR_ID[prato_id]["nome"]},
                 )
-                for p in pratos
-                if p.get("prato_id") in ids_validos
-            ])
+                objetos.append(
+                    OnBoardingPrato(perfil=perfil, prato=prato, interesse=True)
+                )
+            OnBoardingPrato.objects.bulk_create(objetos)
 
-        return JsonResponse({
+        cache.delete(f"recomendados:{request.user.id}")
+
+        return Response({
             "sucesso": True,
-            "mensagem": "Preferências salvas!"
+            "mensagem": "Preferências salvas!",
+            "pratos_salvos": len(ids_pratos),
         })
 
-    except User.DoesNotExist:
-        return JsonResponse({"erro": "Usuário não encontrado"}, status=404)
-
     except Exception as e:
-        return JsonResponse({"erro": str(e)}, status=500)
+        print("Erro ao salvar onboarding:", e)
+        return Response({"erro": str(e)}, status=500)
     
 def obter_perfil(request):
     #o cara tem q ta autenticado neh

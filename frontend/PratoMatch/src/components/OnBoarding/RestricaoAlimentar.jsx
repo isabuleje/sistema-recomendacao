@@ -10,9 +10,11 @@ const RestricaoAlimentar = ({
   adicionarAlergia,
   removerAlergia,
   onAvancar,
-  ingredientes,
+  opcoesAlergias,
 }) => {
-  const sugestoes = ingredientes
+
+  //mó role pra tirar o nome de ingrediente pq já tem alergia como varaivel
+  const sugestoes = opcoesAlergias
     .filter((ingrediente) =>
       ingrediente.toLowerCase().includes(alergia.toLowerCase()),
     )
