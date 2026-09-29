@@ -302,7 +302,9 @@ def salvar_onboarding(request):
         
         
 def obter_perfil(request):
-
+    #o cara tem q ta autenticado neh
+    if not request.user.is_authenticated:
+            return JsonResponse({"erro": "não autenticado"}, status=401)
     usuario = request.user
 
     perfil, _ = PerfilUsuario.objects.get_or_create(
@@ -323,6 +325,10 @@ def obter_perfil(request):
                 flat=True
             )
         ),
+        
+        "usuario_id": usuario.id,
+        "username": usuario.username,
+        "categorias_preferidas": list(perfil.categorias_preferidas.values_list("nome", flat=True)),
     })
     
 @csrf_exempt

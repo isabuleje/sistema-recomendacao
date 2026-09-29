@@ -18,6 +18,7 @@ import {
   salvarFavoritos,
 } from "../services/Pratos.js";
 import { useBuscaPratos, POR_PAGINA_BUSCA } from "../hooks/useBuscaPratos.js";
+import { buscarPerfil } from "../services/Perfil.js";
 
 const ITENS_POR_PAGINA = 24;
 
@@ -155,6 +156,13 @@ const Home = () => {
     termoBusca,
     paginaBusca,
   );
+  const [perfil, setPerfil] = useState(null);
+
+  useEffect(() => {
+    buscarPerfil()
+      .then(setPerfil)
+      .catch(() => setErro("Não foi possível carregar seu perfil."));
+  }, []);
 
   const totalPaginasBusca = Math.max(1, Math.ceil(total / POR_PAGINA_BUSCA));
 
@@ -213,7 +221,7 @@ const Home = () => {
             fontWeight: "700",
           }}
         >
-          Olá, usuário! 👋
+          Olá,{perfil?.username ?? "usuário"}! 👋
         </p>
 
         <i className="bx bx-user" style={{ color: "#000504" }} />

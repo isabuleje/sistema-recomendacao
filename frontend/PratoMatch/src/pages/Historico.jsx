@@ -4,6 +4,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import styles from "../components/Historico/Card.module.css";
 import Card from "../components/Historico/Card.jsx";
 import { buscarPratoFavoritados, salvarFavoritos } from "../services/Pratos.js";
+import { buscarPerfil } from "../services/Perfil.js";
 
 // aceita tanto [ ... ] quanto { pratos: [ ... ] }
 const extrairLista = (dados) =>
@@ -19,6 +20,14 @@ const Historico = () => {
   const [favoritos, setFavoritos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
+
+  const [perfil, setPerfil] = useState(null);
+
+  useEffect(() => {
+    buscarPerfil()
+      .then(setPerfil)
+      .catch(() => setErro("Não foi possível carregar seu perfil."));
+  }, []);
 
   useEffect(() => {
     buscarPratoFavoritados()
@@ -42,7 +51,9 @@ const Historico = () => {
   return (
     <div className="home-page">
       <div className="user-greeting">
-        <p style={{ color: "#055746", fontWeight: "700" }}>Olá, usuário! 👋</p>
+        <p style={{ color: "#055746", fontWeight: "700" }}>
+          Olá, {perfil?.username ?? "usuário"}! 👋
+        </p>
         <i className="bx bx-user" style={{ color: "#000504" }} />
       </div>
 

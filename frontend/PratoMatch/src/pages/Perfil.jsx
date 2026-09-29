@@ -1,29 +1,44 @@
-// Perfil onde o usuário vai poder ver suas informações, alterar suas informações
-// e mudar se ele possui alergia ou é vegetariano, vegano ou onívoro
+import { useEffect, useState } from "react";
 import "../components/Perfil/Perfil.css";
+import { buscarPerfil } from "../services/Perfil.js";
+
+// pegar as inciais do nome do usuário, para mostrar no avatar
+const gerarIniciais = (nome = "") =>
+  nome
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((parte) => parte[0]?.toUpperCase() ?? "")
+    .join("");
 
 const Perfil = () => {
-  // Dados de exemplo — troque pelos dados reais do usuário (state, context, API etc.)
-  const usuario = {
-    nome: "Marina Souza",
-    iniciais: "MS",
-    pratosAvaliados: 47,
-    pratosFavoritados: 12,
-  };
+  const [perfil, setPerfil] = useState(null);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
 
-  const alergias = ["Amendoim", "Frutos do mar"];
-  const preferencias = ["Vegetariano"];
+  useEffect(() => {
+    buscarPerfil()
+      .then(setPerfil)
+      .catch(() => setErro("Não foi possível carregar seu perfil."))
+      .finally(() => setCarregando(false));
+  }, []);
+
+  if (carregando) return <p>Carregando perfil...</p>;
+  if (erro) return <p>{erro}</p>;
+  if (!perfil) return null;
+
+  const alergias = perfil.alergias ?? [];
+  const preferencias = perfil.preferencias ?? [];
 
   return (
     <div className="perfil-page">
       <div className="perfil-tudo-esquerda">
         <div className="perfil-coluna-esquerda">
           <div className="perfil-avatar" aria-hidden="true">
-            {usuario.iniciais}
+            {gerarIniciais(perfil.username)}
           </div>
-          <h1 className="perfil-nome">{usuario.nome}</h1>
+          <h1 className="perfil-nome">{perfil.username}</h1>
         </div>
-
         <div className="perfil-coluna-alergia-preferencia">
           <section className="perfil-secao">
             <h2>Alergias</h2>
@@ -57,40 +72,42 @@ const Perfil = () => {
         </div>
       </div>
 
+      <div className="perfil-acoes">
+        <button type="button" className="perfil-botao">
+          Mudar perfil
+        </button>
+        <button type="button" className="perfil-botao">
+          Mudar preferências
+        </button>
+        <button type="button" className="perfil-botao">
+          Mudar alergias
+        </button>
+        <button type="button" className="perfil-botao">
+          Mudar senha
+        </button>
+        <button type="button" className="perfil-botao perfil-botao-perigo">
+          Deletar conta
+        </button>
+      </div>
+
       <div className="perfil-coluna-direita">
         <div className="perfil-stats">
           <div className="perfil-stat">
             <span className="perfil-stat-numero">
-              {usuario.pratosAvaliados}
+              {perfil.pratos_avaliados ?? 0}
             </span>
             <span className="perfil-stat-legenda">Pratos avaliados</span>
           </div>
 
           <div className="perfil-stat">
             <span className="perfil-stat-numero">
-              {usuario.pratosFavoritados}
+              {perfil.pratos_favoritados ?? 0}
             </span>
             <span className="perfil-stat-legenda">Pratos favoritados</span>
           </div>
         </div>
 
-        <div className="perfil-acoes">
-          <button type="button" className="perfil-botao">
-            Mudar perfil
-          </button>
-          <button type="button" className="perfil-botao">
-            Mudar preferências
-          </button>
-          <button type="button" className="perfil-botao">
-            Mudar alergias
-          </button>
-          <button type="button" className="perfil-botao">
-            Mudar senha
-          </button>
-          <button type="button" className="perfil-botao perfil-botao-perigo">
-            Deletar conta
-          </button>
-        </div>
+        {/* botões de ação: iguais aos seus */}
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import styles from "../components/Avaliados/AvaliadoCard.module.css";
 import AvaliadoCard from "../components/Avaliados/AvaliadoCard.jsx";
 import { buscarPratosAvaliados, salvarFavoritos } from "../services/Pratos.js";
+import {buscarPerfil} from "../services/Perfil.js";
 
 const Avaliado = () => {
   const navigate = useNavigate();
@@ -17,6 +18,14 @@ const Avaliado = () => {
       )
       .catch(() => setErro("Não foi possível carregar seus pratos avaliados."))
       .finally(() => setCarregando(false));
+  }, []);
+
+  const [perfil, setPerfil] = useState(null);
+
+  useEffect(() => {
+    buscarPerfil()
+      .then(setPerfil)
+      .catch(() => setErro("Não foi possível carregar seu perfil."));
   }, []);
 
   const alternarFavorito = async (prato) => {
@@ -43,7 +52,10 @@ const Avaliado = () => {
   return (
     <div className="home-page">
       <div className="user-greeting">
-        <p style={{ color: "#055746", fontWeight: "700" }}> Olá, usuário! 👋</p>
+        <p style={{ color: "#055746", fontWeight: "700" }}>
+          {" "}
+          Olá, {perfil?.username ?? "usuário"}! 👋
+        </p>
         <i className="bx bx-user" style={{ color: "#000504" }} />
       </div>
 

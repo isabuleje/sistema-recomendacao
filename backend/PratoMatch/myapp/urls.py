@@ -13,7 +13,8 @@ from .views import (
     pesquisar_pratos,
     listar_favoritos,
     salvar_favoritos,
-    recomendados
+    recomendados,
+    obter_perfil
 )
 
 #fico imaginando como deve ser em projetos enormes, como q eles organizam esses paths
@@ -32,4 +33,5 @@ urlpatterns = [
     path("favoritos/", listar_favoritos),
     path("favoritos/salvar/", salvar_favoritos),
     path("recomendados/", recomendados),
+    path("perfil/", obter_perfil),
 ]
