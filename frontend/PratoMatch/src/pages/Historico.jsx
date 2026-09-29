@@ -8,7 +8,7 @@ import { buscarPratosAvaliados } from "../services/Pratos.js";
 
 
 //Pra quando os favoritos estiverem funcionando, essa página vai dar pra ver os avaliados e favoritados
-{favoritos.map((prato) => (
+/*{favoritos.map((prato) => (
         <Card
           key={prato.id}
           titulo={prato.nome}
@@ -23,7 +23,7 @@ import { buscarPratosAvaliados } from "../services/Pratos.js";
           }
         />
       ))}
-
+*/
 
 const Historico = () => {
   const navigate = useNavigate();
