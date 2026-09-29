@@ -3,21 +3,40 @@ import { NavLink } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import styles from "../components/Historico/Card.module.css";
 import Card from "../components/Historico/Card.jsx";
+import { useState, useEffect } from "react";
+import { buscarPratosAvaliados } from "../services/Pratos.js";
 
-const historicoPratos = Array.from({ length: 6 }, (_, indice) => ({
-  id: `historico-${indice + 1}`,
-  titulo: "Pizza Margherita",
-  descricao:
-    "Massa artesanal, molho de tomate, mussarela de búfala e manjericão fresco.",
-  imagem: "assets/nova_comida_cansei_da_pizza.jpg",
-  tempo: "25 min",
-  nota: "4,8",
-  numerosNota: "(1,2k)",
-  data: "21 de setembro de 2025",
-}));
+
+//Pra quando os favoritos estiverem funcionando, essa página vai dar pra ver os avaliados e favoritados
+{favoritos.map((prato) => (
+        <Card
+          key={prato.id}
+          titulo={prato.nome}
+          descricao={prato.descricao || "Sem descrição disponível."}
+          imagem={prato.imagem || "/Pratos/pizzar.jpg"}
+          categorias={prato.tags || []}
+          tempo={prato.tempo_preparo}
+          nota={prato.nota_usuario}
+          numerosNota={prato.avaliacoes}
+          onOpenDetalhes={() =>
+            navigate(`/pratos/${prato.id}`, { state: { prato } })
+          }
+        />
+      ))}
+
 
 const Historico = () => {
   const navigate = useNavigate();
+  const [avaliados, setAvaliados] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
+
+  useEffect(() => {
+    buscarPratosAvaliados()
+      .then(setAvaliados)
+      .catch(() => setErro("Não foi possível carregar seus pratos avaliados."))
+      .finally(() => setCarregando(false));
+  }, []);
 
   return (
     <div className="home-page">
@@ -48,10 +67,25 @@ const Historico = () => {
         </NavLink>
       </div>
 
-      {historicoPratos.map((prato) => (
+      {carregando ? (
+        <p>Carregando histórico...</p>
+      ) : erro ? (
+        <p>{erro}</p>
+      ) : (
+        <p>Nenhum prato avaliado encontrado.</p>
+      )}
+
+      
+      {avaliados.map((prato) => (
         <Card
           key={prato.id}
-          {...prato}
+          titulo={prato.nome}
+          descricao={prato.descricao || "Sem descrição disponível."}
+          imagem={prato.imagem || "/Pratos/pizzar.jpg"}
+          categorias={prato.tags || []}
+          tempo={prato.tempo_preparo}
+          nota={prato.nota_usuario}
+          numerosNota={prato.avaliacoes}
           onOpenDetalhes={() =>
             navigate(`/pratos/${prato.id}`, { state: { prato } })
           }
