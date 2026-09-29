@@ -9,6 +9,7 @@ import random
 
 #constantes
 #MINIMO_DE_RECEITAS_EM_COMUM_PARA_AVALIAR_SEMELHANCA = 5
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 def obter_receita(id: int) -> dict:
     lista: dict = pd.read_csv("backend/dataset/PP_recipes.csv")
@@ -195,7 +196,7 @@ def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_d
     contador: int = 0
     contador_indice: int = 0
     passa: bool = True
-    lista_trocas = pd.read_pickle("backend/dataset/ingr_map.pkl")
+    lista_trocas = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl")
     trocas_agrupadas = lista_trocas.groupby('replaced')['raw_ingr'].apply(list)
     print(trocas_agrupadas)
     while contador <= len(placar) and passa:
