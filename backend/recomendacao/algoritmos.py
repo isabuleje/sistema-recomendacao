@@ -247,7 +247,8 @@ def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_d
     lista = lista.set_index('usuario_id')
     lista_escolhas_onboarding: DataFrame = pd.read_sql("SELECT * FROM myapp_onboardingprato", con=conexao)
     if lista_trocas is None:
-        lista_trocas = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl").set_index('raw_ingr')
+        lista_trocas = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl")
+    lista_trocas.set_index('raw_ingr', inplace=True)
 
     try:
         alergias = pd.read_sql("SELECT * FROM myapp_perfilusuario_alergias", con=conexao).groupby('perfilusuario_id')['alergia_id'].apply(list)[(lista.at[id, 'id'])]
@@ -304,7 +305,8 @@ def recall_arroba_n(k: int = 3, n: int = 20, rodadas: int = 3, minimo_receitas_p
     notas_por_id_de_usuario: DataFrame = interacoes.groupby('usuario_id')['nota'].apply(list)
     interacoes = interacoes.set_index('id')
     if lista_trocas is None:
-        lista_trocas = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl").set_index('raw_ingr')
+        lista_trocas = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl")
+    lista_trocas.set_index('raw_ingr', inplace=True)
     lista['items'] = lista.apply(lambda linha: interacoes_por_id_de_usuario.get(linha['usuario_id'], []), axis=1)
     lista['ratings'] = lista.apply(lambda linha: notas_por_id_de_usuario.get(linha['usuario_id'], []), axis=1)
     lista = lista.set_index('usuario_id')
