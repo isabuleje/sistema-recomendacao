@@ -234,6 +234,13 @@ O onboarding possui três etapas:
 2. seleção de categorias preferidas;
 3. seleção de pratos de interesse.
 
+Na terceira etapa, os pratos são carregados pelo endpoint
+`GET /onboarding/pratos/`. A resposta usa as receitas reais do dataset,
+aplicando as alergias, a restrição alimentar e as categorias escolhidas antes
+de intercalar os resultados para manter a diversidade. Os pratos selecionados
+são persistidos no perfil e usados como avaliações iniciais de interesse pelo
+recomendador durante o cold start.
+
 ### 7.7 Perfil do usuário
 
 O perfil permite visualizar e alterar preferências e alergias, alterar a senha e excluir a conta.

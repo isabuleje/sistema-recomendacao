@@ -5,7 +5,11 @@ import {
 } from "../components/OnBoarding/onboardingData";
 import { buscarCategorias } from "../services/Ingredientes_Categorias.js";
 
-import { salvarOnboarding, listar_alergias } from "../services/OnBoarding.js";
+import {
+  salvarOnboarding,
+  listar_alergias,
+  buscarPratosOnboarding,
+} from "../services/OnBoarding.js";
 
 export function useOnboarding() {
   const [fase, setFase] = useState(1);
@@ -20,6 +24,8 @@ export function useOnboarding() {
 
   const [culinariasSelecionadas, setCulinariasSelecionadas] = useState([]);
   const [pratosSelecionados, setPratosSelecionados] = useState([]);
+  const [pratos, setPratos] = useState([]);
+  const [carregandoPratos, setCarregandoPratos] = useState(false);
 
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState(null);
@@ -56,6 +62,37 @@ export function useOnboarding() {
       ativo = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (fase !== 3) return;
+
+    let ativo = true;
+
+    async function carregarPratos() {
+      setCarregandoPratos(true);
+      try {
+        const resultado = await buscarPratosOnboarding({
+          alergias,
+          categorias: culinariasSelecionadas,
+          restricao,
+        });
+        if (ativo) setPratos(resultado);
+      } catch (erroBusca) {
+        if (ativo) {
+          console.error("Erro ao buscar pratos do onboarding:", erroBusca);
+          setErro("Não foi possível carregar os pratos.");
+        }
+      } finally {
+        if (ativo) setCarregandoPratos(false);
+      }
+    }
+
+    carregarPratos();
+
+    return () => {
+      ativo = false;
+    };
+  }, [fase, alergias, culinariasSelecionadas, restricao]);
 
   const adicionarAlergia = (ingrediente) => {
     setAlergias((anteriores) =>
@@ -97,17 +134,6 @@ export function useOnboarding() {
     setFase((atual) => Math.max(atual - 1, 1));
   };
 
-  const obterDados = () => {
-    return {
-      restricao,
-      alergias,
-      culinarias: culinariasSelecionadas,
-      pratos: pratosSelecionados,
-    };
-  };
-
-  //Aqui é a parte mais importante pro backend
-
   const concluir = async () => {
     setSalvando(true);
     setErro(null);
@@ -143,6 +169,8 @@ export function useOnboarding() {
     culinariasSelecionadas,
     toggleCulinaria,
     pratosSelecionados,
+    pratos,
+    carregandoPratos,
     togglePrato,
     avancar,
     voltar,

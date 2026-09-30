@@ -6,7 +6,7 @@ const CardPratoCirculo = ({ prato, selecionado, onToggle }) => (
     onClick={onToggle}
   >
     <span className="prato-circulo-imagem">
-      <img src={prato.imagem} alt="" />
+      <img src={prato.imagem || "/Pratos/pizzar.jpg"} alt="" />
       {selecionado && <span className="prato-circulo-check">✓</span>}
     </span>
     <span className="prato-circulo-nome">{prato.nome}</span>

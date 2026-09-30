@@ -115,6 +115,9 @@ def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, lista_trocas
         inicio = time.perf_counter()
         print(f"INICIO DO ALGORITMO DE BUSCA DE RECOMENDAÇÕES PARA USUÁRIO ID: {id}")
 
+    if id not in lista.index:
+        raise ValueError(f'Usuário com id {id} não encontrado ou não existe. ids na lista: {lista.index.to_list()}')
+
     if len(lista.loc[id]['items']) < minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding:
         faltando: int = minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding - len(lista.loc[id]['items'])
 
@@ -130,10 +133,6 @@ def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, lista_trocas
         #print(lista.loc[id])
     if imprimir_metricas:
         print(f'{time.perf_counter() - inicio}s: LISTAS MODIFICADAS PRA SEREM USAVEIS MAIS EFICIENTEMENTE NO ALGORITMO')
-    if not id in lista.index:
-        print(lista)
-        raise ValueError(f'Usuário com id {id} não encontrado ou não existe. ids na lista: {lista.index.to_list()}')
-    
     receitas_usuario: list[int] = (lista.at[id, 'items'])
     tabela_vizinhos: DataFrame = k_nn(id, k, lista, False, minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar)
     receitas_novas: dict[int, list] = {} #{id da receita ('i') : [quantas vezes apareceu, soma da nota recebida]}
@@ -174,8 +173,13 @@ def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, lista_trocas
     placar = placar.sort_values('valor interno de classificacao', ascending=False)
 
     if len(placar) == 0:
-        quantidade = min(limite * 2, len(lista_receitas))  
-        sorteio = random.sample(list(lista_receitas.index), quantidade)
+        ids_disponiveis = [
+            int(prato_id)
+            for prato_id in raw_receitas.index
+            if int(prato_id) not in receitas_usuario
+        ]
+        quantidade = min(limite * 2, len(ids_disponiveis))
+        sorteio = random.sample(ids_disponiveis, quantidade)
         placar = DataFrame({
             'prato_id': sorteio,
             'nota_esperada': 5.0,
@@ -409,6 +413,7 @@ from pathlib import Path
 from django.db import connection
 
 CAMINHO_RAW = Path(__file__).resolve().parents[1] / "dataset" / "RAW_recipes.csv"
+CAMINHO_BANCO = Path(__file__).resolve().parents[1] / "PratoMatch" / "db.sqlite3"
 
 #vai deixar guardado no cache apenas 1 resultado
 @lru_cache(maxsize=1)
@@ -418,17 +423,21 @@ def _raw_receitas():
 
 #chama a funçaõ principal de reocmendação, recomendar_para é a função chamadao pelo VIEWS do Django
 def recomendar_para(usuario_id: int, limite: int = 60, imprimir: bool = False):
-    #connection.ensure_connection()
-    resultado: pd.DataFrame = obter_recomendacoes(
-        id=usuario_id,
-        k=100,
-        limite=limite,
-        valorizacao_de_frequencia=0.2,
-        #conexao=connection.connection,  
-        conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"),
-        raw_receitas=_raw_receitas(),
-        minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=1,
-    )
+    conexao = sqlite3.connect(CAMINHO_BANCO, timeout=30)
+    try:
+        conexao.execute("PRAGMA busy_timeout = 30000")
+        conexao.execute("PRAGMA query_only = ON")
+        resultado: pd.DataFrame = obter_recomendacoes(
+            id=usuario_id,
+            k=100,
+            limite=limite,
+            valorizacao_de_frequencia=0.2,
+            conexao=conexao,
+            raw_receitas=_raw_receitas(),
+            minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=1,
+        )
+    finally:
+        conexao.close()
 
     if imprimir:
         pratos = pd.read_sql(

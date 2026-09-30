@@ -10,7 +10,14 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 
-from recomendacao.main import obter_categorias, obter_ingredientes, obter_pratos, buscar_pratos, obter_alergias
+from recomendacao.main import (
+    obter_categorias,
+    obter_ingredientes,
+    obter_pratos,
+    obter_pratos_onboarding,
+    buscar_pratos,
+    obter_alergias,
+)
 from recomendacao.algoritmos import recomendar_para
 from .models import (
     PerfilUsuario,
@@ -247,6 +254,25 @@ def pratos(request):
 
     return JsonResponse({
         "pratos": dados_pratos
+    })
+
+
+@api_view(["GET"])
+def pratos_onboarding(request):
+    def lista_query(nome):
+        return [
+            item.strip()
+            for item in request.GET.getlist(nome)
+            for item in item.split(",")
+            if item.strip()
+        ]
+
+    return Response({
+        "pratos": obter_pratos_onboarding(
+            alergias=lista_query("alergias"),
+            categorias=lista_query("categorias"),
+            restricao=request.GET.get("restricao"),
+        )
     })
     
 @api_view(["POST"])
@@ -489,8 +515,46 @@ def recomendados(request):
     ids = cache.get(chave)
     if ids is None:
         try:
-            placar = recomendar_para(usuario_id, limite=60)
-            ids = placar["prato_id"].astype(int).tolist()
+            quantidade_avaliacoes = Interacao.objects.filter(
+                usuario_id=usuario_id,
+                nota__gte=1,
+                nota__lte=5,
+            ).count()
+
+            if quantidade_avaliacoes < 5:
+                perfil = PerfilUsuario.objects.filter(
+                    usuario_id=usuario_id,
+                ).prefetch_related(
+                    "alergias",
+                    "categorias_preferidas",
+                    "preferencias",
+                    "pratos_onboarding",
+                ).first()
+                if perfil is None:
+                    ids = []
+                else:
+                    preferencia = list(
+                        perfil.preferencias.values_list("nome", flat=True)
+                    )
+                    candidatos = obter_pratos_onboarding(
+                        alergias=perfil.alergias.values_list("nome", flat=True),
+                        categorias=perfil.categorias_preferidas.values_list(
+                            "nome", flat=True
+                        ),
+                        restricao=preferencia[0] if preferencia else None,
+                        limite=60,
+                    )
+                    escolhidos = set(
+                        perfil.pratos_onboarding.values_list("id", flat=True)
+                    )
+                    ids = [
+                        prato["id"]
+                        for prato in candidatos
+                        if prato["id"] not in escolhidos
+                    ]
+            else:
+                placar = recomendar_para(usuario_id, limite=24)
+                ids = placar["prato_id"].astype(int).tolist()
         except Exception as e:
             print("Erro no algoritmo de recomendação:", e)
             return Response({"erro": "não foi possível gerar recomendações"}, status=500)

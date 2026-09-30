@@ -31,3 +31,26 @@ export async function listar_alergias() {
   const alergias = await response.json();
   return alergias;
 }
+
+export async function buscarPratosOnboarding({
+  alergias = [],
+  categorias = [],
+  restricao = "nenhuma",
+} = {}) {
+  const params = new URLSearchParams();
+  alergias.forEach((item) => params.append("alergias", item));
+  categorias.forEach((item) => params.append("categorias", item));
+  if (restricao && restricao !== "nenhuma") {
+    params.set("restricao", restricao);
+  }
+
+  const response = await fetch(
+    `${API_URL}/onboarding/pratos/?${params.toString()}`,
+  );
+  if (!response.ok) {
+    throw new Error("Erro ao buscar pratos do onboarding.");
+  }
+
+  const data = await response.json();
+  return Array.isArray(data.pratos) ? data.pratos : [];
+}
