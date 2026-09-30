@@ -9,6 +9,7 @@ import random
 import os
 import sys
 from pathlib import Path
+import numpy as np
 
 BASE_DIR_DJANGO = Path(__file__).resolve().parents[1]
 DJANGO_DIR = BASE_DIR_DJANGO / "PratoMatch"
@@ -24,17 +25,26 @@ os.environ.setdefault(
 #MINIMO_DE_RECEITAS_EM_COMUM_PARA_AVALIAR_SEMELHANCA = 5
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+#NA VERDADE AGORA ISSO SE CHAMA PEARSON
 def calcular_similaridade_cosseno(lista_1: list[float], idxlista_1: list[int], lista_2: list[float], idxlista_2: list[int], min: int = 3) -> float:
     lista_1_comum: list[float] = []
     lista_2_comum: list[float] = []
-
+    if idxlista_1 is None:
+        return -1.0
     mapa2 = {idx:nota for idx, nota in zip(idxlista_2, lista_2)}
+
     for idx, nota in zip(idxlista_1, lista_1):
         if idx in mapa2:
             lista_1_comum.append(nota)
             lista_2_comum.append(mapa2[idx])
     if len(lista_1_comum) < min:
         return 0.0
+
+    tamanho = len(lista_1_comum)
+    media1 = sum(lista_1_comum)/tamanho
+    media2 = sum(lista_2_comum)/tamanho
+    lista_1_comum = [n - media1 for n in lista_1_comum]
+    lista_2_comum = [n - media2 for n in lista_2_comum]
 
     # (X * Y)
     produto: float = (sum(x * y for x, y in zip(lista_1_comum, lista_2_comum)))
@@ -127,12 +137,11 @@ def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, lista_trocas
             if faltando == 0:
                 break
             #print('adicionando coisas da coisa la porque faltou')
-            lista.loc[id]['items'] = lista.loc[id]['items'].append(n)
-            lista.loc[id]['ratings'] = lista.loc[id]['ratings'].append(5.0)
+            lista.at[id, 'items'].append(n)
+            lista.loc[id, 'ratings'].append(5.0)
             faltando -= 1
         #print(lista.loc[id])
-    if imprimir_metricas:
-        print(f'{time.perf_counter() - inicio}s: LISTAS MODIFICADAS PRA SEREM USAVEIS MAIS EFICIENTEMENTE NO ALGORITMO')
+    
     receitas_usuario: list[int] = (lista.at[id, 'items'])
     tabela_vizinhos: DataFrame = k_nn(id, k, lista, False, minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar)
     receitas_novas: dict[int, list] = {} #{id da receita ('i') : [quantas vezes apareceu, soma da nota recebida]}
@@ -187,12 +196,7 @@ def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, lista_trocas
             'valor interno de classificacao': 1.0,
         })
 
-    #print(alergias_dict)
-    #print(lista_trocas.loc['iceberg lettuce leaf']['replaced'])
     filtro_ingredientes: list = [lista_trocas.loc[alergias_dict[chave]]['replaced'] if alergias_dict[chave] in lista_trocas.index else alergias_dict[chave] for chave in alergias]
-    #print(filtro_ingredientes)
-    #filtro_valor_nutricional
-    #filtro_data_de_publicacao_maxima_sei_la
     contador: int = 0
     contador_indice: int = 0
     passa: bool = len(filtro_ingredientes) > 0
@@ -233,7 +237,7 @@ def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, lista_trocas
         print(f'{time.perf_counter() - inicio}s: FILTROS FINAIS EXECUTADOS E ORGANIZAÇÃO DA LISTA FINAL DE RESPOSTAS PREPARADA. PROCESSO FINALIZADO')
     return placar.head(limite)
 
-def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_de_frequencia: float = 0.1, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar: int = 3, imprimir_metricas: bool = False, lista_trocas: DataFrame | None = None, minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding: int = 5):
+def obter_recomendacoes(id: int = 0, k: int = 300, limite: int = 50, valorizacao_de_frequencia: float = 0.1, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar: int = 3, imprimir_metricas: bool = False, lista_trocas: DataFrame | None = None, minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding: int = 5):
     if conexao is None:
         return None
     lista: DataFrame = (pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao))
@@ -274,27 +278,8 @@ def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_d
 #verificados = pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao).set_index('usuario_id')
 #print(verificados)
 #verificados = [16]
-#if __name__ == "__main__":
-if False:
-    verificados = [33]
 
-    for usuario in verificados:
-        print(
-            f"\nid:{usuario}\n",
-            obter_recomendacoes(
-                id=usuario,
-                k=100,
-                limite=3,
-                valorizacao_de_frequencia=0.2,
-                conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"),
-                raw_receitas=pd.read_csv("backend/dataset/RAW_recipes.csv").set_index("id"),
-                minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=1,
-                imprimir_metricas=True,
-                minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding=5,
-            ),
-        )
-
-def recall_arroba_n(k: int = 3, n: int = 20, rodadas: int = 3, minimo_receitas_por_usuario_teste: int = 10, receitas_previstas: int = 2, lista_trocas: DataFrame | None = None, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), imprimir_metricas: bool = False) -> float:
+def recall_arroba_n(k: int = 2000, n: int = 500, rodadas: int = 3, minimo_receitas_por_usuario_teste: int = 55, receitas_previstas: int = 5, lista_trocas: DataFrame | None = None, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), imprimir_metricas: bool = False) -> float:
     if conexao is None:
         return None
     
@@ -324,13 +309,18 @@ def recall_arroba_n(k: int = 3, n: int = 20, rodadas: int = 3, minimo_receitas_p
         notas = lista.loc[id]['ratings'].copy()
         tpratos = []
         tnotas = []
+        #dict_testes = dict(zip(pratos, notas))
+        #dict_testes = dict(sorted(dict_testes.items(), key = lambda item: item[1]))
+        dict_testes: dict = pd.Series(data=lista.loc[id]['ratings'], index=lista.loc[id]['items']).sort_values().to_dict()
+        for prato_id, nota in list(dict_testes.items())[-receitas_previstas:]:
+            tpratos.append(prato_id)
+            tnotas.append(nota)
+            dict_testes.pop(prato_id)
+        print("id escolhido:", id)
+        lista.at[id, 'items'] = list(dict_testes.keys())
+        lista.at[id, 'ratings'] = list(dict_testes.values())
+        print('receitas a buscar:', tpratos, tnotas)
 
-        for _ in range(receitas_previstas):
-            r = random.randrange(len(pratos))
-            tpratos.append(pratos.pop(r))
-            tnotas.append(notas.pop(r))
-        lista.at[id, 'items'] = pratos
-        lista.at[id, 'ratings'] = notas
         dict_testes = dict(zip(tpratos, tnotas))
 
         alergias = []
@@ -342,17 +332,18 @@ def recall_arroba_n(k: int = 3, n: int = 20, rodadas: int = 3, minimo_receitas_p
             alergias_dict=alergias_dict,
             id = id,
             k = k,
-            limite=9999999,
-            valorizacao_de_frequencia=0.0,
+            limite=5000,
+            valorizacao_de_frequencia=0.05,
             raw_receitas=raw_receitas,
-            minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=1,
+            minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=25,
             minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding=1,
             imprimir_metricas=imprimir_metricas,
             lista_trocas=lista_trocas
         )
-        completo = resultado_encontrado.set_index('prato_id').index
-        cortado = resultado_encontrado.head(min(n, len(resultado_encontrado))).set_index('prato_id').index
-
+        completo = resultado_encontrado.set_index('prato_id').index.to_list()
+        cortado = resultado_encontrado.head(min(n, len(resultado_encontrado))).set_index('prato_id').index.to_list()
+        #print(completo)
+        #print(resultado_encontrado)
         achado = 0
         descontado = 0
         for prato in tpratos:
@@ -365,48 +356,8 @@ def recall_arroba_n(k: int = 3, n: int = 20, rodadas: int = 3, minimo_receitas_p
         if not descontado == len(tpratos):
             total += (achado/(receitas_previstas - descontado))
             rodadas_completas += 1
+            print('rodada completa resultado da rodada:', achado/(receitas_previstas - descontado))
     return total / rodadas_completas if rodadas_completas != 0 else None
-
-
-
-
-#descomentar pra testar com todos os usuarios que existem
-#verificados = pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao).set_index('usuario_id')
-#print(verificados)
-#verificados = [16]
-#if __name__ == "__main__":
-if False:
-    verificados = [33]
-
-    for usuario in verificados:
-        print(
-            f"\nid:{usuario}\n",
-            obter_recomendacoes(
-                id=usuario,
-                k=100,
-                limite=3,
-                valorizacao_de_frequencia=0.2,
-                conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"),
-                raw_receitas=pd.read_csv("backend/dataset/RAW_recipes.csv").set_index("id"),
-                minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=1,
-                imprimir_metricas=True,
-                minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding=5,
-            ),
-        )
-
-#lista_escolhas_onboarding: DataFrame = pd.read_sql("SELECT * FROM myapp_onboardingprato", con=conexao)
-#lista_escolhas_onboarding['prato_id'] = [1, 2, 3, 1, 2, 3]
-#lista_escolhas_onboarding['perfil_id'] = [1, 1, 1, 2, 2, 2]
-#escolhas = (lista_escolhas_onboarding.groupby('perfil_id')['prato_id'].apply(list))
-#print(escolhas.loc[2])
-#myapp_alergia
-#myapp_categoria
-#myapp_ingrediente
-#myapp_prato
-#myapp_perfilusuario_alergias
-#myapp_perfilusuario_categorias_preferidas
-#myapp_perfilusuario_preferencias
-#myapp_interacao
 
 
 #isso daq é oq importa pro views
@@ -454,4 +405,22 @@ def recomendar_para(usuario_id: int, limite: int = 60, imprimir: bool = False):
 
 if __name__ == '__main__':
     #recomendar_para(33, imprimir=False)
-    print(recall_arroba_n(conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"), raw_receitas=_raw_receitas()))
+    print(recall_arroba_n(conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"), raw_receitas=_raw_receitas(), imprimir_metricas=False, rodadas=10))
+
+if __name__ == "__main__" and False:
+    verificados = [232056]
+
+    for usuario in verificados:
+        print(
+            f"\nid:{usuario}\n",
+            obter_recomendacoes(
+                id=usuario,
+                k=50,
+                valorizacao_de_frequencia=0.2,
+                conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"),
+                raw_receitas=pd.read_csv("backend/dataset/RAW_recipes.csv").set_index("id"),
+                minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=5,
+                imprimir_metricas=True,
+                minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding=5,
+            ),
+        )
