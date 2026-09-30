@@ -11,13 +11,6 @@ import random
 #MINIMO_DE_RECEITAS_EM_COMUM_PARA_AVALIAR_SEMELHANCA = 5
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-def obter_receita(id: int) -> dict:
-    lista: dict = pd.read_csv("backend/dataset/PP_recipes.csv")
-    #'i' = equivalente aos indices que a coluna 'items' do PP_users.csv representa
-    #'id' = equivalente aos indices que a coluna 'id' no RAW_recipes.csv representa
-    return lista.loc[id]
-
-
 def calcular_similaridade_cosseno(lista_1: list[float], idxlista_1: list[int], lista_2: list[float], idxlista_2: list[int], min: int = 3) -> float:
     lista_1_comum: list[float] = []
     lista_2_comum: list[float] = []
@@ -184,7 +177,7 @@ def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_d
         quantidade = min(limite * 2, len(lista_receitas))  
         sorteio = random.sample(list(lista_receitas.index), quantidade)
         placar = DataFrame({
-            'prato_id': sorteio,
+            'prato_id': int(sorteio),
             'nota_esperada': 5.0,
             'quantidade de avaliacoes': 1,
             'valor interno de classificacao': 1.0,
@@ -250,7 +243,8 @@ verificados = [33]
 #verificados = pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao).set_index('usuario_id')
 #print(verificados)
 #verificados = [16]
-if __name__ == "__main__":
+#if __name__ == "__main__":
+if False:
     verificados = [33]
 
     for usuario in verificados:
@@ -297,14 +291,29 @@ def _raw_receitas():
 
 
 #chama a funçaõ principal de reocmendação, recomendar_para é a função chamadao pelo VIEWS do Django
-def recomendar_para(usuario_id: int, limite: int = 60):
+def recomendar_para(usuario_id: int, limite: int = 60, imprimir: bool = False):
     connection.ensure_connection()
-    return obter_recomendacoes(
+    resultado: pd.DataFrame = obter_recomendacoes(
         id=usuario_id,
         k=100,
         limite=limite,
         valorizacao_de_frequencia=0.2,
-        conexao=connection.connection,   
+        conexao=connection.connection,  
+        #conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"),
         raw_receitas=_raw_receitas(),
         minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=1,
     )
+
+    if imprimir:
+        pratos = pd.read_sql(
+            "SELECT * FROM myapp_prato",
+            connection.connection
+            #sqlite3.connect("backend/PratoMatch/db.sqlite3")
+            ).set_index('id')
+        for indice, linha in resultado.iterrows():
+            print(f'\n{pratos.loc[int(linha['prato_id'])]}')
+
+    return resultado
+
+if __name__ == '__main__':
+    recomendar_para(33, imprimir=True)
