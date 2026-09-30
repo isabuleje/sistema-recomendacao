@@ -126,9 +126,10 @@ def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, lista_trocas
         for n in escolhas:
             if faltando == 0:
                 break
-            #print('adicionando coisas da coisa la porque faltou')
-            lista.loc[id]['items'] = lista.loc[id]['items'].append(n)
-            lista.loc[id]['ratings'] = lista.loc[id]['ratings'].append(5.0)
+
+            lista.at[id, 'items'] = lista.at[id, 'items'] + [n]
+            lista.at[id, 'ratings'] = lista.at[id, 'ratings'] + [5.0]
+
             faltando -= 1
         #print(lista.loc[id])
     if imprimir_metricas:
