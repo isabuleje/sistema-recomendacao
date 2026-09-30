@@ -246,6 +246,72 @@ def obter_pratos(limite=None, ids=None):
 
     return _PRATOS_LISTA
 
+
+def obter_pratos_onboarding(alergias=None, categorias=None, restricao=None, limite=24):
+    """Retorna candidatos reais, seguros e variados para a terceira etapa."""
+    alergias = {
+        str(valor).strip().casefold()
+        for valor in (alergias or [])
+        if str(valor).strip()
+    }
+    categorias = {
+        str(valor).strip().casefold()
+        for valor in (categorias or [])
+        if str(valor).strip()
+    }
+
+    restricoes = {
+        "vegetariano": {"vegetarian", "ovo-vegetariano"},
+        "vegano": {"vegan"},
+        "gluten": {"gluten-free", "gluten free"},
+        "lactose": {"dairy-free", "lactose-free", "lactose free"},
+    }
+    tags_restricao = restricoes.get(str(restricao or "").casefold(), set())
+
+    candidatos = []
+    for prato in _PRATOS_LISTA:
+        ingredientes = {
+            str(ingrediente).strip().casefold()
+            for ingrediente in prato.get("ingredientes", [])
+        }
+        tags = {
+            str(tag).strip().casefold()
+            for tag in prato.get("tags", [])
+        }
+
+        if alergias and any(
+            alergia in ingrediente or ingrediente in alergia
+            for alergia in alergias
+            for ingrediente in ingredientes
+        ):
+            continue
+        if tags_restricao and not tags.intersection(tags_restricao):
+            continue
+        if categorias and not any(
+            categoria in tag or tag in categoria
+            for categoria in categorias
+            for tag in tags
+        ):
+            continue
+        candidatos.append(prato)
+
+    # Intercala categorias para evitar uma grade composta por receitas iguais.
+    grupos = {}
+    for prato in candidatos:
+        chave = next(iter(prato.get("tags", [])), "sem categoria").casefold()
+        grupos.setdefault(chave, []).append(prato)
+    resultado = []
+    while grupos and len(resultado) < limite:
+        for chave in list(grupos):
+            prato = grupos[chave].pop(0)
+            resultado.append(prato)
+            if not grupos[chave]:
+                del grupos[chave]
+            if len(resultado) >= limite:
+                break
+
+    return resultado
+
 # Série auxiliar para busca por texto (montada 1x, no import)
 _NOMES_LOWER = df["name"].astype(str).str.lower()
 _IDS_DF = df["id"]
@@ -281,4 +347,3 @@ alergias_df = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl")
 
 def obter_alergias():
     return alergias_df["replaced"].drop_duplicates().tolist()
-

@@ -7,7 +7,6 @@ import "../components/Home/Input.css";
 import { Search, Send, ChevronLeft, ChevronRight } from "lucide-react";
 
 import Card from "../components/Home/Card";
-import FilterSection from "../components/Home/Filtro.jsx";
 import Loading from "../components/Loading/Loading.jsx";
 
 import { useEffect, useState, useRef } from "react";
@@ -269,7 +268,6 @@ const Home = () => {
             )}
           </div>
 
-          {!emBusca && <FilterSection />}
         </div>
 
         {emBusca ? (

@@ -37,6 +37,8 @@ const OnBoarding = () => {
     toggleCulinaria,
 
     pratosSelecionados,
+    pratos,
+    carregandoPratos,
     togglePrato,
 
     avancar,
@@ -93,6 +95,8 @@ const OnBoarding = () => {
         {fase === 3 && (
           <EscolhaPratos
             selecionados={pratosSelecionados}
+            pratos={pratos}
+            carregando={carregandoPratos}
             onToggle={togglePrato}
             onVoltar={voltar}
             onConcluir={handleConcluir}
