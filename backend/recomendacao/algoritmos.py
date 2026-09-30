@@ -96,27 +96,15 @@ def k_nn(id: int, k: int = 3, lista: DataFrame | None = None, fazer_print: bool 
         tabela_influencia['influencia'].append(vizinhos.loc[vizinhos['u'] == linha, 'similaridade'].item() / total)
     return DataFrame(tabela_influencia)
 
-def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_de_frequencia: float = 0.1, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar: int = 3, imprimir_metricas: bool = False, minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding: int = 5):
-    if conexao is None:
-        return None
+def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_de_frequencia: float = 0.1, alergias_dict: dict = {}, lista_escolhas_onboarding: DataFrame | None = None, lista: DataFrame | None = None, lista_receitas: DataFrame | None = None, interacoes: DataFrame | None = None, raw_receitas: DataFrame | None = None, alergias: list = [], minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar: int = 3, imprimir_metricas: bool = False, minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding: int = 5):
+
     if imprimir_metricas:
         inicio = time.perf_counter()
         print(f"INICIO DO ALGORITMO DE BUSCA DE RECOMENDAÇÕES PARA USUÁRIO ID: {id}")
-    lista: DataFrame = (pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao))
-    lista_receitas: DataFrame = pd.read_sql("SELECT * FROM myapp_prato", con=conexao)
-    interacoes: DataFrame = pd.read_sql("SELECT * FROM myapp_interacao", con=conexao)
-    if imprimir_metricas:
-        print(f'{time.perf_counter() - inicio}s: LISTAS TRANSFERIDAS DE SQL PARA PANDAS')
-    interacoes_por_id_de_usuario: DataFrame = interacoes.groupby('usuario_id')['prato_id'].apply(list)
-    notas_por_id_de_usuario: DataFrame = interacoes.groupby('usuario_id')['nota'].apply(list)
-    interacoes = interacoes.set_index('id')
-    lista['items'] = lista.apply(lambda linha: interacoes_por_id_de_usuario.get(linha['usuario_id'], []), axis=1)
-    lista['ratings'] = lista.apply(lambda linha: notas_por_id_de_usuario.get(linha['usuario_id'], []), axis=1)
-    lista = lista.set_index('usuario_id')
-    if len(lista.loc[id]['items']) < minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar or True:
-        faltando: int = minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar - len(lista.loc[id]['items'])
-        faltando = 2
-        lista_escolhas_onboarding: DataFrame = pd.read_sql("SELECT * FROM myapp_onboardingprato", con=conexao)
+
+    if len(lista.loc[id]['items']) < minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding:
+        faltando: int = minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding - len(lista.loc[id]['items'])
+
         escolhas: list = (lista_escolhas_onboarding.groupby('perfil_id')['prato_id'].apply(list)).get(id, [])
         #print(escolhas)
         for n in escolhas:
@@ -177,21 +165,13 @@ def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_d
         quantidade = min(limite * 2, len(lista_receitas))  
         sorteio = random.sample(list(lista_receitas.index), quantidade)
         placar = DataFrame({
-            'prato_id': int(sorteio),
+            'prato_id': sorteio,
             'nota_esperada': 5.0,
             'quantidade de avaliacoes': 1,
             'valor interno de classificacao': 1.0,
         })
 
-    try:
-        alergias = pd.read_sql("SELECT * FROM myapp_perfilusuario_alergias", con=conexao).groupby('perfilusuario_id')['alergia_id'].apply(list)[(lista.at[id, 'id'])]
-    except (KeyError):
-        alergias = []
-    alergias.append(1)
     lista_trocas = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl").set_index('raw_ingr')
-    #print(lista_trocas)
-    alergias_dict: dict = pd.read_sql("SELECT * FROM myapp_alergia", con=conexao).set_index('id').to_dict()['nome']
-    alergias_dict[1] = 'iceberg lettuce leaf'
     #print(alergias_dict)
     #print(lista_trocas.loc['iceberg lettuce leaf']['replaced'])
     filtro_ingredientes: list = [lista_trocas.loc[alergias_dict[chave]]['replaced'] if alergias_dict[chave] in lista_trocas.index else alergias_dict[chave] for chave in alergias]
@@ -233,12 +213,44 @@ def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_d
                 placar.drop(contador_indice, inplace = True)
             contador_indice += 1
 
+
     if imprimir_metricas:
         print(f'{time.perf_counter() - inicio}s: FILTROS FINAIS EXECUTADOS E ORGANIZAÇÃO DA LISTA FINAL DE RESPOSTAS PREPARADA. PROCESSO FINALIZADO')
     return placar.head(limite)
 
+def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_de_frequencia: float = 0.1, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar: int = 3, imprimir_metricas: bool = False, minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding: int = 5):
+    if conexao is None:
+        return None
+    lista: DataFrame = (pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao))
+    lista_receitas: DataFrame = pd.read_sql("SELECT * FROM myapp_prato", con=conexao)
+    interacoes: DataFrame = pd.read_sql("SELECT * FROM myapp_interacao", con=conexao)
+    interacoes_por_id_de_usuario: DataFrame = interacoes.groupby('usuario_id')['prato_id'].apply(list)
+    notas_por_id_de_usuario: DataFrame = interacoes.groupby('usuario_id')['nota'].apply(list)
+    interacoes = interacoes.set_index('id')
+    lista['items'] = lista.apply(lambda linha: interacoes_por_id_de_usuario.get(linha['usuario_id'], []), axis=1)
+    lista['ratings'] = lista.apply(lambda linha: notas_por_id_de_usuario.get(linha['usuario_id'], []), axis=1)
+    lista = lista.set_index('usuario_id')
+    lista_escolhas_onboarding: DataFrame = pd.read_sql("SELECT * FROM myapp_onboardingprato", con=conexao)
 
-verificados = [33]
+    try:
+        alergias = pd.read_sql("SELECT * FROM myapp_perfilusuario_alergias", con=conexao).groupby('perfilusuario_id')['alergia_id'].apply(list)[(lista.at[id, 'id'])]
+    except (KeyError):
+        alergias = []
+
+    alergias_dict: dict = pd.read_sql("SELECT * FROM myapp_alergia", con=conexao).set_index('id').to_dict()['nome']
+
+    return _obter_recomendacoes(
+        alergias=alergias, lista=lista, lista_receitas=lista_receitas, interacoes=interacoes, lista_escolhas_onboarding=lista_escolhas_onboarding,
+        alergias_dict=alergias_dict,
+        id = id,
+        k = k,
+        limite=limite,
+        valorizacao_de_frequencia=valorizacao_de_frequencia,
+        raw_receitas=raw_receitas,
+        minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar,
+        minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding=minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding,
+        imprimir_metricas=imprimir_metricas
+    )
 #descomentar pra testar com todos os usuarios que existem
 #verificados = pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao).set_index('usuario_id')
 #print(verificados)
@@ -262,6 +274,103 @@ if False:
                 minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding=5,
             ),
         )
+
+def recall_arroba_n(k: int = 3, n: int = 20, rodadas: int = 3, minimo_receitas_por_usuario_teste: int = 10, receitas_previstas: int = 2,  valorizacao_de_frequencia: float = 0.1, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), imprimir_metricas: bool = False) -> float:
+    if conexao is None:
+        return None
+    
+    lista: DataFrame = (pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao))
+    lista_receitas: DataFrame = pd.read_sql("SELECT * FROM myapp_prato", con=conexao)
+    interacoes: DataFrame = pd.read_sql("SELECT * FROM myapp_interacao", con=conexao)
+    interacoes_por_id_de_usuario: DataFrame = interacoes.groupby('usuario_id')['prato_id'].apply(list)
+    notas_por_id_de_usuario: DataFrame = interacoes.groupby('usuario_id')['nota'].apply(list)
+    interacoes = interacoes.set_index('id')
+    lista['items'] = lista.apply(lambda linha: interacoes_por_id_de_usuario.get(linha['usuario_id'], []), axis=1)
+    lista['ratings'] = lista.apply(lambda linha: notas_por_id_de_usuario.get(linha['usuario_id'], []), axis=1)
+    lista = lista.set_index('usuario_id')
+    lista_escolhas_onboarding: DataFrame = pd.read_sql("SELECT * FROM myapp_onboardingprato", con=conexao)
+
+    por_usuario = interacoes.groupby('usuario_id')['prato_id'].apply(list)
+    elegiveis = por_usuario[por_usuario.apply(len) > minimo_receitas_por_usuario_teste].index.to_list()
+    if len(elegiveis) == 0:
+        return None
+    total = 0
+    ids = random.sample(elegiveis, rodadas)
+    rodadas_completas = 0
+    for id in ids:
+        pratos = lista.loc[id]['items'].copy()
+        notas = lista.loc[id]['ratings'].copy()
+        tpratos = []
+        tnotas = []
+
+        for _ in range(receitas_previstas):
+            r = random.randrange(len(pratos))
+            tpratos.append(pratos.pop(r))
+            tnotas.append(notas.pop(r))
+        lista.at[id, 'items'] = pratos
+        lista.at[id, 'ratings'] = notas
+        dict_testes = dict(zip(tpratos, tnotas))
+
+        alergias = []
+
+        alergias_dict: dict = pd.read_sql("SELECT * FROM myapp_alergia", con=conexao).set_index('id').to_dict()['nome']
+
+        resultado_encontrado = _obter_recomendacoes(
+            alergias=alergias, lista=lista, lista_receitas=lista_receitas, interacoes=interacoes, lista_escolhas_onboarding=lista_escolhas_onboarding,
+            alergias_dict=alergias_dict,
+            id = id,
+            k = k,
+            limite=9999999,
+            valorizacao_de_frequencia=0.0,
+            raw_receitas=raw_receitas,
+            minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=1,
+            minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding=1,
+            imprimir_metricas=imprimir_metricas
+        )
+        completo = resultado_encontrado.set_index('prato_id').index
+        cortado = resultado_encontrado.head(min(n, len(resultado_encontrado))).set_index('prato_id').index
+
+        achado = 0
+        descontado = 0
+        for prato in tpratos:
+            if not prato in completo:
+                descontado += 1
+            elif prato in cortado:
+                achado += 1
+            (lista.at[id, 'items']).append(prato)
+            lista.at[id, 'ratings'].append(dict_testes[prato])
+        if not descontado == len(tpratos):
+            total += (achado/(receitas_previstas - descontado))
+            rodadas_completas += 1
+    return total / rodadas_completas if rodadas_completas != 0 else None
+
+
+
+
+#descomentar pra testar com todos os usuarios que existem
+#verificados = pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao).set_index('usuario_id')
+#print(verificados)
+#verificados = [16]
+#if __name__ == "__main__":
+if False:
+    verificados = [33]
+
+    for usuario in verificados:
+        print(
+            f"\nid:{usuario}\n",
+            obter_recomendacoes(
+                id=usuario,
+                k=100,
+                limite=3,
+                valorizacao_de_frequencia=0.2,
+                conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"),
+                raw_receitas=pd.read_csv("backend/dataset/RAW_recipes.csv").set_index("id"),
+                minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=1,
+                imprimir_metricas=True,
+                minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding=5,
+            ),
+        )
+
 #lista_escolhas_onboarding: DataFrame = pd.read_sql("SELECT * FROM myapp_onboardingprato", con=conexao)
 #lista_escolhas_onboarding['prato_id'] = [1, 2, 3, 1, 2, 3]
 #lista_escolhas_onboarding['perfil_id'] = [1, 1, 1, 2, 2, 2]
@@ -292,14 +401,14 @@ def _raw_receitas():
 
 #chama a funçaõ principal de reocmendação, recomendar_para é a função chamadao pelo VIEWS do Django
 def recomendar_para(usuario_id: int, limite: int = 60, imprimir: bool = False):
-    connection.ensure_connection()
+    #connection.ensure_connection()
     resultado: pd.DataFrame = obter_recomendacoes(
         id=usuario_id,
         k=100,
         limite=limite,
         valorizacao_de_frequencia=0.2,
-        conexao=connection.connection,  
-        #conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"),
+        #conexao=connection.connection,  
+        conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"),
         raw_receitas=_raw_receitas(),
         minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=1,
     )
@@ -316,4 +425,5 @@ def recomendar_para(usuario_id: int, limite: int = 60, imprimir: bool = False):
     return resultado
 
 if __name__ == '__main__':
-    recomendar_para(33, imprimir=True)
+    #recomendar_para(33, imprimir=False)
+    print(recall_arroba_n(conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"), raw_receitas=_raw_receitas()))
