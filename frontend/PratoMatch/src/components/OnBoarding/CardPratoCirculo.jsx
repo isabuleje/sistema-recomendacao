@@ -1,3 +1,5 @@
+import {imagemAleatoria} from "../../utils/imagensPratos.js";
+
 const CardPratoCirculo = ({ prato, selecionado, onToggle }) => (
   <button
     type="button"
@@ -6,7 +8,7 @@ const CardPratoCirculo = ({ prato, selecionado, onToggle }) => (
     onClick={onToggle}
   >
     <span className="prato-circulo-imagem">
-      <img src={prato.imagem || "/Pratos/pizzar.jpg"} alt="" />
+      <img src={imagemAleatoria()} alt="" />
       {selecionado && <span className="prato-circulo-check">✓</span>}
     </span>
     <span className="prato-circulo-nome">{prato.nome}</span>

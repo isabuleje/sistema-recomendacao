@@ -27,7 +27,6 @@ const CardDetalhes = ({
   imagem,
   categorias,
   tempo,
-  calorias,
   ingredientes,
   passos,
   avaliacoes = 0,
@@ -59,8 +58,7 @@ const CardDetalhes = ({
   };
 
   const temTempo = tempo !== undefined && tempo !== null && tempo !== "";
-  const temCalorias =
-    calorias !== undefined && calorias !== null && calorias !== "";
+
 
   const renderizarPasso = (passo, indiceReal) => (
     <li className="passo-item" key={`${passo}-${indiceReal}`}>

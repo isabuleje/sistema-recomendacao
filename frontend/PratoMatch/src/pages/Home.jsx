@@ -18,6 +18,7 @@ import {
 } from "../services/Pratos.js";
 import { useBuscaPratos, POR_PAGINA_BUSCA } from "../hooks/useBuscaPratos.js";
 import { buscarPerfil } from "../services/Perfil.js";
+import { imagemAleatoria } from './../utils/imagensPratos';
 
 const ITENS_POR_PAGINA = 24;
 
@@ -95,7 +96,7 @@ const CardGrid = ({
         {pratosVisiveis.map((prato) => (
           <Card
             key={prato.id}
-            image="public/Pratos/pizzar.jpg"
+            image={imagemAleatoria()}
             title={prato.nome}
             description={prato.descricao || "Sem descrição disponível."}
             category={prato.tags?.length > 0 ? prato.tags[0] : "Prato"}
