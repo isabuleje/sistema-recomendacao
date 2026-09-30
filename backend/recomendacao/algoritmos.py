@@ -6,6 +6,19 @@ from decimal import Decimal
 import sqlite3
 import time
 import random
+import os
+import sys
+from pathlib import Path
+
+BASE_DIR_DJANGO = Path(__file__).resolve().parents[1]
+DJANGO_DIR = BASE_DIR_DJANGO / "PratoMatch"
+
+sys.path.insert(0, str(DJANGO_DIR))
+
+os.environ.setdefault(
+    "DJANGO_SETTINGS_MODULE",
+    "configs.settings"
+)
 
 #constantes
 #MINIMO_DE_RECEITAS_EM_COMUM_PARA_AVALIAR_SEMELHANCA = 5
@@ -177,7 +190,7 @@ def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_d
         quantidade = min(limite * 2, len(lista_receitas))  
         sorteio = random.sample(list(lista_receitas.index), quantidade)
         placar = DataFrame({
-            'prato_id': int(sorteio),
+            'prato_id': sorteio,
             'nota_esperada': 5.0,
             'quantidade de avaliacoes': 1,
             'valor interno de classificacao': 1.0,
