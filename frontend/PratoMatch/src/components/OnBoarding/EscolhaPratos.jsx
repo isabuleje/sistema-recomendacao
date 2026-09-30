@@ -1,11 +1,15 @@
 import CardPratoCirculo from "./CardPratoCirculo";
 import { MIN_PRATOS, PRATOS } from "./onboardingData";
 import { ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
-const EscolhaPratos = ({ selecionados, onToggle, onVoltar, podeConcluir }) => {
-  const navigate = useNavigate();
-
+const EscolhaPratos = ({
+  selecionados,
+  onToggle,
+  onVoltar,
+  onConcluir,
+  podeConcluir,
+  salvando,
+}) => {
   return (
     <section className="onboarding-fase">
       <h1>Escolha seus pratos favoritos</h1>
@@ -35,10 +39,12 @@ const EscolhaPratos = ({ selecionados, onToggle, onVoltar, podeConcluir }) => {
         <button
           type="button"
           className="botao botao-concluir"
-          onClick={() => navigate("/home")}
+          onClick={onConcluir}
           disabled={!podeConcluir}
         >
-          <span className="botao-texto">Concluir</span>
+          <span className="botao-texto">
+            {salvando ? "Salvando..." : "Concluir"}
+          </span>
           <ArrowRight className="botao-seta" />
         </button>
       </div>

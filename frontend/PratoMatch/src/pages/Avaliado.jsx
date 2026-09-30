@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import styles from "../components/Avaliados/AvaliadoCard.module.css";
 import AvaliadoCard from "../components/Avaliados/AvaliadoCard.jsx";
 import { buscarPratosAvaliados, salvarFavoritos } from "../services/Pratos.js";
-import {buscarPerfil} from "../services/Perfil.js";
+import { buscarPerfil } from "../services/Perfil.js";
 
 const Avaliado = () => {
   const navigate = useNavigate();
@@ -98,7 +98,7 @@ const Avaliado = () => {
             tempo={prato.tempo_preparo}
             nota={prato.nota_usuario}
             numerosNota={prato.avaliacoes}
-            isFavorite
+            isFavorite={prato.is_favorito}
             onToggleFavorite={() => alternarFavorito(prato)}
             onOpenDetalhes={() =>
               navigate(`/pratos/${prato.id}`, { state: { prato } })

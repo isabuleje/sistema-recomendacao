@@ -29,12 +29,6 @@ export const RESTRICOES = [
     icone: "🥛",
     descricao: "Evito alimentos com lactose",
   },
-  {
-    value: "baixa_caloria",
-    label: "Baixa calorias",
-    icone: "🚫",
-    descricao: "Prefiro refeições mais leves",
-  },
 ];
 
 export const CULINARIAS = [

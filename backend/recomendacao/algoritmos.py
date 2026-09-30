@@ -6,6 +6,19 @@ from decimal import Decimal
 import sqlite3
 import time
 import random
+import os
+import sys
+from pathlib import Path
+
+BASE_DIR_DJANGO = Path(__file__).resolve().parents[1]
+DJANGO_DIR = BASE_DIR_DJANGO / "PratoMatch"
+
+sys.path.insert(0, str(DJANGO_DIR))
+
+os.environ.setdefault(
+    "DJANGO_SETTINGS_MODULE",
+    "configs.settings"
+)
 
 #constantes
 #MINIMO_DE_RECEITAS_EM_COMUM_PARA_AVALIAR_SEMELHANCA = 5
