@@ -109,7 +109,7 @@ def k_nn(id: int, k: int = 3, lista: DataFrame | None = None, fazer_print: bool 
         tabela_influencia['influencia'].append(vizinhos.loc[vizinhos['u'] == linha, 'similaridade'].item() / total)
     return DataFrame(tabela_influencia)
 
-def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_de_frequencia: float = 0.1, alergias_dict: dict = {}, lista_escolhas_onboarding: DataFrame | None = None, lista: DataFrame | None = None, lista_receitas: DataFrame | None = None, interacoes: DataFrame | None = None, raw_receitas: DataFrame | None = None, alergias: list = [], minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar: int = 3, imprimir_metricas: bool = False, minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding: int = 5):
+def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, lista_trocas: DataFrame | None = None, valorizacao_de_frequencia: float = 0.1, alergias_dict: dict = {}, lista_escolhas_onboarding: DataFrame | None = None, lista: DataFrame | None = None, lista_receitas: DataFrame | None = None, interacoes: DataFrame | None = None, raw_receitas: DataFrame | None = None, alergias: list = [], minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar: int = 3, imprimir_metricas: bool = False, minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding: int = 5):
 
     if imprimir_metricas:
         inicio = time.perf_counter()
@@ -183,7 +183,6 @@ def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_
             'valor interno de classificacao': 1.0,
         })
 
-    lista_trocas = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl").set_index('raw_ingr')
     #print(alergias_dict)
     #print(lista_trocas.loc['iceberg lettuce leaf']['replaced'])
     filtro_ingredientes: list = [lista_trocas.loc[alergias_dict[chave]]['replaced'] if alergias_dict[chave] in lista_trocas.index else alergias_dict[chave] for chave in alergias]
@@ -230,7 +229,7 @@ def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_
         print(f'{time.perf_counter() - inicio}s: FILTROS FINAIS EXECUTADOS E ORGANIZAÇÃO DA LISTA FINAL DE RESPOSTAS PREPARADA. PROCESSO FINALIZADO')
     return placar.head(limite)
 
-def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_de_frequencia: float = 0.1, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar: int = 3, imprimir_metricas: bool = False, minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding: int = 5):
+def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_de_frequencia: float = 0.1, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar: int = 3, imprimir_metricas: bool = False, lista_trocas: DataFrame | None = None, minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding: int = 5):
     if conexao is None:
         return None
     lista: DataFrame = (pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao))
@@ -243,6 +242,8 @@ def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_d
     lista['ratings'] = lista.apply(lambda linha: notas_por_id_de_usuario.get(linha['usuario_id'], []), axis=1)
     lista = lista.set_index('usuario_id')
     lista_escolhas_onboarding: DataFrame = pd.read_sql("SELECT * FROM myapp_onboardingprato", con=conexao)
+    if lista_trocas is None:
+        lista_trocas = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl").set_index('raw_ingr')
 
     try:
         alergias = pd.read_sql("SELECT * FROM myapp_perfilusuario_alergias", con=conexao).groupby('perfilusuario_id')['alergia_id'].apply(list)[(lista.at[id, 'id'])]
@@ -261,7 +262,8 @@ def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_d
         raw_receitas=raw_receitas,
         minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar,
         minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding=minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding,
-        imprimir_metricas=imprimir_metricas
+        imprimir_metricas=imprimir_metricas,
+        lista_trocas=lista_trocas
     )
 #descomentar pra testar com todos os usuarios que existem
 #verificados = pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao).set_index('usuario_id')
@@ -287,7 +289,7 @@ if False:
             ),
         )
 
-def recall_arroba_n(k: int = 3, n: int = 20, rodadas: int = 3, minimo_receitas_por_usuario_teste: int = 10, receitas_previstas: int = 2,  valorizacao_de_frequencia: float = 0.1, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), imprimir_metricas: bool = False) -> float:
+def recall_arroba_n(k: int = 3, n: int = 20, rodadas: int = 3, minimo_receitas_por_usuario_teste: int = 10, receitas_previstas: int = 2, lista_trocas: DataFrame | None = None, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), imprimir_metricas: bool = False) -> float:
     if conexao is None:
         return None
     
@@ -297,6 +299,8 @@ def recall_arroba_n(k: int = 3, n: int = 20, rodadas: int = 3, minimo_receitas_p
     interacoes_por_id_de_usuario: DataFrame = interacoes.groupby('usuario_id')['prato_id'].apply(list)
     notas_por_id_de_usuario: DataFrame = interacoes.groupby('usuario_id')['nota'].apply(list)
     interacoes = interacoes.set_index('id')
+    if lista_trocas is None:
+        lista_trocas = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl").set_index('raw_ingr')
     lista['items'] = lista.apply(lambda linha: interacoes_por_id_de_usuario.get(linha['usuario_id'], []), axis=1)
     lista['ratings'] = lista.apply(lambda linha: notas_por_id_de_usuario.get(linha['usuario_id'], []), axis=1)
     lista = lista.set_index('usuario_id')
@@ -337,7 +341,8 @@ def recall_arroba_n(k: int = 3, n: int = 20, rodadas: int = 3, minimo_receitas_p
             raw_receitas=raw_receitas,
             minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=1,
             minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding=1,
-            imprimir_metricas=imprimir_metricas
+            imprimir_metricas=imprimir_metricas,
+            lista_trocas=lista_trocas
         )
         completo = resultado_encontrado.set_index('prato_id').index
         cortado = resultado_encontrado.head(min(n, len(resultado_encontrado))).set_index('prato_id').index
