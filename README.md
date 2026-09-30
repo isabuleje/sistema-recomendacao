@@ -174,7 +174,9 @@ O módulo de métricas implementa `MRR@K` e a criação de ground truth a partir
 
 | **Métrica** | **Descrição** |
 | ----------- | -------------- |
-| **MRR@K** | Média do inverso da posição do primeiro item relevante nas primeiras `K` recomendações. |
+| **HITRATE@5** | Métrica que mede a porcentagem de vezes que uma tentativa, estratégia ou sistema atinge um resultado positivo ou esperado. |
+| **REC@ALL@5** | Mede a proporção de casos positivos reais que um modelo de classificação conseguiu identificar corretamente |
+| **PRECISION@5** | Métrica de avaliação em aprendizado de máquina que mede a proporção de previsões positivas corretas em relação ao total de previsões positivas feitas pelo modelo|
 | **Ground truth por nota** | Considera relevantes as interações com nota maior ou igual ao limite configurado, que por padrão é 4. |
 
 ### 5.3 Exemplos de usuários
@@ -185,7 +187,7 @@ Os exemplos e resultados numéricos devem ser adicionados após a execução da 
 
 ## 6. Resultados
 
-Os resultados quantitativos ainda não estão registrados neste README. Eles devem ser adicionados após a execução das rotinas de avaliação com os arquivos de treino, validação e teste.
+
 
 ---
 
@@ -245,23 +247,25 @@ recomendador durante o cold start.
 
 O perfil permite visualizar e alterar preferências e alergias, alterar a senha e excluir a conta.
 
-### 7.8 Imagens da interface
-
 **Tela inicial**
 
-[INSERIR IMAGEM]
+<img width="1917" height="870" alt="image" src="https://github.com/user-attachments/assets/7bde0846-d7fb-47d7-b84c-ace833549258" />
 
-**Tela de recomendações**
 
-[INSERIR IMAGEM]
+**Tela de Perfil do usuário**
+
+<img width="1917" height="862" alt="image" src="https://github.com/user-attachments/assets/f7b0062e-7771-413f-b4c9-b7dce802bc96" />
+
 
 **Tela de histórico**
 
-[INSERIR IMAGEM]
+<img width="1917" height="853" alt="image" src="https://github.com/user-attachments/assets/5610af25-8417-4e9e-9cfd-794be81e855f" />
+
 
 **Tela de cadastro/onboarding**
 
-[INSERIR IMAGEM]
+<img width="1917" height="865" alt="image" src="https://github.com/user-attachments/assets/6fc576d3-5928-44f2-bee9-c1b2a0ce63f9" />
+
 
 ---
 
@@ -378,12 +382,6 @@ README.md
 
 ---
 
-## 12. Equipe
-
-| Nome | Função |
-| ---- | ------ |
-| Isabela | Full-Stack |
-| João | Recomendação |
 
 **Instituição:** UEA - Universidade Estadual do Amazonas
 **Curso:** Sistemas de Informação
