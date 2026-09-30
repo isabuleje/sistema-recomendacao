@@ -51,7 +51,6 @@ const AvaliadoCard = ({
         </button>
       </div>
 
-      {/* Centro: Informações da Pizza */}
       <div className={styles.cardContent}>
         <h3 className={styles.cardTitle}>{titulo}</h3>
 

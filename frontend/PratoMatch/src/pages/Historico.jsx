@@ -5,6 +5,7 @@ import styles from "../components/Historico/Card.module.css";
 import Card from "../components/Historico/Card.jsx";
 import { buscarPratoFavoritados, salvarFavoritos } from "../services/Pratos.js";
 import { buscarPerfil } from "../services/Perfil.js";
+import { imagemAleatoria } from "../utils/imagensPratos.js";
 
 // aceita tanto [ ... ] quanto { pratos: [ ... ] }
 const extrairLista = (dados) =>
@@ -81,7 +82,7 @@ const Historico = () => {
             key={prato.id}
             titulo={prato.nome}
             descricao={prato.descricao || "Sem descrição disponível."}
-            imagem={prato.imagem || "/Pratos/pizzar.jpg"}
+            imagem={imagemAleatoria()}
             categorias={prato.tags || []}
             tempo={prato.tempo_preparo}
             nota={prato.nota_usuario ?? 0}

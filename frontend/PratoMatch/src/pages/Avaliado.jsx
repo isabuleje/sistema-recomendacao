@@ -4,6 +4,7 @@ import styles from "../components/Avaliados/AvaliadoCard.module.css";
 import AvaliadoCard from "../components/Avaliados/AvaliadoCard.jsx";
 import { buscarPratosAvaliados, salvarFavoritos } from "../services/Pratos.js";
 import { buscarPerfil } from "../services/Perfil.js";
+import { imagemAleatoria } from "../utils/imagensPratos.js";
 
 const Avaliado = () => {
   const navigate = useNavigate();
@@ -93,7 +94,7 @@ const Avaliado = () => {
             key={prato.id}
             titulo={prato.nome}
             descricao={prato.descricao || "Sem descrição disponível."}
-            imagem={prato.imagem || "/Pratos/pizzar.jpg"}
+            imagem={imagemAleatoria()}
             categorias={prato.tags || []}
             tempo={prato.tempo_preparo}
             nota={prato.nota_usuario}
