@@ -1,60 +1,85 @@
+"""
+============================================================
+SEED OFICIAL - PRATOMATCH
+============================================================
+Popula o banco com TODOS os dados do CSV (categorias, pratos,
+usuários e interações) mais os catálogos fixos (alergias e
+preferências alimentares).
+
+Uso:
+    python seed_oficial.py            -> popula o banco (não apaga nada)
+    python seed_oficial.py --limpar   -> apaga os dados do seed e popula de novo
+
+Observação: este script NÃO roda makemigrations. As migrations
+são geradas pelo desenvolvedor (python manage.py makemigrations),
+versionadas no Git e apenas aplicadas aqui com "migrate".
+============================================================
+"""
+
 import os
 import sys
 import subprocess
 from pathlib import Path
 
-'''#
-dps a gnt nao pode esquecer de tirar isso daq do codigo kkkkkkkkkkkkk
-meu grande mano gepete dando uma ajuda pra gnt, valeu mano
-'''
+import pandas as pd
+
+#O comando da maga
 BASE_DIR = Path(__file__).resolve().parent
 PRATOMATCH_DIR = BASE_DIR / "PratoMatch"
 
 sys.path.insert(0, str(PRATOMATCH_DIR))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "configs.settings")
 
+
 # ============================================================
-# DJANGO: MIGRAÇÕES AUTOMÁTICAS
+# CONFIGURAÇÕES
 # ============================================================
-# Assim você não precisa ficar executando os comandos manualmente
-# sempre que alterar os models.
-#
-# Equivale a:
-#   python manage.py makemigrations
-#   python manage.py migrate
+# None = sem limite (usa TUDO que existe no CSV)
+LIMITE_USUARIOS = None
+LIMITE_PRATOS = None
+LIMITE_CATEGORIAS = None
+
+# Cria respostas de onboarding a partir das primeiras interações
+# de cada usuário. Isso é dado derivado, não vem direto do CSV.
+CRIAR_ONBOARDING = True
+ONBOARDING_POR_USUARIO = 8
+
+# Senha dos usuários importados do CSV.
+# None  -> senha inutilizável (ninguém consegue logar; recomendado
+#          para produção, pois são usuários apenas de dados).
+# "abc" -> todos ficam com essa senha (útil só em ambiente de teste).
+SENHA_DEMO = None
+
+# Prefixo do username dos usuários criados pelo seed.
+PREFIXO_USERNAME = "usuario_"
+
+
+# ============================================================
+# MIGRAÇÕES
 # ============================================================
 
-def preparar_banco():
-    print("\nVerificando alterações nos models...")
-
-    subprocess.run(
-        [sys.executable, "manage.py", "makemigrations"],
-        cwd=PRATOMATCH_DIR,
-        check=True,
-    )
-
+def aplicar_migracoes():
+    """Só aplica as migrations que já existem no projeto."""
     print("\nAplicando migrações...")
+
     subprocess.run(
         [sys.executable, "manage.py", "migrate"],
         cwd=PRATOMATCH_DIR,
         check=True,
     )
 
-    print("\nBanco pronto!")
 
-
-preparar_banco()
+aplicar_migracoes()
 
 import django
 
 django.setup()
 
-# ============================================================
-# MODELS
-# ============================================================
-
+# Estes imports só funcionam depois do django.setup().
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.db.models import Count
+
 from myapp.models import (
     Categoria,
     Prato,
@@ -62,7 +87,7 @@ from myapp.models import (
     Alergia,
     PreferenciaAlimentar,
     PerfilUsuario,
-    OnBoardingPrato
+    OnBoardingPrato,
 )
 
 from recomendacao.main import (
@@ -71,530 +96,321 @@ from recomendacao.main import (
     INTERACOES,
 )
 
-# ============================================================
-# CONFIGURAÇÕES DO SEED
-# ============================================================
 
-LIMITE_USUARIOS = 10
-
-USUARIOS_CANDIDATOS = 100
-
-LIMITE_PRATOS = None
-
-LIMITE_CATEGORIAS = 10
 # ============================================================
-# LIMPAR DADOS GERADOS PELO SEED
-# ============================================================
+# LIMPEZA (só roda com --limpar, antes ia automaticamente mas como a gnt n ta mais mexendo no models ent n precisa)
 
 def limpar_banco():
-    print("\nLimpando dados antigos...")
+    """
+    Apaga somente o que o seed cria.
 
+    Usuários reais (cadastrados pelo app) NÃO são apagados:
+    só removemos os usuários com o prefixo do seed.
+    A ordem respeita as dependências entre as tabelas.
+    """
+    print("\nLimpando dados do seed...")
+
+    OnBoardingPrato.objects.all().delete()
     Interacao.objects.all().delete()
-    PerfilUsuario.objects.all().delete()
+    PerfilUsuario.objects.filter(
+        usuario__username__startswith=PREFIXO_USERNAME
+    ).delete()
+    User.objects.filter(
+        username__startswith=PREFIXO_USERNAME
+    ).delete()
     Prato.objects.all().delete()
     Categoria.objects.all().delete()
     Alergia.objects.all().delete()
     PreferenciaAlimentar.objects.all().delete()
-    OnBoardingPrato.objects.all().delete()
 
     print("Banco limpo!")
 
 
 # ============================================================
-# ESCOLHER USUÁRIOS COM RECEITAS EM COMUM
-# ============================================================
-# ============================================================
-# ESCOLHER POUCOS USUÁRIOS COM RECEITAS EM COMUM
-# ============================================================
-
-def selecionar_usuarios_comuns():
-
-    print("\nProcurando poucos usuários com receitas em comum...")
-
-    # --------------------------------------------------------
-    # PEGAMOS SOMENTE UMA PEQUENA PARTE DOS USUÁRIOS
-    # --------------------------------------------------------
-
-    usuarios_disponiveis = (
-        INTERACOES["user_id"]
-        .dropna()
-        .astype(int)
-        .drop_duplicates()
-        .tolist()
-    )
-
-    candidatos_ids = usuarios_disponiveis[:USUARIOS_CANDIDATOS]
-
-    print(
-        f"Analisando somente {len(candidatos_ids)} "
-        f"usuários candidatos..."
-    )
-
-    # --------------------------------------------------------
-    # FILTRA O DATAFRAME
-    # --------------------------------------------------------
-
-    dados = INTERACOES[
-        INTERACOES["user_id"].isin(candidatos_ids)
-    ][
-        ["user_id", "recipe_id"]
-    ].dropna()
-
-    dados["user_id"] = dados["user_id"].astype(int)
-    dados["recipe_id"] = dados["recipe_id"].astype(int)
-
-    # --------------------------------------------------------
-    # RECEITAS DE CADA USUÁRIO
-    # --------------------------------------------------------
-
-    receitas_por_usuario = (
-        dados.groupby("user_id")["recipe_id"]
-        .agg(set)
-        .to_dict()
-    )
-
-    usuarios = list(receitas_por_usuario.keys())
-
-    if len(usuarios) < 2:
-        raise RuntimeError(
-            "Não existem usuários suficientes para o teste."
-        )
-
-    # --------------------------------------------------------
-    # PROCURA UM GRUPO PEQUENO
-    # --------------------------------------------------------
-
-    for referencia in usuarios:
-
-        receitas_referencia = receitas_por_usuario[referencia]
-
-        selecionados = [referencia]
-
-        for usuario_id in usuarios:
-
-            if usuario_id == referencia:
-                continue
-
-            receitas_usuario = receitas_por_usuario[usuario_id]
-
-            comuns = receitas_referencia & receitas_usuario
-
-            if comuns:
-
-                selecionados.append(usuario_id)
-
-                print(
-                    f"Usuário {usuario_id}: "
-                    f"{len(comuns)} receitas em comum"
-                )
-
-            # Já temos usuários suficientes
-            if len(selecionados) >= LIMITE_USUARIOS:
-                break
-
-        if len(selecionados) >= LIMITE_USUARIOS:
-
-            print(
-                f"\nGrupo encontrado!"
-            )
-
-            print(
-                f"Usuário de referência: {referencia}"
-            )
-
-            print(
-                f"Usuários selecionados: "
-                f"{len(selecionados)}"
-            )
-
-            return selecionados
-
-    # --------------------------------------------------------
-    # CASO NÃO ENCONTRE
-    # --------------------------------------------------------
-
-    raise RuntimeError(
-        "Não foram encontrados usuários suficientes "
-        "com receitas em comum dentro dos candidatos."
-    )
-
-# ============================================================
-# CRIAR CATEGORIAS
-# ============================================================
+# CATÁLOGOS FIXOS (não vêm do CSV)
+# Tenho quase ctz que nao precisava dessa parte de criar categorias e alergias mas tudo bem, n faz mal n
 
 def criar_categorias():
-    """
-    Não cadastra todas as categorias do CSV.
+    """Cadastra as categorias encontradas no CSV."""
+    print("\nCriando categorias...")
 
-    Apenas algumas categorias são necessárias para montar os
-    perfis de teste.
-    """
+    # dict.fromkeys remove duplicadas mantendo a ordem.
+    nomes = list(dict.fromkeys(obter_categorias()))
 
-    print("\nCriando categorias de exemplo...")
+    if LIMITE_CATEGORIAS is not None:
+        nomes = nomes[:LIMITE_CATEGORIAS]
 
-    categorias_csv = obter_categorias()
-
-    # Mantém somente uma pequena quantidade.
-    categorias = list(categorias_csv)[:LIMITE_CATEGORIAS]
-
-    categorias_obj = {}
-
-    for nome in categorias:
-        categoria, _ = Categoria.objects.get_or_create(nome=nome)
-        categorias_obj[nome] = categoria
-
-    print(f"{len(categorias_obj)} categorias criadas.")
-
-    return categorias_obj
-
-
-# ============================================================
-# CRIAR PRATOS
-# ============================================================
-
-def criar_pratos(usuarios_ids):
-    print("\nCriando pratos dos usuários selecionados...")
-
-    user_ids = set(usuarios_ids)
-
-    # Apenas interações dos usuários escolhidos.
-    interacoes = INTERACOES[
-        INTERACOES["user_id"].isin(user_ids)
-    ].copy()
-
-    interacoes["recipe_id"] = interacoes["recipe_id"].astype(int)
-
-    # Mantemos somente receitas avaliadas por pelo menos 2 dos
-    # usuários selecionados. Assim o banco fica menor e os usuários
-    # realmente possuem receitas em comum.
-    ids_pratos = (
-        interacoes.groupby("recipe_id")["user_id"]
-        .nunique()
-    )
-    ids_pratos = ids_pratos[ids_pratos >= 2].index
-
-    if LIMITE_PRATOS is not None:
-        ids_pratos = ids_pratos[:LIMITE_PRATOS]
-
-    ids_pratos = set(int(id_prato) for id_prato in ids_pratos)
-
-    print(
-        f"Encontrados {len(ids_pratos)} pratos compartilhados "
-        f"por pelo menos 2 usuários."
+    Categoria.objects.bulk_create(
+        [Categoria(nome=nome) for nome in nomes],
+        batch_size=1000,
+        ignore_conflicts=True,  # rodar de novo não duplica
     )
 
-    # O CSV de receitas é lido uma vez.
-    pratos_dados = obter_pratos()
+    print(f"{Categoria.objects.count()} categorias no banco.")
 
-    pratos_dados = [
-        prato
-        for prato in pratos_dados
-        if prato["id"] in ids_pratos
-    ]
-
-    # Como o banco foi limpo, bulk_create é muito mais rápido
-    # do que fazer update_or_create para cada receita.
-    pratos_obj = []
-
-    for dados in pratos_dados:
-        if dados["id"] is None:
-            continue
-
-        pratos_obj.append(
-            Prato(
-                id=int(dados["id"]),
-                nome=dados["nome"],
-            )
-        )
-
-    if pratos_obj:
-        Prato.objects.bulk_create(
-            pratos_obj,
-            batch_size=1000,
-            ignore_conflicts=True,
-        )
-
-    pratos_obj = {
-        prato.id: prato
-        for prato in Prato.objects.filter(
-            id__in=ids_pratos
-        )
-    }
-
-    print(f"{len(pratos_obj)} pratos cadastrados.")
-
-    return pratos_obj
-
-
-# ============================================================
-# CRIAR ALERGIAS
-# ============================================================
 
 def criar_alergias():
     print("\nCriando alergias...")
 
-    nomes = [
-        "Amendoim",
-        "Leite",
-        "Glúten",
-        "Ovo",
-        "Camarão",
-        "Soja",
-    ]
-
-    alergias = {}
-
-    objetos = [
-        Alergia(nome=nome)
-        for nome in nomes
-    ]
+    nomes = ["Amendoim", "Leite", "Glúten", "Ovo", "Camarão", "Soja"]
 
     Alergia.objects.bulk_create(
-        objetos,
+        [Alergia(nome=nome) for nome in nomes],
         ignore_conflicts=True,
     )
 
-    for alergia in Alergia.objects.filter(nome__in=nomes):
-        alergias[alergia.nome] = alergia
+    print(f"{Alergia.objects.count()} alergias no banco.")
 
-    print(f"{len(alergias)} alergias criadas.")
-
-    return alergias
-
-
-# ============================================================
-# CRIAR PREFERÊNCIAS ALIMENTARES
-# ============================================================
 
 def criar_preferencias():
     print("\nCriando preferências alimentares...")
 
+    #Tirei o Onívoro e Low Carb pq onivoro é considerado nenhum e low carb nao tem como fazer pq n tem calorias nos pratos
     nomes = [
         "Vegetariano",
         "Vegano",
-        "Onívoro",
-        "Low Carb",
         "Sem Glúten",
         "Sem Lactose",
     ]
 
-    objetos = [
-        PreferenciaAlimentar(nome=nome)
-        for nome in nomes
-    ]
-
     PreferenciaAlimentar.objects.bulk_create(
-        objetos,
+        [PreferenciaAlimentar(nome=nome) for nome in nomes],
         ignore_conflicts=True,
     )
 
-    preferencias = {
-        preferencia.nome: preferencia
-        for preferencia in PreferenciaAlimentar.objects.filter(
-            nome__in=nomes
+    print(f"{PreferenciaAlimentar.objects.count()} preferências no banco.")
+
+
+# ============================================================
+# PRATOS
+# ============================================================
+
+def criar_pratos():
+    """
+    Cadastra todos os pratos do CSV de receitas.
+    Mantém o id original do CSV, assim as interações apontam
+    direto para o prato certo.
+
+    Retorna o conjunto de ids cadastrados.
+    """
+    print("\nCriando pratos...")
+
+    pratos_csv = obter_pratos()
+
+    if LIMITE_PRATOS is not None:
+        pratos_csv = pratos_csv[:LIMITE_PRATOS]
+
+    objetos = [
+        Prato(id=int(dados["id"]), nome=dados["nome"])
+        for dados in pratos_csv
+        if dados["id"] is not None
+    ]
+
+    Prato.objects.bulk_create(
+        objetos,
+        batch_size=1000,
+        ignore_conflicts=True,
+    )
+
+    print(f"{len(objetos)} pratos processados.")
+
+    return {prato.id for prato in objetos}
+
+
+# ============================================================
+# INTERAÇÕES (limpeza do DataFrame)
+# ============================================================
+
+def preparar_interacoes(ids_pratos):
+    """
+    Limpa o DataFrame do CSV uma única vez:
+      - remove linhas incompletas
+      - mantém só notas de 1 a 5
+      - mantém só receitas que existem na tabela Prato
+      - deixa uma interação por usuário + prato (a mais recente)
+      - aplica LIMITE_USUARIOS, se houver
+    """
+    print("\nPreparando interações do CSV...")
+
+    df = INTERACOES[["user_id", "recipe_id", "rating", "date"]].dropna(
+        subset=["user_id", "recipe_id", "rating"]
+    ).copy()
+
+    df["user_id"] = df["user_id"].astype(int)
+    df["recipe_id"] = df["recipe_id"].astype(int)
+    df["rating"] = df["rating"].astype(int)
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+
+    df = df[df["rating"].between(1, 5)]
+    df = df[df["recipe_id"].isin(ids_pratos)]
+
+    df = df.sort_values("date").drop_duplicates(
+        subset=["user_id", "recipe_id"],
+        keep="last",
+    )
+
+    if LIMITE_USUARIOS is not None:
+        permitidos = df["user_id"].drop_duplicates().head(LIMITE_USUARIOS)
+        df = df[df["user_id"].isin(permitidos)]
+
+    print(
+        f"{len(df)} interações válidas de "
+        f"{df['user_id'].nunique()} usuários."
+    )
+
+    return df
+
+
+# ============================================================
+# USUÁRIOS E PERFIS
+# ============================================================
+
+def criar_usuarios(ids_usuarios):
+    print("\nCriando usuários...")
+
+    senha = make_password(SENHA_DEMO)
+
+    # Sem id explícito: o banco escolhe o pk.
+    objetos = [
+        User(
+            username=f"{PREFIXO_USERNAME}{uid}",
+            email=f"usuario{uid}@pratomatch.com",
+            password=senha,
         )
+        for uid in ids_usuarios
+    ]
+
+    # Se o username já existe, o insert é ignorado e reaproveitamos
+    # o usuário existente (o mapa abaixo pega os dois casos).
+    User.objects.bulk_create(
+        objetos,
+        batch_size=1000,
+        ignore_conflicts=True,
+    )
+
+    # Mapa {user_id do CSV: pk real do User}.
+    tamanho = len(PREFIXO_USERNAME)
+    mapa = {
+        int(username[tamanho:]): pk
+        for pk, username in User.objects
+            .filter(username__startswith=PREFIXO_USERNAME)
+            .values_list("id", "username")
+        if username[tamanho:].isdigit()
     }
 
-    print(f"{len(preferencias)} preferências criadas.")
+    print(f"{len(mapa)} usuários prontos.")
+    return mapa
 
-    return preferencias
+def criar_perfis(mapa_usuarios):
+    """
+    Cria um PerfilUsuario vazio para cada usuário do seed.
 
+    Alergias, preferências e categorias preferidas ficam vazias de
+    propósito: o CSV não tem essa informação, e inventar valores
+    para usuários "oficiais" poderia distorcer as recomendações.
+    
+    Realmente n tem motivo real pra popular esses perfils, antes era so pra vc ver como ficava
+    """
+    print("\nCriando perfis...")
 
-# ============================================================
-# CRIAR USUÁRIOS
-# ============================================================
-
-def criar_usuarios(usuarios_ids):
-    print("\nCriando usuários de demonstração...")
-
-    usuarios = {}
-
-    for numero in usuarios_ids:
-        numero = int(numero)
-        username = f"usuario_{numero}"
-
-        usuario, created = User.objects.get_or_create(
-            username=username,
-            defaults={
-                "email": f"usuario{numero}@pratomatch.com"
-            },
-        )
-
-        if created:
-            usuario.set_password("123456")
-            usuario.save()
-
-        usuarios[numero] = usuario
-
-    print(f"{len(usuarios)} usuários preparados.")
-
-    return usuarios
-
-
-# ============================================================
-# CRIAR PERFIS
-# ============================================================
-
-def criar_perfis(
-    usuarios,
-    alergias,
-    preferencias,
-    categorias,
-):
-    print("\nCriando perfis dos usuários...")
-
-    preferencias_lista = list(preferencias.values())
-    alergias_lista = list(alergias.values())
-    categorias_lista = list(categorias.values())
-
-    perfis = []
-
-    for usuario in usuarios.values():
-        perfil = PerfilUsuario(usuario=usuario)
-        perfis.append(perfil)
-
-    # Como os perfis acabaram de ser apagados, podemos inserir em lote.
     PerfilUsuario.objects.bulk_create(
-        perfis,
-        batch_size=100,
+        [PerfilUsuario(usuario_id=pk) for pk in mapa_usuarios.values()],
+        batch_size=1000,
+        ignore_conflicts=True,
     )
 
-    # Precisamos buscar os objetos criados para os relacionamentos M2M.
-    perfis = list(
-        PerfilUsuario.objects.filter(
-            usuario__in=usuarios.values()
-        )
-    )
-
-    for contador, perfil in enumerate(perfis):
-        # Preferência
-        if preferencias_lista:
-            perfil.preferencias.add(
-                preferencias_lista[contador % len(preferencias_lista)]
-            )
-
-        # Alergia
-        if alergias_lista and contador % 2 == 0:
-            perfil.alergias.add(
-                alergias_lista[contador % len(alergias_lista)]
-            )
-
-        # Categoria: somente entre as poucas categorias cadastradas.
-        if categorias_lista:
-            perfil.categorias_preferidas.add(
-                categorias_lista[contador % len(categorias_lista)]
-            )
-
-    print(f"{len(perfis)} perfis configurados.")
+    print(f"{PerfilUsuario.objects.count()} perfis no banco.")
 
 
 # ============================================================
-# CRIAR INTERAÇÕES
+# INTERAÇÕES (gravação no banco)
 # ============================================================
 
-def criar_interacoes(
-    usuarios,
-    pratos,
-):
+def criar_interacoes(df):
     print("\nCriando interações...")
 
-    user_ids = list(usuarios.keys())
-
-    interacoes = INTERACOES[
-        INTERACOES["user_id"].isin(user_ids)
-    ].copy()
-
-    interacoes["date"] = __import__("pandas").to_datetime(
-        interacoes["date"],
-        errors="coerce",
-    )
-
-    interacoes = interacoes[
-        interacoes["rating"].between(1, 5)
-    ].copy()
-
-    # Uma interação por usuário + prato.
-    interacoes = (
-        interacoes
-        .sort_values("date")
-        .drop_duplicates(
-            subset=["user_id", "recipe_id"],
-            keep="last",
-        )
-    )
+    if Interacao.objects.exists():
+        print("Já existem interações; pulando (use --limpar para refazer).")
+        return
 
     objetos = []
 
-    for _, linha in interacoes.iterrows():
-        user_id = int(linha["user_id"])
-        recipe_id = int(linha["recipe_id"])
-        rating = int(linha["rating"])
+    # itertuples é bem mais rápido que iterrows para muitas linhas
+    # aparentemente iterrows é horrivel pq eu usei ele no main e demorou seculos pra rodar tudo
+    for linha in df.itertuples(index=False):
+        campos = {}
 
-        if user_id not in usuarios:
-            continue
-
-        if recipe_id not in pratos:
-            continue
-
-        data = linha["date"]
-
-        if __import__("pandas").isna(data):
-            data = None
+        # Obs.: se o campo "data" do model for auto_now_add, o Django
+        # ignora este valor e grava a data do momento do seed.
+        if not pd.isna(linha.date):
+            campos["data"] = linha.date
 
         objetos.append(
             Interacao(
-                usuario=usuarios[user_id],
-                prato=pratos[recipe_id],
-                nota=rating,
-                interesse=rating >= 4,
-                status="favorito" if rating == 5 else "visualizado",
-                **({"data": data} if data is not None else {}),
+                usuario_id=linha.usuario_pk,
+                prato_id=linha.recipe_id,
+                nota=linha.rating,
+                interesse=linha.rating >= 4,
+                # Confira se estes valores batem com as choices do model.
+                status="favorito" if linha.rating == 5 else "visualizado",
+                **campos,
             )
         )
 
-    if objetos:
-        Interacao.objects.bulk_create(
-            objetos,
-            batch_size=1000,
-            ignore_conflicts=True,
-        )
+    Interacao.objects.bulk_create(
+        objetos,
+        batch_size=2000,
+        ignore_conflicts=True,
+    )
 
     print(f"{len(objetos)} interações criadas.")
 
 
-#popular a tabela OnBoarding 
-def criar_onboarding(usuarios, qtd_por_usuario=8):
+# ============================================================
+# ONBOARDING
+# ============================================================
+
+def criar_onboarding(df):
+    """
+    Para cada usuário, usa as primeiras interações (por id do prato)
+    como se fossem as respostas do onboarding.
+    """
     print("\nCriando dados de onboarding...")
 
-    perfis = PerfilUsuario.objects.filter(
-        usuario__in=usuarios.values()
-    ).select_related("usuario")
+    if OnBoardingPrato.objects.exists():
+        print("Já existe onboarding; pulando (use --limpar para refazer).")
+        return
 
-    objetos = []
+    # {usuario_id: perfil_id}, uma única consulta.
+    perfil_por_usuario = dict(
+        PerfilUsuario.objects.values_list("usuario_id", "id")
+    )
 
-    for perfil in perfis:
-        interacoes = (
-            Interacao.objects
-            .filter(usuario=perfil.usuario)
-            .order_by("prato_id")[:qtd_por_usuario]
+    amostra = (
+        df.sort_values(["user_id", "recipe_id"])
+        .groupby("user_id")
+        .head(ONBOARDING_POR_USUARIO)
+    )
+
+    objetos = [
+        OnBoardingPrato(
+            perfil_id=perfil_por_usuario[linha.usuario_pk],
+            prato_id=linha.recipe_id,
+            interesse=linha.rating >= 4,
         )
-
-        for interacao in interacoes:
-            objetos.append(
-                OnBoardingPrato(
-                    perfil=perfil,
-                    prato=interacao.prato,
-                    interesse=interacao.interesse
-                )
-            )
+        for linha in amostra.itertuples(index=False)
+        if linha.usuario_pk in perfil_por_usuario
+    ]
 
     OnBoardingPrato.objects.bulk_create(
         objetos,
-        batch_size=1000,
+        batch_size=2000,
         ignore_conflicts=True,  # respeita a UniqueConstraint
     )
 
     print(f"{len(objetos)} respostas de onboarding criadas.")
+
+
 # ============================================================
 # EXECUÇÃO
 # ============================================================
@@ -604,34 +420,33 @@ def main():
     print("        POPULANDO BANCO - PRATOMATCH")
     print("=" * 60)
 
-    limpar_banco()
+    if "--limpar" in sys.argv:
+        limpar_banco()
 
-    # Primeiro escolhemos usuários que realmente possuem
-    # receitas em comum.
-    usuarios_ids = selecionar_usuarios_comuns()
+    # 1) Catálogos
+    criar_categorias()
+    criar_alergias()
+    criar_preferencias()
 
-    categorias = criar_categorias()
-    alergias = criar_alergias()
-    preferencias = criar_preferencias()
+    # 2) Pratos (precisam existir antes das interações)
+    ids_pratos = criar_pratos()
 
-    usuarios = criar_usuarios(usuarios_ids)
+    # 3) Interações do CSV, já filtradas e limpas
+    df = preparar_interacoes(ids_pratos)
+    ids_usuarios = df["user_id"].drop_duplicates().tolist()
 
-    pratos = criar_pratos(usuarios_ids)
+    mapa = criar_usuarios(ids_usuarios)
 
-    criar_perfis(
-        usuarios,
-        alergias,
-        preferencias,
-        categorias,
-    )
+    # Traduz o id do CSV para o pk real do User.
+    df = df[df["user_id"].isin(mapa)].copy()
+    df["usuario_pk"] = df["user_id"].map(mapa)
 
-    criar_interacoes(
-        usuarios,
-        pratos,
-    )
-    criar_onboarding(
-        usuarios,
-    )
+    criar_perfis(mapa)
+    criar_interacoes(df)
+
+
+    if CRIAR_ONBOARDING:
+        criar_onboarding(df)
 
     print("\n" + "=" * 60)
     print("        BANCO POPULADO COM SUCESSO!")
@@ -645,33 +460,19 @@ def main():
     print(f"Alergias: {Alergia.objects.count()}")
     print(f"Preferências: {PreferenciaAlimentar.objects.count()}")
     print(f"Interações: {Interacao.objects.count()}")
+    print(f"Onboarding: {OnBoardingPrato.objects.count()}")
 
-    print("\nUsuários de teste:")
+    print("\nPratos mais avaliados:")
 
-    for usuario in usuarios.values():
-        print(
-            f"  {usuario.username} "
-            f"(senha: 123456)"
-        )
-
-    print("\nReceitas compartilhadas:")
-
-    # Mostra apenas algumas receitas que aparecem para mais
-    # de um usuário, sem imprimir milhares de linhas.
-    comuns = (
+    top = (
         Interacao.objects
-        .values("prato")
+        .values("prato__nome")
         .annotate(qtd=Count("usuario"))
-        .filter(qtd__gt=1)
         .order_by("-qtd")[:10]
     )
 
-    for item in comuns:
-        prato = Prato.objects.get(id=item["prato"])
-        print(
-            f"  {prato.nome} -> "
-            f"{item['qtd']} usuários"
-        )
+    for item in top:
+        print(f"  {item['prato__nome']} -> {item['qtd']} usuários")
 
 
 if __name__ == "__main__":
