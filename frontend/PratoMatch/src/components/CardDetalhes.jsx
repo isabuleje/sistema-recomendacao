@@ -21,7 +21,6 @@ const dividirEmDuasColunas = (lista) => {
   return [lista.slice(0, metade), lista.slice(metade)];
 };
 
-
 const CardDetalhes = ({
   titulo,
   descricao,
@@ -33,7 +32,8 @@ const CardDetalhes = ({
   passos,
   avaliacoes = 0,
   estrelas = 0,
-  avaliacaoUsuario: avaliacaoUsuarioProp, salvando,
+  avaliacaoUsuario: avaliacaoUsuarioProp,
+  salvando,
   onAvaliar,
 }) => {
   const [avaliacaoInterna, setAvaliacaoInterna] = useState(0);
@@ -47,11 +47,8 @@ const CardDetalhes = ({
   const [colunaEsquerdaPassos, colunaDireitaPassos] =
     dividirEmDuasColunas(listaPassos);
 
-  const listaCategorias = Array.isArray(categorias)
-    ? categorias
-    : categorias
-      ? [categorias]
-      : [];
+  const categoriasCompletas = normalizarLista(categorias);
+  const listaCategorias = categoriasCompletas.slice(0, 5);
 
   const mediaEstrelas = Number(estrelas) || 0;
   const estrelasCheias = Math.round(mediaEstrelas);
@@ -139,9 +136,6 @@ const CardDetalhes = ({
                   🕜 {typeof tempo === "number" ? `${tempo} min` : tempo}
                 </span>
               )}
-              <span className="tag calorias">
-                🔥 {temCalorias ? `${calorias} kcal` : "Não informado kcal"}
-              </span>
             </div>
           </div>
         </div>
