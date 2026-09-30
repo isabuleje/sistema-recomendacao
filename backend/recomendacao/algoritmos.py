@@ -180,7 +180,6 @@ def obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, valorizacao_d
             receitas_valor[receita] = nota_prevista
         else:
             receitas_valor[receita] = nota_prevista + (nota_prevista * valorizacao_de_frequencia * ((((frequencia - 1)/(maior_frequencia - 1)) ** 0.5)))
-
     placar: DataFrame = DataFrame((receitas_novas).items(), columns=['prato_id', 'nota_esperada'])
     placar['quantidade de avaliacoes'] = placar['prato_id'].map(receitas_frequencia)
     placar['valor interno de classificacao'] = placar['prato_id'].map(receitas_valor)

@@ -177,13 +177,14 @@ Possibilidades utilizadas no projeto:
 
 O sistema foi avaliado utilizando as seguintes métricas:
 
-| **Métrica**     | **Descrição**             |
-| --------------- | ------------------------- |
-| **Precision@K** | [DESCREVER]               |
-| **Recall@K**    | [DESCREVER]               |
-| **NDCG@K**      | [DESCREVER, SE UTILIZADA] |
-| **HitRate@K**   | [DESCREVER, SE UTILIZADA] |
-| **[OUTRA]**     | [DESCREVER]               |
+| **Métrica**     | **Descrição**                                                                             |
+| --------------- | ----------------------------------------------------------------------------------------- |
+| **Precision@K** | [DESCREVER]                                                                               |
+| **Recall@K**    | [DESCREVER]                                                                               |
+| **NDCG@K**      | [DESCREVER, SE UTILIZADA]                                                                 |
+| **HitRate@K**   | [DESCREVER, SE UTILIZADA]                                                                 |
+| **MRR@5**       | Média do inverso da posição do primeiro item relevante nas cinco primeiras recomendações. |
+
 
 ### 5.3 Exemplos de usuários
 
@@ -265,7 +266,6 @@ A página inicial apresenta:
 A página de histórico permite ao usuário visualizar:
 
 - Pratos favoritados
-
 
 ### 7.3 Avaliados
 
@@ -383,7 +383,6 @@ http://127.0.0.1:8000
 
 ### Frontend
 
-
 ```text
 http://localhost:[PORTA]
 ```
@@ -450,11 +449,10 @@ http://localhost:[PORTA]
 
 ## 12. Equipe
 
-| Nome    |   Função    |
-| ------  |   --------  |
-| Isabela | Full-Stack  |
-| João    |Recomendação |
-
+| Nome    | Função       |
+| ------- | ------------ |
+| Isabela | Full-Stack   |
+| João    | Recomendação |
 
 **Instituição:** UEA - Universidade Estadual do Amazonas
 
