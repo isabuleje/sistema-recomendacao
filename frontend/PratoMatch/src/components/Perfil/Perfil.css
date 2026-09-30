@@ -1,122 +1,356 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
 .perfil-page {
   --primary-green: #115e41;
   --bg-color: #faf7f2;
-  --text-gray: #7a8781;
+  --text-dark: #12382b;
+  --text-gray: #5f6f68;
   --tag-green-bg: #e1f0e5;
   --tag-orange-bg: #f9ebe0;
   --tag-orange-text: #8e6a4b;
   --border-color: #ebe6df;
 
-  margin: 40px;
-  font-family: Inter;
+  --verde: #1a7a55;
+  --verde-fundo: #d3ebd9;
+  --amarelo: #d9922a;
+  --amarelo-fundo: #fbe7c4;
+  --azul: #3fae95;
+  --azul-fundo: #d1eee5;
+  --vermelho: #c0392b;
+  --vermelho-fundo: #fbd3cf;
+
   box-sizing: border-box;
-  min-width: 0;
-  padding-bottom: 48px;
-
-  /*Gap que divide a coluna esquerda da direita*/
-  display: flex;
-  gap: 500px;
-}
-
-/*-------------- COLUNA ESQUERDA --------------*/
-
-/* Coluna esquerda: identidade + alergias/preferências */
-.perfil-esquerda {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 48px 64px;
+  font-family: "Inter", system-ui, sans-serif;
+  color: var(--text-dark);
+  text-align: left;
+  background: linear-gradient(160deg, #fff6e8 0%, #f7f1e4 100%);
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  margin-bottom: 48px;
+  gap: 32px;
 }
 
-/*Bolinha que fica as iniciais do usuário*/
-.perfil-avatar {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  background: var(--primary-green);
-  color: var(--bg-color);
+.perfil-page *,
+.perfil-page *::before,
+.perfil-page *::after {
+  box-sizing: border-box;
+}
+
+.perfil-page h1,
+.perfil-page h2,
+.perfil-page p,
+.perfil-page ul {
+  margin: 0;
+}
+
+.perfil-cabecalho {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  margin-bottom: 16px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
 }
 
 .perfil-identidade {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: 40px;
+  gap: 28px;
+  min-width: 0;
 }
 
-/*Coluna que fica as alergias e preferências do usuário*/
-.perfil-coluna-alergia-preferencia {
+.perfil-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.perfil-avatar {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
   display: flex;
-  align-items: flex-start; /* Alinha os itens bem a esquerda da coluna*/
-  flex-direction: column;
-  gap: 40px; /*Gap entre alergias e preferências*/
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-green);
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.perfil-avatar-folha {
   position: absolute;
-  top: 480px;
-}
-
-.perfil-alergias {
-  background: var(--tag-orange-bg);
-  border-radius: 999px;
-  padding: 20px 24px;
-  min-width: 1000px;
-}
-
-.perfil-preferencias {
-  background: var(--tag-green-bg);
-  border-radius: 999px;
-  padding: 20px 24px;
-  min-width: 1000px;
-}
-
-/*-------------- COLUNA DIREITA --------------*/
-
-/* Coluna direita: estatísticas e ações */
-.perfil-direita {
+  right: -2px;
+  bottom: 2px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
-  flex-direction: column;
-  gap: 24px;
-  margin-bottom: 48px;
+  align-items: center;
+  justify-content: center;
+  background: #6fae4a;
+  color: #fff;
+  border: 3px solid #fdfaf4;
 }
 
-/*Coluna que fica avaliados e favoritos do usuário*/
+.perfil-nome {
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--primary-green);
+  overflow-wrap: anywhere;
+}
+
+.perfil-membro {
+  margin-top: 6px;
+  font-size: 1.05rem;
+  color: var(--text-gray);
+}
+
+
 .perfil-stats {
-  flex-direction: column;
-  color: #115e41;
-  width: 500px;
+  display: flex;
+  gap: 16px;
 }
 
 .perfil-stat {
-  flex-direction: column;
   display: flex;
-  margin-bottom: 32px;
-  justify-content: center;
   align-items: center;
-  color: #115e41;
-  font-size: 1.2rem;
-  font-weight: 600;
-  border: 2px solid #115e41;
-  border-radius: 16px;
-  padding: 16px;
-  height: 200px;
+  gap: 16px;
+  min-width: 230px;
+  padding: 20px 24px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(17, 94, 65, 0.08);
 }
 
-/*Coluna que fica todos os botões*/
-.perfil-acoes {
+.perfil-stat-icone {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.perfil-stat-verde {
+  background: var(--verde-fundo);
+  color: var(--verde);
+}
+
+.perfil-stat-amarelo {
+  background: var(--amarelo-fundo);
+  color: var(--amarelo);
+}
+
+.perfil-stat-texto {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+}
+
+.perfil-stat-numero {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-dark);
+}
+
+.perfil-stat-legenda {
+  font-size: 0.9rem;
+  color: var(--text-gray);
+}
+
+.perfil-conteudo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.perfil-linha {
+  --cor: var(--verde);
+  --cor-fundo: var(--verde-fundo);
+
+  flex: 1;
+  min-height: 112px;
+  max-height: 160px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 20px 32px 20px 36px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid color-mix(in srgb, var(--cor) 45%, white);
+  border-left: 6px solid var(--cor);
+  box-shadow: 0 2px 10px rgba(17, 94, 65, 0.05);
+}
+
+.perfil-linha-amarelo {
+  --cor: var(--amarelo);
+  --cor-fundo: var(--amarelo-fundo);
+}
+
+.perfil-linha-azul {
+  --cor: var(--azul);
+  --cor-fundo: var(--azul-fundo);
+}
+
+.perfil-linha-vermelho {
+  --cor: var(--vermelho);
+  --cor-fundo: var(--vermelho-fundo);
+}
+
+.perfil-linha-icone {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cor-fundo);
+  color: var(--cor);
+}
+
+.perfil-linha-texto {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.perfil-linha-texto h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.perfil-descricao {
+  font-size: 1rem;
+  color: var(--text-gray);
+}
+
+.perfil-linha-seta {
+  display: flex;
+  color: var(--text-gray);
+}
+
+.perfil-tags {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.tag-alergia {
+  background: var(--tag-orange-bg);
+  color: var(--tag-orange-text);
+}
+
+.tag-preferencia {
+  background: var(--tag-green-bg);
+  color: var(--primary-green);
 }
 
 .perfil-botao {
-  background: transparent;
-  border-radius: 16px;
-  padding: 4px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-shrink: 0;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 14px 28px;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
   cursor: pointer;
+  transition: filter 0.15s, background 0.15s, color 0.15s;
+}
+
+.perfil-botao:hover {
+  filter: brightness(1.08);
+}
+
+.perfil-botao:focus-visible {
+  outline: 3px solid var(--primary-green);
+  outline-offset: 3px;
+}
+
+.perfil-botao-verde {
+  background: var(--primary-green);
+  color: #fff;
+}
+
+.perfil-botao-amarelo {
+  background: var(--amarelo);
+  color: #fff;
+}
+
+.perfil-botao-contorno {
+  background: transparent;
+  color: var(--primary-green);
+  border-color: var(--primary-green);
+}
+
+.perfil-botao-contorno:hover {
+  filter: none;
+  background: var(--primary-green);
+  color: #fff;
+}
+
+.perfil-botao-perigo {
+  background: var(--vermelho);
+  color: #fff;
+}
+
+.perfil-botao-perigo:focus-visible {
+  outline-color: var(--vermelho);
+}
+
+
+@media (max-width: 900px) {
+  .perfil-page {
+    padding: 28px 20px;
+  }
+
+  .perfil-stats {
+    width: 100%;
+  }
+
+  .perfil-stat {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .perfil-linha {
+    flex-wrap: wrap;
+    max-height: none;
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .perfil-linha-icone {
+    width: 56px;
+    height: 56px;
+  }
+
+  .perfil-linha-seta {
+    display: none;
+  }
+
+  .perfil-botao {
+    width: 100%;
+  }
 }

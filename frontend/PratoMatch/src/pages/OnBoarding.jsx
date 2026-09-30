@@ -54,7 +54,7 @@ const OnBoarding = () => {
     const sucesso = await concluir();
 
     if (sucesso) {
-      navigate("/");
+      navigate("/home");
     }
   };
 

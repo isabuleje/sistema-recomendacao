@@ -66,6 +66,7 @@ def listar_avaliados(request):
             "id": interacao.prato_id,
             "nome": dados.get("nome", interacao.prato.nome),
             "nota_usuario": interacao.nota,
+            "is_favorito": interacao.status == "Favoritado",
             "avaliacoes": dados.get("avaliacoes", 0),
             "estrelas": dados.get("estrelas", 0),
         })
@@ -357,6 +358,15 @@ def obter_perfil(request):
         
         "usuario_id": usuario.id,
         "username": usuario.username,
+        "pratos_avaliados": Interacao.objects.filter(
+            usuario=usuario,
+            nota__gte=1,
+            nota__lte=5,
+        ).count(),
+        "pratos_favoritados": Interacao.objects.filter(
+            usuario=usuario,
+            status="Favoritado",
+        ).count(),
         "categorias_preferidas": list(perfil.categorias_preferidas.values_list("nome", flat=True)),
     })
     
