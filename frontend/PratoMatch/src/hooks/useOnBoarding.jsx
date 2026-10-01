@@ -9,7 +9,7 @@ import {
   salvarOnboarding,
   listar_alergias,
   buscarPratosOnboarding,
-} from "../services/OnBoarding.js";
+} from "../services/onboardingService.js";
 
 export function useOnboarding() {
   const [fase, setFase] = useState(1);

@@ -1,56 +1,90 @@
-import { API_URL, prepararCsrf } from "./api.js";
+import { apiFetch, prepararCsrf } from "./api.js";
 
+/*
+Os serviços do onboarding possue:
+  - salvarOnboarding(dados)
+  - listar_alergias()
+  - buscar_categorias()
+  - buscarPratosOnboarding()
+*/
+
+/* Função POST que salva os dados escolhidos durante o onboarding*/
 export async function salvarOnboarding(dados) {
   const csrfToken = await prepararCsrf();
-  const resposta = await fetch(`${API_URL}/onboarding/`, {
+
+  return apiFetch("/onboarding/", {
     method: "POST",
+
     headers: {
       "Content-Type": "application/json",
       "X-CSRFToken": csrfToken,
     },
-    credentials: "include",
+
     body: JSON.stringify(dados),
   });
-
-  const resultado = await resposta.json();
-
-  if (!resposta.ok) {
-    throw new Error(resultado.erro || "Erro ao salvar o onboarding.");
-  }
-
-  return resultado;
 }
 
-export async function listar_alergias() {
-  const response = await fetch(`${API_URL}/alergias/`);
+/* Função GET que pega todas as alergias*/
+export async function listarAlergias() {
+  const data = await apiFetch("/alergias/");
 
-  if (!response.ok) {
-    throw new Error(`Erro ao buscar alergias: ${response.status}`);
-  }
-
-  const alergias = await response.json();
-  return alergias;
+  return data;
 }
 
+/**
+Busca os pratos que serão apresentados
+durante o onboarding.
+
+Os filtros são opcionais:
+  - alergias
+  - categorias
+  - restrição alimentar
+
+Tipo: 
+buscarPratosOnboarding({
+      alergias: [1, 3],
+      categorias: ["italiana", "brasileira"],
+      restricao: "vegetariano"
+  });
+
+Tenho quase certeza que o backend não funciona dessa maneira, uma das coisas para MUDAR
+ */
 export async function buscarPratosOnboarding({
   alergias = [],
   categorias = [],
   restricao = "nenhuma",
 } = {}) {
   const params = new URLSearchParams();
-  alergias.forEach((item) => params.append("alergias", item));
-  categorias.forEach((item) => params.append("categorias", item));
+
+  // Adiciona cada alergia separadamente
+  alergias.forEach((item) => {
+    params.append("alergias", item);
+  });
+
+  // Categorias também indo separads
+  categorias.forEach((item) => {
+    params.append("categorias", item);
+  });
+
+  // Se for "nenhuma" manda nada de nada pro backend
   if (restricao && restricao !== "nenhuma") {
     params.set("restricao", restricao);
   }
 
-  const response = await fetch(
-    `${API_URL}/onboarding/pratos/?${params.toString()}`,
-  );
-  if (!response.ok) {
-    throw new Error("Erro ao buscar pratos do onboarding.");
-  }
+  // Os parâmetros se transformam em uma URL
+  const queryString = params.toString();
 
-  const data = await response.json();
+  const endpoint = queryString
+    ? `/onboarding/pratos/?${queryString}`
+    : "/onboarding/pratos/";
+
+  const data = await apiFetch(endpoint);
+
+
   return Array.isArray(data.pratos) ? data.pratos : [];
+}
+
+/* Função GET para pegar todas as categorias*/
+export async function buscarCategorias() {
+  return await apiFetch("/categorias/");
 }
