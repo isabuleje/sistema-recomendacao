@@ -1,4 +1,4 @@
-import { RESTRICOES } from "./onboardingData";
+import { RESTRICOES } from "../OnboardingData";
 import { ArrowRight, Search } from "lucide-react";
 
 const RestricaoAlimentar = ({
@@ -12,7 +12,6 @@ const RestricaoAlimentar = ({
   onAvancar,
   opcoesAlergias,
 }) => {
-
   //mó role pra tirar o nome de ingrediente pq já tem alergia como varaivel
   const sugestoes = opcoesAlergias
     .filter((ingrediente) =>

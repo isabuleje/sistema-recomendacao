@@ -1,5 +1,5 @@
-import CardPratoCirculo from "./CardPratoCirculo";
-import { MIN_PRATOS } from "./onboardingData";
+import CardPratoCirculo from "../CardPratoCirculo";
+import { MIN_PRATOS } from "../OnboardingData";
 import { ArrowRight } from "lucide-react";
 
 const EscolhaPratos = ({
@@ -20,15 +20,18 @@ const EscolhaPratos = ({
       </p>
 
       <div className="pratos-grid-circular">
-        {carregando && <p className="onboarding-subtitulo">Carregando pratos...</p>}
-        {!carregando && pratos.map((prato) => (
-          <CardPratoCirculo
-            key={prato.id}
-            prato={prato}
-            selecionado={selecionados.includes(prato.id)}
-            onToggle={() => onToggle(prato.id)}
-          />
-        ))}
+        {carregando && (
+          <p className="onboarding-subtitulo">Carregando pratos...</p>
+        )}
+        {!carregando &&
+          pratos.map((prato) => (
+            <CardPratoCirculo
+              key={prato.id}
+              prato={prato}
+              selecionado={selecionados.includes(prato.id)}
+              onToggle={() => onToggle(prato.id)}
+            />
+          ))}
       </div>
 
       <p className="onboarding-contador">

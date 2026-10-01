@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import styles from "../components/Avaliados/AvaliadoCard.module.css";
-import AvaliadoCard from "../components/Avaliados/AvaliadoCard.jsx";
-import { buscarPratosAvaliados, salvarFavoritos } from "../services/Pratos.js";
-import { buscarPerfil } from "../services/Perfil.js";
+import styles from "../components/avaliados/AvaliadoCard.module.css";
+import AvaliadoCard from "../components/avaliados/AvaliadoCard.jsx";
+import { buscarPratosAvaliados, salvarFavoritos } from "../services/pratosService.js";
+import { buscarPerfil } from "../services/perfilService.js";
 import { imagemAleatoria } from "../utils/imagensPratos.js";
 
 const Avaliado = () => {

@@ -398,10 +398,10 @@ def hit_rate_at_5(
             f"{hit_rate:.4f}"
         )
 
-        print(
+        '''print(
             f"Hit Rate@5 (%): "
             f"{hit_rate * 100:.2f}%"
-        )
+        )'''
 
         print("===================================")
 
