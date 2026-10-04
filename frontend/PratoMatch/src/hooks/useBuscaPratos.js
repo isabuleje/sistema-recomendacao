@@ -22,19 +22,13 @@ export function useBuscaPratos() {
 
   useEffect(() => {
     const termoLimpo = termo.trim();
+    const idRequisicao = ++idRequisicaoAtual.current;
 
     if (!termoLimpo) {
-      setResultados([]);
-      setTotal(0);
-      setBuscando(false);
-      setErroBusca(null);
       return;
     }
 
-    const idRequisicao = ++idRequisicaoAtual.current;
-
-    setBuscando(true);
-    setErroBusca(null);
+    const controller = new AbortController();
 
     // debounce, esperando o usuário terminar de digitar antes de mandar a requisição
     const timer = setTimeout(async () => {
@@ -44,6 +38,7 @@ export function useBuscaPratos() {
           termoLimpo,
           pagina,
           POR_PAGINA_BUSCA,
+          controller.signal,
         );
 
         //resposta apenas a requisição de busca mais recente
@@ -53,7 +48,10 @@ export function useBuscaPratos() {
           setTotal(Number(dados.total) || 0);
         }
       } catch (error) {
-        if (idRequisicao === idRequisicaoAtual.current) {
+        if (
+          idRequisicao === idRequisicaoAtual.current &&
+          error.name !== "AbortError"
+        ) {
           console.error("Erro ao pesquisar pratos:", error);
           setErroBusca("Não foi possível buscar os pratos.");
         }
@@ -67,17 +65,52 @@ export function useBuscaPratos() {
     //timer pra uma pesquisa nao sobrepor a outra
     return () => {
       clearTimeout(timer);
+      controller.abort();
     };
   }, [termo, pagina]);
 
   //se tem termo ent busca :D
   const emBusca = (termo ?? "").trim().length > 0;
+  const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA_BUSCA));
+
+  const alterarBusca = (event) => {
+    const novoTermo = event.target.value;
+
+    setTermo(novoTermo);
+    setPagina(1);
+    setResultados([]);
+    setTotal(0);
+    setErroBusca(null);
+    setBuscando(novoTermo.trim().length > 0);
+  };
+
+  const limparBusca = () => {
+    setTermo("");
+    setPagina(1);
+    setResultados([]);
+    setTotal(0);
+    setBuscando(false);
+    setErroBusca(null);
+  };
+
+  const mudarPagina = (novaPagina) => {
+    setPagina(Math.min(Math.max(1, novaPagina), totalPaginas));
+    setBuscando(true);
+    setErroBusca(null);
+  };
 
   return {
+    termo,
+    alterarBusca,
+    limparBusca,
+    pagina,
+    mudarPagina,
     resultados,
     total,
     buscando,
+    erro: erroBusca,
     erroBusca,
     emBusca,
+    totalPaginas,
   };
 }

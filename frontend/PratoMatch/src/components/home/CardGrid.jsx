@@ -80,6 +80,7 @@ function CardGrid({
             title={prato.nome}
             description={prato.descricao || "Sem descrição disponível."}
             category={prato.tags?.length > 0 ? prato.tags[0] : "Prato"}
+            categories={prato.tags || []}
             prepTime={prato.tempo_preparo}
             rating={prato.estrelas}
             evaluations={prato.avaliacoes}

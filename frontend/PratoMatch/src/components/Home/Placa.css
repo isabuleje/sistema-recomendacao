@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: space-between;
 
-  background-color: #fef6e6;
+  background-color: #fde9d1;
   border-radius: 35px;
   padding: 24px 40px;
   margin: 0 24px;
@@ -43,8 +43,7 @@
 }
 
 .placa-subtitulo {
-  margin: 6px 0 0 0;
-  color: #000000;
+  color: #0B806B;
   font-family: Inter, sans-serif;
   font-size: 16px;
 }

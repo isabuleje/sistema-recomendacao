@@ -11,6 +11,10 @@
 
 .chips-grid {
   display: flex;
+  flex: 1;
+  align-content: flex-start;
+  max-height: calc(100svh - 20rem);
+  overflow-y: auto;
   justify-content: center;
   margin-top: 3.3rem;
   flex-wrap: wrap;

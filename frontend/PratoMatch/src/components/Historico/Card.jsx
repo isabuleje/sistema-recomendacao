@@ -2,14 +2,11 @@ import styles from "./Card.module.css";
 import { Heart } from "lucide-react";
 
 const Card = ({
-  id,
   titulo,
   descricao,
   imagem,
   tempo,
   nota,
-  numerosNota,
-  data,
   isFavorite,
   onToggleFavorite,
   onOpenDetalhes,

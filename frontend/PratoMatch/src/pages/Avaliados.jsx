@@ -5,6 +5,7 @@ import styles from "../components/avaliados/AvaliadoCard.module.css";
 import AvaliadoCard from "../components/avaliados/AvaliadoCard.jsx";
 
 import { useAvaliacao } from "../hooks/useAvaliados.jsx";
+import { useFavoritos } from "../hooks/useFavoritos.jsx";
 import { usePerfil } from "../hooks/usePerfil.js";
 
 import { imagemDoPrato } from "../utils/imagensPratos.js";
@@ -12,7 +13,9 @@ import { imagemDoPrato } from "../utils/imagensPratos.js";
 const Avaliado = () => {
   const navigate = useNavigate();
 
-  const { avaliados, carregando, erro, alternarFavorito } = useAvaliacao();
+  const { avaliados, carregando, erro } = useAvaliacao();
+  const { favoritos, alternarFavorito: alternarFavoritoPersistido } =
+    useFavoritos();
 
   const { perfil } = usePerfil();
 
@@ -74,8 +77,8 @@ const Avaliado = () => {
             tempo={prato.tempo_preparo}
             nota={prato.nota_usuario}
             numerosNota={prato.avaliacoes}
-            isFavorite={prato.is_favorito}
-            onToggleFavorite={() => alternarFavorito(prato.id)}
+            isFavorite={favoritos.has(Number(prato.id))}
+            onToggleFavorite={() => alternarFavoritoPersistido(prato.id)}
             onOpenDetalhes={() => abrirDetalhes(prato)}
           />
         ))

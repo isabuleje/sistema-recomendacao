@@ -86,5 +86,6 @@ export async function buscarPratosOnboarding({
 
 /* Função GET para pegar todas as categorias*/
 export async function buscarCategorias() {
-  return await apiFetch("/categorias/");
+  const data = await apiFetch("/categorias/");
+  return Array.isArray(data) ? data : (data?.categorias ?? []);
 }

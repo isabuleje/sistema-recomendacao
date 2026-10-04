@@ -6,6 +6,7 @@ const Card = ({
   title,
   description,
   category,
+  categories = [],
   prepTime,
   rating,
   isFavorite,
@@ -51,12 +52,43 @@ const Card = ({
       </div>
       <div className="card-info">
         <h2 className="card-title">{title}</h2>
-        <div className="card-metadata">
-          <span>{category}</span>
-          <span>{prepTime} min </span>
-          <span className="card-rating">⭐ {rating}</span>
+        <div className="card-metadata-row">
+
+          <div className="card-metadata">
+            <span className="metaItem">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              {prepTime} min
+            </span>
+            <span className="meta-dot" aria-hidden="true">
+              •
+            </span>
+            <span className="card-rating">⭐ {rating}</span>
+          </div>
         </div>
         <p className="card-description">{description}</p>
+
+        {categories.length > 0 && (
+          <ul className="card-tags" aria-label="Categorias do prato">
+            {categories.slice(0, 2).map((item) => (
+              <li key={item} className="card-tag">
+                {item}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

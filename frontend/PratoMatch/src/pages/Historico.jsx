@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import styles from "../components/Historico/Card.module.css";
 import Card from "../components/Historico/Card.jsx";
-import { buscarFavoritos, salvarFavorito } from "../services/favoritosService.js";
+import {
+  buscarFavoritos,
+  salvarFavorito,
+} from "../services/favoritosService.js";
 import { buscarPerfil } from "../services/perfilService.js";
 import { imagemDoPrato } from "../utils/imagensPratos.js";
 
@@ -52,10 +55,10 @@ const Historico = () => {
   return (
     <div className="home-page">
       <div className="user-greeting">
-        <p style={{ color: "#055746", fontWeight: "700" }}>
+        <p style={{ fontWeight: "700" }}>
           Olá, {perfil?.username ?? "usuário"}! 👋
         </p>
-        <i className="bx bx-user" style={{ color: "#000504" }} />
+        <i className="bx bx-user"/>
       </div>
 
       <div
@@ -85,7 +88,7 @@ const Historico = () => {
             imagem={imagemDoPrato(prato.id)}
             categorias={prato.tags || []}
             tempo={prato.tempo_preparo}
-            nota={prato.nota_usuario ?? 0}
+            nota={prato.nota_usuario ?? "Sem nota"}
             numerosNota={prato.avaliacoes}
             isFavorite
             onToggleFavorite={() => desfavoritar(prato)}

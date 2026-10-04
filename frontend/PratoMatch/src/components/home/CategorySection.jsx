@@ -21,7 +21,7 @@ function CategorySection({
       <div className="category-heading">
         <h2 className="category-title">{title}</h2>
 
-        <p>{description}</p>
+        <p className="category-description">{description}</p>
       </div>
 
       <CardGrid

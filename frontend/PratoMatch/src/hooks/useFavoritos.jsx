@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { buscarFavoritos, salvarFavorito } from "../services/favoritosService.js";
 
 //Alterna favoritos e salva favorito
@@ -11,6 +11,7 @@ export function useFavoritos(pratoId, favoritoInicial = false) {
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
+  const alteracoesRef = useRef(0);
 
   useEffect(() => {
     async function carregar() {
@@ -20,9 +21,13 @@ export function useFavoritos(pratoId, favoritoInicial = false) {
         const dados = await buscarFavoritos();
 
         const pratos = Array.isArray(dados) ? dados : (dados?.pratos ?? []);
-        const ids = pratos.map((prato) => prato.id);
+        const ids = pratos.map((prato) => Number(prato.id));
 
-        setFavorito(usaColecao ? new Set(ids) : ids.includes(pratoId));
+        if (alteracoesRef.current === 0) {
+          setFavorito(
+            usaColecao ? new Set(ids) : ids.includes(Number(pratoId)),
+          );
+        }
       } catch (error) {
         // Favoritos não devem impedir a Home de funcionar.
         console.error("Erro ao carregar favoritos:", error);
@@ -45,16 +50,22 @@ export function useFavoritos(pratoId, favoritoInicial = false) {
       return;
     }
 
+    const idNormalizado = Number(id);
     const anterior = favorito;
-    const estaFavorito = usaColecao ? anterior.has(id) : anterior;
+    const estaFavorito = usaColecao
+      ? anterior.has(idNormalizado)
+      : anterior;
     const novo = !estaFavorito;
+    alteracoesRef.current += 1;
 
     setFavorito(
       usaColecao
         ? new Set(
             novo
-              ? [...anterior, id]
-              : [...anterior].filter((favoritoId) => favoritoId !== id),
+              ? [...anterior, idNormalizado]
+              : [...anterior].filter(
+                  (favoritoId) => favoritoId !== idNormalizado,
+                ),
           )
         : novo,
     );
@@ -62,7 +73,7 @@ export function useFavoritos(pratoId, favoritoInicial = false) {
     setErro("");
 
     try {
-      await salvarFavorito(id, novo);
+      await salvarFavorito(idNormalizado, novo);
     } catch (error) {
       //deu erro ent volta ao estado anterior
       setFavorito(anterior);
