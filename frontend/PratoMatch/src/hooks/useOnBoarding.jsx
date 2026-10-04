@@ -1,26 +1,22 @@
 import { useEffect, useState } from "react";
-import {
-  MIN_PRATOS,
-  TOTAL_FASES,
-} from "../components/OnBoarding/onboardingData";
-import { buscarCategorias } from "../services/Ingredientes_Categorias.js";
-
+import { MIN_PRATOS, TOTAL_FASES } from "../constants/onboardingData.js";
 import {
   salvarOnboarding,
-  listar_alergias,
+  listarAlergias,
+  buscarCategorias,
   buscarPratosOnboarding,
 } from "../services/onboardingService.js";
 
 export function useOnboarding() {
-  const [fase, setFase] = useState(1);
+  const [fase, setFase] = useState(1); //sao 3 fases
 
   const [categorias, setCategorias] = useState([]);
   const [listaAlergias, setListaAlergias] = useState([]);
 
   const [restricao, setRestricao] = useState("nenhuma");
 
-  const [alergia, setAlergia] = useState("");
-  const [alergias, setAlergias] = useState([]);
+  const [alergia, setAlergia] = useState(""); //texto q esta sendo digitado no input das alergias
+  const [alergias, setAlergias] = useState([]); //alergias selecionadas pelo usuario
 
   const [culinariasSelecionadas, setCulinariasSelecionadas] = useState([]);
   const [pratosSelecionados, setPratosSelecionados] = useState([]);
@@ -30,21 +26,25 @@ export function useOnboarding() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState(null);
 
+  // carrega os dados necessários (categorias e alergias)
   useEffect(() => {
-    let ativo = true;
+    let ativo = true; // flag para controlar se o componente ainda está montado
 
     async function carregarDados() {
       const [categoriasRes, alergiasRes] = await Promise.allSettled([
         buscarCategorias(),
-        listar_alergias(),
+        listarAlergias(),
       ]);
 
-      if (!ativo) return;
+      if (!ativo) return; //senao foi montado, nao faz nada
 
       if (categoriasRes.status === "fulfilled") {
         setCategorias(
           Array.isArray(categoriasRes.value) ? categoriasRes.value : [],
         );
+      } else {
+        console.log("Erro ao buscar categorias:", categoriasRes.reason);
+        setErro("Não foi possível carregar a lista de categorias.");
       }
 
       if (alergiasRes.status === "fulfilled") {
@@ -63,6 +63,7 @@ export function useOnboarding() {
     };
   }, []);
 
+  // Carrega os pratos apenas na fase 3, e se o usuário mudar algum filtro (alergias, categorias ou restrição) ele busca dnv
   useEffect(() => {
     if (fase !== 3) return;
 
@@ -70,20 +71,25 @@ export function useOnboarding() {
 
     async function carregarPratos() {
       setCarregandoPratos(true);
+      setErro(null);
       try {
         const resultado = await buscarPratosOnboarding({
           alergias,
           categorias: culinariasSelecionadas,
           restricao,
         });
-        if (ativo) setPratos(resultado);
+        if (ativo) {
+          setPratos(resultado);
+        }
       } catch (erroBusca) {
         if (ativo) {
           console.error("Erro ao buscar pratos do onboarding:", erroBusca);
           setErro("Não foi possível carregar os pratos.");
         }
       } finally {
-        if (ativo) setCarregandoPratos(false);
+        if (ativo) {
+          setCarregandoPratos(false);
+        }
       }
     }
 
@@ -94,6 +100,7 @@ export function useOnboarding() {
     };
   }, [fase, alergias, culinariasSelecionadas, restricao]);
 
+  // Adiciona alergias, e evita que uma mesma alergia seja selecionada duas vezes
   const adicionarAlergia = (ingrediente) => {
     setAlergias((anteriores) =>
       anteriores.includes(ingrediente)
@@ -101,31 +108,40 @@ export function useOnboarding() {
         : [...anteriores, ingrediente],
     );
 
-    setAlergia("");
+    setAlergia(""); //limpa o input
   };
 
+  // Remove uma alergia da lista
   const removerAlergia = (ingrediente) => {
     setAlergias((anteriores) =>
       anteriores.filter((item) => item !== ingrediente),
     );
   };
 
+  // Alterna a seleção de uma culinária (categoria/ fase 2)
   const toggleCulinaria = (item) => {
-    setCulinariasSelecionadas((atual) =>
-      atual.includes(item)
-        ? atual.filter((itemAtual) => itemAtual !== item)
-        : [...atual, item],
-    );
+    setCulinariasSelecionadas((atual) => {
+      if (atual.includes(item)) {
+        return atual.filter((culinaria) => culinaria !== item);
+      } else {
+        return [...atual, item];
+      }
+    });
   };
 
+  // Alterna a seleção de um prato (fase 3)
   const togglePrato = (id) => {
-    setPratosSelecionados((atual) =>
-      atual.includes(id)
-        ? atual.filter((prato) => prato !== id)
-        : [...atual, id],
-    );
+    setPratosSelecionados((atual) =>{
+      if (atual.includes(id)) {
+        return atual.filter((pratoId) => pratoId !== id);
+      } else {
+        return [...atual, id];
+      }
+    })
   };
 
+
+  // Funções para avançar e voltar entre as fases do onboarding, garantindo que não ultrapasse os limites
   const avancar = () => {
     setFase((atual) => Math.min(atual + 1, TOTAL_FASES));
   };
@@ -134,6 +150,8 @@ export function useOnboarding() {
     setFase((atual) => Math.max(atual - 1, 1));
   };
 
+
+  // Concluir envia todas as escolhas do usuário para o backend
   const concluir = async () => {
     setSalvando(true);
     setErro(null);
@@ -148,17 +166,28 @@ export function useOnboarding() {
 
       return true;
     } catch (e) {
-      setErro(e.message);
+      console.log("Erro ao salvar onboarding:", e);
+      setErro(e.message || "Erro ao salvar o onboarding. Tente novamente.");
       return false;
     } finally {
       setSalvando(false);
     }
   };
 
+  const podeConcluir = pratosSelecionados.length >= MIN_PRATOS;
+
   return {
+    //navegação entre fases
     fase,
+    avancar,
+    voltar,
+
+    //dados do onboarding
     categorias,
     listaAlergias,
+    pratos,
+
+    //escolhas do usuário
     restricao,
     setRestricao,
     alergia,
@@ -169,15 +198,16 @@ export function useOnboarding() {
     culinariasSelecionadas,
     toggleCulinaria,
     pratosSelecionados,
-    pratos,
-    carregandoPratos,
     togglePrato,
-    avancar,
-    voltar,
+    
+
+    //operacoes
     concluir,
+    carregandoPratos,
     salvando,
     erro,
 
-    podeConcluir: pratosSelecionados.length >= MIN_PRATOS,
+    //condicao para habilitar o botão de concluir
+    podeConcluir,
   };
 }

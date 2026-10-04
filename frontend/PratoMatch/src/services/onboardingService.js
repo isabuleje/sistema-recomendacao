@@ -3,8 +3,8 @@ import { apiFetch, prepararCsrf } from "./api.js";
 /*
 Os serviços do onboarding possue:
   - salvarOnboarding(dados)
-  - listar_alergias()
-  - buscar_categorias()
+  - listarAlergias()
+  - buscarCategorias()
   - buscarPratosOnboarding()
 */
 
