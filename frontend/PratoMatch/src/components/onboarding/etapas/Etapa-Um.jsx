@@ -1,4 +1,4 @@
-import { RESTRICOES } from "../OnboardingData";
+import { RESTRICOES } from "../../../constants/onboardingData.js";
 import { ArrowRight, Search } from "lucide-react";
 
 const RestricaoAlimentar = ({

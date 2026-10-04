@@ -5,10 +5,10 @@ import "../components/Home/Categorias.css";
 import "../components/Home/Input.css";
 
 import CategorySection from "../components/Home/CategorySection.jsx";
-import Loading from "../components/Loading/Loading.jsx";
+import Loading from "../components/common/loading/Loading.jsx";
 
 import { useBuscaPratos } from "../hooks/useBuscaPratos.js";
-import { useFavoritos } from "../hooks/useFavoritos.js";
+import { useFavoritos } from "../hooks/useFavoritos.jsx";
 import { usePerfil } from "../hooks/usePerfil.js";
 import { useRecomendacoes } from "../hooks/useRecomendacoes.js";
 
@@ -43,11 +43,11 @@ const Home = () => {
     <div className="home-page">
       {/* Cabeçalho */}
 
-      <div className="user-greeting">
+      <header className="user-greeting">
         <p>Olá, {perfil?.username ?? "usuário"}! 👋</p>
 
         <i className="bx bx-user" aria-hidden="true" />
-      </div>
+      </header>
 
       {/* Placa principal */}
 

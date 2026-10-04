@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import styles from "../components/Historico/Card.module.css";
 import Card from "../components/Historico/Card.jsx";
-import { buscarPratoFavoritados, salvarFavoritos } from "../services/Pratos.js";
-import { buscarPerfil } from "../services/Perfil.js";
-import { imagemAleatoria } from "../utils/imagensPratos.js";
+import { buscarFavoritos, salvarFavorito } from "../services/favoritosService.js";
+import { buscarPerfil } from "../services/perfilService.js";
+import { imagemDoPrato } from "../utils/imagensPratos.js";
 
 // aceita tanto [ ... ] quanto { pratos: [ ... ] }
 const extrairLista = (dados) =>
@@ -31,7 +31,7 @@ const Historico = () => {
   }, []);
 
   useEffect(() => {
-    buscarPratoFavoritados()
+    buscarFavoritos()
       .then((dados) => setFavoritos(extrairLista(dados)))
       .catch(() => setErro("Não foi possível carregar seus favoritos."))
       .finally(() => setCarregando(false));
@@ -42,7 +42,7 @@ const Historico = () => {
     setFavoritos((atuais) => atuais.filter((p) => p.id !== prato.id));
 
     try {
-      await salvarFavoritos(prato.id, false);
+      await salvarFavorito(prato.id, false);
     } catch (error) {
       setFavoritos((atuais) => [...atuais, prato]);
       console.error("Erro ao atualizar favorito:", error);
@@ -82,7 +82,7 @@ const Historico = () => {
             key={prato.id}
             titulo={prato.nome}
             descricao={prato.descricao || "Sem descrição disponível."}
-            imagem={imagemAleatoria()}
+            imagem={imagemDoPrato(prato.id)}
             categorias={prato.tags || []}
             tempo={prato.tempo_preparo}
             nota={prato.nota_usuario ?? 0}

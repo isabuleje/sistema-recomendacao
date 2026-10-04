@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { pesquisarPratos } from "../services/Pratos.js";
+import { pesquisarPratos } from "../services/pratosService.js";
 import { ATRASO_DEBOUNCE, POR_PAGINA_BUSCA } from "../constants/busca.js";
 
 /* Hook utilizado para pesquisar pratos 
@@ -8,10 +8,12 @@ import { ATRASO_DEBOUNCE, POR_PAGINA_BUSCA } from "../constants/busca.js";
   Evita que uma resposta antiga sobrescreva uma pesquisa mais recente
 */
 
-export function useBuscaPratos(termo, pagina = 1) {
+export function useBuscaPratos() {
   // Pratos encontrados pela pesquisa.
   const [resultados, setResultados] = useState([]);
   const [total, setTotal] = useState(0);
+  const [pagina, setPagina] = useState(1);
+  const [termo, setTermo] = useState("");
   const [buscando, setBuscando] = useState(false); //se ta tendo busca, sim ou nao
   const [erroBusca, setErroBusca] = useState(null);
 
@@ -69,7 +71,7 @@ export function useBuscaPratos(termo, pagina = 1) {
   }, [termo, pagina]);
 
   //se tem termo ent busca :D
-  const emBusca = termo.trim().length > 0;
+  const emBusca = (termo ?? "").trim().length > 0;
 
   return {
     resultados,

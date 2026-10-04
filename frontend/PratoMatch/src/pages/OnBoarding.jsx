@@ -1,22 +1,18 @@
-import { useNavigate } from "react-router-dom";
+import OnBoardingHeader from "../components/onboarding/OnBoardingHeader";
+import RestricaoAlimentar from "../components/onboarding/etapas/Etapa-Um";
+import EscolhaCulinaria from "../components/onboarding/etapas/Etapa-Dois";
+import EscolhaPratos from "../components/onboarding/etapas/Etapa-Tres";
 
-import OnBoardingHeader from "../components/OnBoarding/OnBoardingHeader";
-import RestricaoAlimentar from "../components/OnBoarding/RestricaoAlimentar";
-import EscolhaCulinaria from "../components/OnBoarding/EscolhaCulinaria";
-import EscolhaPratos from "../components/OnBoarding/EscolhaPratos";
+import { TOTAL_FASES} from "../constants/onboardingData.js";
 
-import { TOTAL_FASES } from "../components/OnBoarding/onboardingData";
+import { useOnboarding } from "../hooks/useOnboarding";
 
-import { useOnboarding } from "../hooks/useOnBoarding";
-
-import "../components/OnBoarding/OnBoardingLayout.css";
-import "../components/OnBoarding/OnBoardingFase1.css";
-import "../components/OnBoarding/OnBoardingFase2.css";
-import "../components/OnBoarding/OnBoardingFase3.css";
+import "../components/onboarding/css/OnBoardingLayout.css";
+import "../components/onboarding/css/OnBoardingFase1.css";
+import "../components/onboarding/css/OnBoardingFase2.css";
+import "../components/onboarding/css/OnBoardingFase3.css";
 
 const OnBoarding = () => {
-  const navigate = useNavigate();
-
   const {
     fase,
 
@@ -44,21 +40,13 @@ const OnBoarding = () => {
     avancar,
     voltar,
 
-    concluir,
+    handleConcluir,
 
     salvando,
     erro,
 
     podeConcluir,
   } = useOnboarding();
-
-  const handleConcluir = async () => {
-    const sucesso = await concluir();
-
-    if (sucesso) {
-      navigate("/home");
-    }
-  };
 
   return (
     <section id="onboarding">

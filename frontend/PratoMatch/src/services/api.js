@@ -43,14 +43,15 @@ Ele só é chamado em POST, PUT, PATCH e DELETE
 */
 
 export async function prepararCsrf() {
-  const response = await apiFetch("/csrf/", {
-    credentials: "include", //credentials é sobre precisar estar logado
-  });
+  await apiFetch("/csrf/");
 
-  if (!response.ok) {
+  const cookie = document.cookie
+    .split("; ")
+    .find((item) => item.startsWith("csrftoken="));
+
+  if (!cookie) {
     throw new Error("Não foi possível obter o token CSRF");
   }
-  const data = await response.json();
 
-  return data.csrfToken;
+  return decodeURIComponent(cookie.split("=")[1]);
 }

@@ -6,8 +6,8 @@ import Home from "./pages/Home";
 import Perfil from "./pages/Perfil";
 import Historico from "./pages/Historico";
 import OnBoarding from "./pages/OnBoarding.jsx";
-import Avaliado from "./pages/Avaliado.jsx";
-import CardDetalhesPage from "./pages/CardDetalhesPage.jsx";
+import Avaliado from "./pages/Avaliados.jsx";
+import CardDetalhesPage from "./pages/Detalhes.jsx";
 import Cadastro from "./pages/Cadastro.jsx";
 
 export default function App() {

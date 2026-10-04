@@ -1,5 +1,5 @@
 import CardPratoCirculo from "../CardPratoCirculo";
-import { MIN_PRATOS } from "../OnboardingData";
+import { MIN_PRATOS } from "../../../constants/onboardingData.js";
 import { ArrowRight } from "lucide-react";
 
 const EscolhaPratos = ({

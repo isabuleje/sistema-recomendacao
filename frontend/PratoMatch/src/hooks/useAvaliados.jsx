@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { salvarAvaliacao } from "../services/avaliacaoService.js";
+import { useState, useEffect } from "react";
+import { salvarAvaliacao, buscarAvaliados } from "../services/avaliacaoService.js";
+
 
 /*Hook responsável por gerenciar a avaliação de um prato*/
 export function useAvaliacao(pratoId, notaInicial = 0) {
@@ -8,6 +9,8 @@ export function useAvaliacao(pratoId, notaInicial = 0) {
   ); /*number é pra caso a nota venha como string, ela vira numero*/
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
+  const [avaliados, setAvaliados] = useState([]);
+  const [carregando, setCarregando] = useState(false);
 
   const avaliar = async (novaNota) => {
     if (!Number.isInteger(novaNota) || novaNota < 1 || novaNota > 5) {
@@ -35,5 +38,28 @@ export function useAvaliacao(pratoId, notaInicial = 0) {
     }
   };
 
-  return { nota, avaliar, salvando, erro };
+  useEffect(() => {
+    async function carregar() {
+      try {
+        setCarregando(true);
+        setErro(null);
+
+        const dados = await buscarAvaliados();
+
+        const pratos = Array.isArray(dados) ? dados : (dados?.pratos ?? []);
+
+        setAvaliados(pratos);
+      } catch (error) {
+        console.error("Erro ao carregar pratos avaliados:", error);
+
+        setErro("Não foi possível carregar seus pratos avaliados.");
+      } finally {
+        setCarregando(false);
+      }
+    }
+
+    carregar();
+  }, []);
+
+  return { nota, avaliar, salvando, erro, carregando , avaliados};
 }

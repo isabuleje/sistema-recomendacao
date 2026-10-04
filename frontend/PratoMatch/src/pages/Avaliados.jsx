@@ -1,63 +1,33 @@
-import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+
 import styles from "../components/avaliados/AvaliadoCard.module.css";
+
 import AvaliadoCard from "../components/avaliados/AvaliadoCard.jsx";
-import { buscarPratosAvaliados, salvarFavoritos } from "../services/pratosService.js";
-import { buscarPerfil } from "../services/perfilService.js";
-import { imagemAleatoria } from "../utils/imagensPratos.js";
+
+import { useAvaliacao } from "../hooks/useAvaliados.jsx";
+import { usePerfil } from "../hooks/usePerfil.js";
+
+import { imagemDoPrato } from "../utils/imagensPratos.js";
 
 const Avaliado = () => {
   const navigate = useNavigate();
-  const [avaliados, setAvaliados] = useState([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState("");
 
-  useEffect(() => {
-    buscarPratosAvaliados()
-      .then((dados) =>
-        setAvaliados(Array.isArray(dados) ? dados : (dados?.pratos ?? [])),
-      )
-      .catch(() => setErro("Não foi possível carregar seus pratos avaliados."))
-      .finally(() => setCarregando(false));
-  }, []);
+  const { avaliados, carregando, erro, alternarFavorito } = useAvaliacao();
 
-  const [perfil, setPerfil] = useState(null);
+  const { perfil } = usePerfil();
 
-  useEffect(() => {
-    buscarPerfil()
-      .then(setPerfil)
-      .catch(() => setErro("Não foi possível carregar seu perfil."));
-  }, []);
-
-  const alternarFavorito = async (prato) => {
-    const novo = !prato.is_favorito;
-
-    // otimista: atualiza só esse prato na lista
-    setAvaliados((atuais) =>
-      atuais.map((p) => (p.id === prato.id ? { ...p, is_favorito: novo } : p)),
-    );
-
-    try {
-      await salvarFavoritos(prato.id, novo);
-    } catch (error) {
-      // reverte se a API falhar
-      setAvaliados((atuais) =>
-        atuais.map((p) =>
-          p.id === prato.id ? { ...p, is_favorito: !novo } : p,
-        ),
-      );
-      console.error("Erro ao atualizar favorito:", error);
-    }
+  const abrirDetalhes = (prato) => {
+    navigate(`/pratos/${prato.id}`, {
+      state: { prato },
+    });
   };
 
   return (
     <div className="home-page">
       <div className="user-greeting">
-        <p style={{ color: "#055746", fontWeight: "700" }}>
-          {" "}
-          Olá, {perfil?.username ?? "usuário"}! 👋
-        </p>
-        <i className="bx bx-user" style={{ color: "#000504" }} />
+        <p>Olá, {perfil?.username ?? "usuário"}! 👋</p>
+
+        <i className="bx bx-user" aria-hidden="true" />
       </div>
 
       <div
@@ -67,15 +37,20 @@ const Avaliado = () => {
         <NavLink
           to="/historico"
           className={({ isActive }) =>
-            `${styles["page-toggle-button"]} ${isActive ? styles["page-toggle-button-active"] : ""}`
+            `${styles["page-toggle-button"]} ${
+              isActive ? styles["page-toggle-button-active"] : ""
+            }`
           }
         >
           Favoritos
         </NavLink>
+
         <NavLink
           to="/avaliados"
           className={({ isActive }) =>
-            `${styles["page-toggle-button"]} ${isActive ? styles["page-toggle-button-active"] : ""}`
+            `${styles["page-toggle-button"]} ${
+              isActive ? styles["page-toggle-button-active"] : ""
+            }`
           }
         >
           Avaliados
@@ -94,16 +69,14 @@ const Avaliado = () => {
             key={prato.id}
             titulo={prato.nome}
             descricao={prato.descricao || "Sem descrição disponível."}
-            imagem={imagemAleatoria()}
+            imagem={imagemDoPrato(prato.id)}
             categorias={prato.tags || []}
             tempo={prato.tempo_preparo}
             nota={prato.nota_usuario}
             numerosNota={prato.avaliacoes}
             isFavorite={prato.is_favorito}
-            onToggleFavorite={() => alternarFavorito(prato)}
-            onOpenDetalhes={() =>
-              navigate(`/pratos/${prato.id}`, { state: { prato } })
-            }
+            onToggleFavorite={() => alternarFavorito(prato.id)}
+            onOpenDetalhes={() => abrirDetalhes(prato)}
           />
         ))
       )}

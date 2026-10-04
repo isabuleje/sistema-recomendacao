@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import diningImage from "../../assets/dining.png";
-import ShadowText from "../ShadowText/ShadowText";
+import ShadowText from "../common/shadow-text/ShadowText.jsx";
 import "./SideBar.css";
 
 
@@ -8,7 +8,7 @@ const menuItems = [
   { label: "Home", icon: "bx-home", path: "/home" },
   { label: "Histórico", icon: "bx-history", path: "/historico" },
   { label: "Avaliados", icon: "bx-heart", path: "/avaliados" },
-];
+]
 const profileItem = { label: "Perfil", icon: "bx-user", path: "/perfil" };
 
 const SideBar = () => {

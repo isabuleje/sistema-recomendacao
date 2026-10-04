@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import Card from "./Card.jsx";
 
-import { imagemAleatoria } from "../../utils/imagensPratos.js";
+import { imagemDoPrato } from "../../utils/imagensPratos.js";
 import { POR_PAGINA_BUSCA } from "../../constants/busca.js";
 
 /*
@@ -53,10 +53,10 @@ function CardGrid({
         paginaAtual * POR_PAGINA_BUSCA,
       );
 
-  // Aq resolve aquele problema de ficar renderizando as imagens o tempo todo kkkkk
-  const imagens = useMemo(() => {
-    return pratosVisiveis.map(() => imagemAleatoria());
-  }, [pratosVisiveis]);
+  const imagens = useMemo(
+    () => pratosVisiveis.map((prato) => imagemDoPrato(prato.id)),
+    [pratosVisiveis],
+  );
 
   const irParaPagina = (numero) => {
     if (usaPaginacaoDoServidor) {

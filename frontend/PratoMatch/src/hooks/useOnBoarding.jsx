@@ -6,6 +6,7 @@ import {
   buscarCategorias,
   buscarPratosOnboarding,
 } from "../services/onboardingService.js";
+import { useNavigate } from "react-router-dom";
 
 export function useOnboarding() {
   const [fase, setFase] = useState(1); //sao 3 fases
@@ -25,6 +26,8 @@ export function useOnboarding() {
 
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState(null);
+
+  const navigate = useNavigate();
 
   // carrega os dados necessários (categorias e alergias)
   useEffect(() => {
@@ -176,6 +179,14 @@ export function useOnboarding() {
 
   const podeConcluir = pratosSelecionados.length >= MIN_PRATOS;
 
+  const handleConcluir = async () => {
+    const sucesso = await concluir();
+
+    if (sucesso) {
+      navigate("/home");
+    }
+  };
+
   return {
     //navegação entre fases
     fase,
@@ -206,6 +217,7 @@ export function useOnboarding() {
     carregandoPratos,
     salvando,
     erro,
+    handleConcluir,
 
     //condicao para habilitar o botão de concluir
     podeConcluir,

@@ -19,7 +19,7 @@ Função POST para remover ou salvar um prato dos favoritos
 export async function salvarFavorito(prato_id, favorito) {
   const csrfToken = await prepararCsrf();
 
-  return apiFetch("/favoritos/salvar", {
+  return apiFetch("/favoritos/salvar/", {
     method: "POST",
 
     headers: {
@@ -27,8 +27,8 @@ export async function salvarFavorito(prato_id, favorito) {
       "X-CSRFToken": csrfToken,
     },
     body: JSON.stringify({
-        prato_id: prato_id,
-        status: favorito ? "Favoritado" : "Avaliado"
-    })
+      prato_id,
+      status: favorito ? "Favoritado" : "Avaliado",
+    }),
   });
 }
