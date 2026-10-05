@@ -38,13 +38,12 @@ durante o onboarding.
 Os filtros são opcionais:
   - alergias
   - categorias
-  - restrição alimentar
+  - alergias e categorias
 
 Tipo: 
 buscarPratosOnboarding({
       alergias: [1, 3],
-      categorias: ["italiana", "brasileira"],
-      restricao: "vegetariano"
+      categorias: ["italiana", "brasileira"]
   });
 
 Tenho quase certeza que o backend não funciona dessa maneira, uma das coisas para MUDAR
@@ -52,7 +51,6 @@ Tenho quase certeza que o backend não funciona dessa maneira, uma das coisas pa
 export async function buscarPratosOnboarding({
   alergias = [],
   categorias = [],
-  restricao = "nenhuma",
 } = {}) {
   const params = new URLSearchParams();
 
@@ -65,11 +63,6 @@ export async function buscarPratosOnboarding({
   categorias.forEach((item) => {
     params.append("categorias", item);
   });
-
-  // Se for "nenhuma" manda nada de nada pro backend
-  if (restricao && restricao !== "nenhuma") {
-    params.set("restricao", restricao);
-  }
 
   // Os parâmetros se transformam em uma URL
   const queryString = params.toString();

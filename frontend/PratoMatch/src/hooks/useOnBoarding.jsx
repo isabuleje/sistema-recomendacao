@@ -14,8 +14,6 @@ export function useOnboarding() {
   const [categorias, setCategorias] = useState([]);
   const [listaAlergias, setListaAlergias] = useState([]);
 
-  const [restricao, setRestricao] = useState("nenhuma");
-
   const [alergia, setAlergia] = useState(""); //texto q esta sendo digitado no input das alergias
   const [alergias, setAlergias] = useState([]); //alergias selecionadas pelo usuario
 
@@ -66,7 +64,7 @@ export function useOnboarding() {
     };
   }, []);
 
-  // Carrega os pratos apenas na fase 3, e se o usuário mudar algum filtro (alergias, categorias ou restrição) ele busca dnv
+  // Carrega os pratos da fase 3 quando alergias ou categorias mudam.
   useEffect(() => {
     if (fase !== 3) return;
 
@@ -79,7 +77,6 @@ export function useOnboarding() {
         const resultado = await buscarPratosOnboarding({
           alergias,
           categorias: culinariasSelecionadas,
-          restricao,
         });
         if (ativo) {
           setPratos(resultado);
@@ -101,7 +98,7 @@ export function useOnboarding() {
     return () => {
       ativo = false;
     };
-  }, [fase, alergias, culinariasSelecionadas, restricao]);
+  }, [fase, alergias, culinariasSelecionadas]);
 
   // Adiciona alergias, e evita que uma mesma alergia seja selecionada duas vezes
   const adicionarAlergia = (ingrediente) => {
@@ -161,7 +158,6 @@ export function useOnboarding() {
 
     try {
       await salvarOnboarding({
-        preferencias: restricao && restricao !== "nenhuma" ? [restricao] : [],
         alergias,
         categorias: culinariasSelecionadas,
         pratos_curtidos: pratosSelecionados,
@@ -199,8 +195,6 @@ export function useOnboarding() {
     pratos,
 
     //escolhas do usuário
-    restricao,
-    setRestricao,
     alergia,
     setAlergia,
     alergias,
