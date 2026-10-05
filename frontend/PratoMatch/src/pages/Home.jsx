@@ -1,231 +1,55 @@
-// Página inicial, onde o usuário vai poder ver os pratos recomendados
+import { Search, Send } from "lucide-react";
 
 import "../components/Home/Placa.css";
 import "../components/Home/Categorias.css";
 import "../components/Home/Input.css";
 
-import { Search, Send, ChevronLeft, ChevronRight } from "lucide-react";
+import CategorySection from "../components/Home/CategorySection.jsx";
+import Loading from "../components/common/loading/Loading.jsx";
 
-import Card from "../components/Home/Card";
-import Loading from "../components/Loading/Loading.jsx";
-
-import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  buscarPratoFavoritados,
-  buscarRecomendados,
-  salvarFavoritos,
-} from "../services/Pratos.js";
-import { useBuscaPratos, POR_PAGINA_BUSCA } from "../hooks/useBuscaPratos.js";
-import { buscarPerfil } from "../services/Perfil.js";
-import { imagemAleatoria } from './../utils/imagensPratos';
-
-const ITENS_POR_PAGINA = 24;
-
-const CategorySection = ({
-  title,
-  description,
-  pratos,
-  paginaAtual,
-  totalPaginas,
-  onMudarPagina,
-  favoritos,
-  onToggleFavorite,
-}) => (
-  <section className="category-section">
-    <div className="category-heading">
-      <h2 className="category-title" style={{ color: "#055746" }}>
-        {title}
-      </h2>
-
-      <p>{description}</p>
-    </div>
-
-    <CardGrid
-      pratos={pratos}
-      paginaAtual={paginaAtual} //temos páginas :D e nem demora pra carregar
-      totalPaginas={totalPaginas}
-      onMudarPagina={onMudarPagina}
-      favoritos={favoritos}
-      onToggleFavorite={onToggleFavorite}
-    />
-  </section>
-);
-
-const CardGrid = ({
-  pratos,
-  paginaAtual: paginaExterna,
-  totalPaginas: totalExterno,
-  onMudarPagina,
-  favoritos = new Set(),
-  onToggleFavorite,
-}) => {
-  const navigate = useNavigate();
-  const [paginaInterna, setPaginaInterna] = useState(1);
-  const topoRef = useRef(null); //pra rolar pro topo da lista de pratos quando mudar de página
-
-  // true quando a paginação é feita pela API (busca)
-  const servidor = onMudarPagina !== undefined;
-
-  // no modo local, volta para a página 1 se a lista mudar
-  useEffect(() => {
-    if (!servidor) setPaginaInterna(1);
-  }, [pratos, servidor]);
-
-  const paginaAtual = servidor ? paginaExterna : paginaInterna;
-  const totalPaginas = servidor
-    ? totalExterno
-    : Math.max(1, Math.ceil(pratos.length / ITENS_POR_PAGINA));
-
-  // na API a lista já vem cortada
-  const pratosVisiveis = servidor
-    ? pratos
-    : pratos.slice(
-        (paginaAtual - 1) * ITENS_POR_PAGINA,
-        paginaAtual * ITENS_POR_PAGINA,
-      );
-
-  const irParaPagina = (numero) => {
-    (servidor ? onMudarPagina : setPaginaInterna)(numero);
-    topoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  return (
-    <>
-      <div ref={topoRef} className="cards-grid">
-        {pratosVisiveis.map((prato) => (
-          <Card
-            key={prato.id}
-            image={imagemAleatoria()}
-            title={prato.nome}
-            description={prato.descricao || "Sem descrição disponível."}
-            category={prato.tags?.length > 0 ? prato.tags[0] : "Prato"}
-            prepTime={prato.tempo_preparo}
-            rating={prato.estrelas}
-            evaluations={prato.avaliacoes}
-            isFavorite={favoritos.has(prato.id)}
-            onToggleFavorite={() => onToggleFavorite?.(prato.id)}
-            onOpenDetalhes={() =>
-              navigate(`/pratos/${prato.id}`, { state: { prato } })
-            }
-          />
-        ))}
-      </div>
-
-      {totalPaginas > 1 && (
-        <nav className="paginacao" aria-label="Paginação de pratos">
-          <button
-            type="button"
-            className="paginacao-botao"
-            onClick={() => irParaPagina(paginaAtual - 1)}
-            disabled={paginaAtual === 1}
-            aria-label="Página anterior"
-          >
-            <ChevronLeft size={18} />
-          </button>
-
-          <span className="paginacao-info">
-            Página {paginaAtual} de {totalPaginas}
-          </span>
-
-          <button
-            type="button"
-            className="paginacao-botao"
-            onClick={() => irParaPagina(paginaAtual + 1)}
-            disabled={paginaAtual === totalPaginas}
-            aria-label="Próxima página"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </nav>
-      )}
-    </>
-  );
-};
+import { useBuscaPratos } from "../hooks/useBuscaPratos.js";
+import { useFavoritos } from "../hooks/useFavoritos.jsx";
+import { usePerfil } from "../hooks/usePerfil.js";
+import { useRecomendacoes } from "../hooks/useRecomendacoes.js";
 
 const Home = () => {
-  const [pratos, setPratos] = useState([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState(null);
-  const [favoritos, setFavoritos] = useState(new Set());
+  const { perfil } = usePerfil();
+  const {
+    pratos,
+    carregando: carregandoRecomendacoes,
+    erro: erroRecomendacoes,
+  } = useRecomendacoes();
+  const { favoritos, alternarFavorito } = useFavoritos();
 
-  const [termoBusca, setTermoBusca] = useState("");
-  const [paginaBusca, setPaginaBusca] = useState(1);
+  const {
+    termo,
+    alterarBusca,
+    limparBusca,
 
-  const { resultados, total, buscando, erroBusca, emBusca } = useBuscaPratos(
-    termoBusca,
-    paginaBusca,
-  );
-  const [perfil, setPerfil] = useState(null);
+    pagina,
+    mudarPagina,
 
-  useEffect(() => {
-    buscarPerfil()
-      .then(setPerfil)
-      .catch(() => setErro("Não foi possível carregar seu perfil."));
-  }, []);
+    resultados,
+    total,
 
-  const totalPaginasBusca = Math.max(1, Math.ceil(total / POR_PAGINA_BUSCA));
+    buscando,
+    erro: erroBusca,
 
-  useEffect(() => {
-    const carregarPratos = async () => {
-      try {
-        setCarregando(true);
-        setErro(null);
-
-        const dados = await buscarRecomendados();
-        setPratos(dados);
-      } catch (error) {
-        console.error("Erro ao carregar pratos:", error);
-
-        setErro("Não foi possível carregar os pratos.");
-      } finally {
-        setCarregando(false);
-      }
-    };
-
-    carregarPratos();
-  }, []);
-
-  useEffect(() => {
-    buscarPratoFavoritados()
-      .then((dados) => setFavoritos(new Set(dados.map((prato) => prato.id))))
-      .catch((error) => console.error("Erro ao carregar favoritos:", error));
-  }, []);
-
-  const alternarFavorito = async (pratoId) => {
-    const eraFavorito = favoritos.has(pratoId);
-    setFavoritos((atuais) => {
-      const atualizados = new Set(atuais);
-      eraFavorito ? atualizados.delete(pratoId) : atualizados.add(pratoId);
-      return atualizados;
-    });
-
-    try {
-      await salvarFavoritos(pratoId, !eraFavorito);
-    } catch (error) {
-      setFavoritos((atuais) => {
-        const revertidos = new Set(atuais);
-        eraFavorito ? revertidos.add(pratoId) : revertidos.delete(pratoId);
-        return revertidos;
-      });
-      console.error("Erro ao atualizar favorito:", error);
-    }
-  };
+    emBusca,
+    totalPaginas,
+  } = useBuscaPratos();
 
   return (
     <div className="home-page">
-      <div className="user-greeting">
-        <p
-          style={{
-            color: "#055746",
-            fontWeight: "700",
-          }}
-        >
-          Olá,{perfil?.username ?? "usuário"}! 👋
-        </p>
+      {/* Cabeçalho */}
 
-        <i className="bx bx-user" style={{ color: "#000504" }} />
-      </div>
+      <header className="user-greeting">
+        <p>Olá, {perfil?.username ?? "usuário"}! 👋</p>
+
+        <i className="bx bx-user" aria-hidden="true" />
+      </header>
+
+      {/* Placa principal */}
 
       <div className="placa">
         <div className="placa-conteudo">
@@ -237,43 +61,41 @@ const Home = () => {
         </div>
       </div>
 
+      {/* Conteúdo da home */}
       <section className="home-content">
+        {/* Barra de pesquisa*/}
+
         <div className="category-filter-row">
           <div className="input-wrapper">
-            <Search className="search-icon" />
+            <Search className="search-icon" aria-hidden="true" />
 
             <input
               type="text"
               placeholder="O que você quer comer hoje?"
               name="text"
               className="input"
-              value={termoBusca}
-              onChange={(e) => {
-                setTermoBusca(e.target.value);
-                setPaginaBusca(1);
-              }}
+              value={termo}
+              onChange={alterarBusca}
+              aria-label="Pesquisar pratos"
             />
 
-            {termoBusca && (
+            {termo && (
               <button
                 className="send-button"
                 type="button"
                 aria-label="Limpar pesquisa"
-                onClick={() => {
-                  setTermoBusca("");
-                  setPaginaBusca(1);
-                }}
+                onClick={limparBusca}
               >
                 <Send />
               </button>
             )}
           </div>
-
         </div>
+
+        {/* Resulados da busca */}
 
         {emBusca ? (
           <>
-            {/* loading só na primeira carga; ao trocar de página a lista antiga fica visível */}
             {buscando && resultados.length === 0 && (
               <div className="pratos-loading">
                 <Loading />
@@ -286,18 +108,18 @@ const Home = () => {
               </div>
             )}
 
-            {!erroBusca && (resultados.length > 0 || !buscando) && (
+            {!erroBusca && (
               <CategorySection
-                title={`Resultados para "${termoBusca}"`}
+                title={`Resultados para "${termo}"`}
                 description={
                   total > 0
                     ? `${total} prato(s) encontrado(s).`
                     : "Nenhum prato encontrado com esse termo."
                 }
                 pratos={resultados}
-                paginaAtual={paginaBusca}
-                totalPaginas={totalPaginasBusca}
-                onMudarPagina={setPaginaBusca}
+                paginaAtual={pagina}
+                totalPaginas={totalPaginas}
+                onMudarPagina={mudarPagina}
                 favoritos={favoritos}
                 onToggleFavorite={alternarFavorito}
               />
@@ -305,19 +127,21 @@ const Home = () => {
           </>
         ) : (
           <>
-            {carregando && (
+            {/* Recomendacoes */}
+
+            {carregandoRecomendacoes && (
               <div className="pratos-loading">
                 <Loading />
               </div>
             )}
 
-            {!carregando && erro && (
+            {!carregandoRecomendacoes && erroRecomendacoes && (
               <div className="pratos-error">
-                <p>{erro}</p>
+                <p>{erroRecomendacoes}</p>
               </div>
             )}
 
-            {!carregando && !erro && (
+            {!carregandoRecomendacoes && !erroRecomendacoes && (
               <CategorySection
                 title="Recomendados para você"
                 description="Encontre os pratos mais indicados para o seu gosto."

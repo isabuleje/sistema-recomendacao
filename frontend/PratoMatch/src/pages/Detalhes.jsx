@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import CardDetalhes from "../components/CardDetalhes.jsx";
-import { useAvaliacao } from "../hooks/useAvaliacao.jsx";
-import { imagemAleatoria } from "../utils/imagensPratos.js";
+import { useAvaliacao } from "../hooks/useAvaliados.jsx";
+import { imagemDoPrato } from "../utils/imagensPratos.js";
 
 const CardDetalhesPage = () => {
   const { state } = useLocation();
@@ -32,7 +32,7 @@ const CardDetalhesPage = () => {
       <CardDetalhes
         titulo={prato.nome}
         descricao={prato.descricao || "Sem descrição disponível."}
-        imagem={  imagemAleatoria()}
+        imagem={imagemDoPrato(prato.id)}
         categorias={(prato.tags || []).join(", ") || "Sem categoria"}
         tempo={`${prato.tempo_preparo || 0} min`}
         calorias={prato.calorias || "Não informado"}

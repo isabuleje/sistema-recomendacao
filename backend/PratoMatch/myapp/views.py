@@ -202,11 +202,15 @@ def salvar_avaliacao(request):
         defaults={"nome": dados_prato["nome"]},
     )
 
-    interacao, _ = Interacao.objects.update_or_create(
+    interacao, criada = Interacao.objects.get_or_create(
         usuario=request.user,
         prato=prato,
         defaults={"nota": nota, "status": "Avaliado"},
     )
+    interacao.nota = nota
+    if criada or interacao.status != "Favoritado":
+        interacao.status = "Avaliado"
+    interacao.save(update_fields=["nota", "status"])
 
     #deletar o cache logo dps pq eu quero ver a lista de recomendacao atualizando
     cache.delete(f"recomendados:{request.user.id}")

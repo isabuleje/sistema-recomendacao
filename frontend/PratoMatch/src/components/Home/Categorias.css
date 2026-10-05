@@ -43,6 +43,7 @@
   font-weight: 700;
   line-height: 1.1;
   margin: 0;
+  color: #055746;
 }
 
 /* Nos títulos, as duas cores ficam exatamente na mesma posição. */
@@ -193,4 +194,11 @@
 .paginacao-botao:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+.category-description {
+  font-size: 16px;
+  line-height: 1.1;
+  margin-bottom: 16px;
+  color: #0B806B;
 }

@@ -1,3 +1,11 @@
+/*
+Váriaveis estáticas do onboarding
+Aqui pode alterar:
+  - Restrições alimentares
+  - Total de etapas/fases no onboarding
+  - Mínimo de escolha de pratos na fase 3
+*/
+
 export const RESTRICOES = [
   {
     value: "nenhuma",
@@ -29,33 +37,6 @@ export const RESTRICOES = [
     icone: "🥛",
     descricao: "Evito alimentos com lactose",
   },
-];
-
-export const CULINARIAS = [
-  "Docinhos",
-  "Bolos",
-  "Almoço",
-  "Jantar",
-  "Sobremesa",
-  "Café da manhã",
-];
-
-export const INGREDIENTES = [
-  "Amendoim",
-  "Amêndoa",
-  "Castanha",
-  "Castanha-do-pará",
-  "Camarão",
-  "Caranguejo",
-  "Leite",
-  "Ovo",
-  "Soja",
-  "Trigo",
-  "Peixe",
-  "Nozes",
-  "Avelã",
-  "Pistache",
-  "Gergelim",
 ];
 
 export const TOTAL_FASES = 3;
