@@ -237,7 +237,7 @@ def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, lista_trocas
         print(f'{time.perf_counter() - inicio}s: FILTROS FINAIS EXECUTADOS E ORGANIZAÇÃO DA LISTA FINAL DE RESPOSTAS PREPARADA. PROCESSO FINALIZADO')
     return placar.head(limite)
 
-def obter_recomendacoes(id: int = 0, k: int = 300, limite: int = 50, valorizacao_de_frequencia: float = 0.1, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar: int = 3, imprimir_metricas: bool = False, lista_trocas: DataFrame | None = None, minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding: int = 5):
+def obter_recomendacoes(id: int = 0, k: int = 30, limite: int = 50, valorizacao_de_frequencia: float = 0.1, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar: int = 3, imprimir_metricas: bool = False, lista_trocas: DataFrame | None = None, minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding: int = 5):
     if conexao is None:
         return None
     lista: DataFrame = (pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao))
@@ -316,10 +316,10 @@ def recall_arroba_n(k: int = 2000, n: int = 500, rodadas: int = 3, minimo_receit
             tpratos.append(prato_id)
             tnotas.append(nota)
             dict_testes.pop(prato_id)
-        print("id escolhido:", id)
+        #print("id escolhido:", id)
         lista.at[id, 'items'] = list(dict_testes.keys())
         lista.at[id, 'ratings'] = list(dict_testes.values())
-        print('receitas a buscar:', tpratos, tnotas)
+        #print('receitas a buscar:', tpratos, tnotas)
 
         dict_testes = dict(zip(tpratos, tnotas))
 
@@ -356,7 +356,7 @@ def recall_arroba_n(k: int = 2000, n: int = 500, rodadas: int = 3, minimo_receit
         if not descontado == len(tpratos):
             total += (achado/(receitas_previstas - descontado))
             rodadas_completas += 1
-            print('rodada completa resultado da rodada:', achado/(receitas_previstas - descontado))
+            #print('rodada completa resultado da rodada:', achado/(receitas_previstas - descontado))
     return total / rodadas_completas if rodadas_completas != 0 else None
 
 
@@ -375,7 +375,7 @@ def _raw_receitas():
 
 
 #chama a funçaõ principal de reocmendação, recomendar_para é a função chamadao pelo VIEWS do Django
-def recomendar_para(usuario_id: int, limite: int = 60, imprimir: bool = False):
+def recomendar_para(usuario_id: int, limite: int = 60, imprimir: bool = True):
     conexao = sqlite3.connect(CAMINHO_BANCO, timeout=30)
     try:
         conexao.execute("PRAGMA busy_timeout = 30000")
@@ -405,7 +405,8 @@ def recomendar_para(usuario_id: int, limite: int = 60, imprimir: bool = False):
 
 if __name__ == '__main__':
     #recomendar_para(33, imprimir=False)
-    print(recall_arroba_n(conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"), raw_receitas=_raw_receitas(), imprimir_metricas=False, rodadas=10))
+    print("média de recall (10 rodadas)")
+    print(recall_arroba_n(conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"), raw_receitas=_raw_receitas(), imprimir_metricas=False, rodadas=10, k = 15))
 
 if __name__ == "__main__" and False:
     verificados = [232056]
@@ -415,11 +416,11 @@ if __name__ == "__main__" and False:
             f"\nid:{usuario}\n",
             obter_recomendacoes(
                 id=usuario,
-                k=50,
+                k=15,
                 valorizacao_de_frequencia=0.2,
                 conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"),
                 raw_receitas=pd.read_csv("backend/dataset/RAW_recipes.csv").set_index("id"),
-                minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=5,
+                minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar=2,
                 imprimir_metricas=True,
                 minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding=5,
             ),

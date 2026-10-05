@@ -187,6 +187,8 @@ Os exemplos e resultados numéricos devem ser adicionados após a execução da 
 
 Os resultados quantitativos ainda não estão registrados neste README. Eles devem ser adicionados após a execução das rotinas de avaliação com os arquivos de treino, validação e teste.
 
+![alt text](image-1.png)
+
 ---
 
 ## 7. Interface
@@ -390,3 +392,4 @@ README.md
 **Disciplina:** Oficina de Desenvolvimento de Sistema 1
 **Professor:** Fábio
 **Data:** 30/09/2026
+![alt text](image.png)
