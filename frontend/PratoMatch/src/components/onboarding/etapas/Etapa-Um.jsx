@@ -1,9 +1,6 @@
-import { RESTRICOES } from "../../../constants/onboardingData.js";
 import { ArrowRight, Search } from "lucide-react";
 
-const RestricaoAlimentar = ({
-  restricao,
-  setRestricao,
+const SelecaoAlergias = ({
   alergia,
   setAlergia,
   alergias,
@@ -25,53 +22,6 @@ const RestricaoAlimentar = ({
       <p className="onboarding-subtitulo">
         Assim, as recomendações ficam mais seguras e do seu estilo de vida.
       </p>
-
-      <div className="titulo-grupo">
-        <div className="titulo-com-icone">
-          <img
-            src="public/leaf (1).png"
-            width={40}
-            height={40}
-            alt="Ícone de folha"
-            className="alert-icon"
-          />
-          <h2 className="campo-subtitulo">
-            Você possui alguma restrição alimentar?
-          </h2>
-        </div>
-
-        <p className="campo-complemento">
-          Selecione todas as opções que se aplicam a você. Se não houver
-          nenhuma, selecione "Nenhuma".
-        </p>
-      </div>
-
-      <div
-        className="listaCampos"
-        role="radiogroup"
-        aria-label="Restrição alimentar"
-      >
-        {RESTRICOES.map((opcao) => (
-          <label className="campo" key={opcao.value}>
-            <input
-              type="radio"
-              name="restricao"
-              value={opcao.value}
-              className="campoCheckbox"
-              checked={restricao === opcao.value}
-              onChange={() => setRestricao(opcao.value)}
-            />
-            <span className="campoIcone" aria-hidden="true">
-              {opcao.icone}
-            </span>
-            <span className="campoNome">{opcao.label}</span>
-            <span className="campoDescricao">{opcao.descricao}</span>
-            <span className="campoCheck" aria-hidden="true">
-              ✓
-            </span>
-          </label>
-        ))}
-      </div>
 
       <div className="titulo-grupo">
         <div className="titulo-com-icone">
@@ -154,4 +104,4 @@ const RestricaoAlimentar = ({
   );
 };
 
-export default RestricaoAlimentar;
+export default SelecaoAlergias;

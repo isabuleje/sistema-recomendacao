@@ -247,7 +247,7 @@ def obter_pratos(limite=None, ids=None):
     return _PRATOS_LISTA
 
 
-def obter_pratos_onboarding(alergias=None, categorias=None, restricao=None, limite=24):
+def obter_pratos_onboarding(alergias=None, categorias=None, limite=24):
     """Retorna candidatos reais, seguros e variados para a terceira etapa."""
     alergias = {
         str(valor).strip().casefold()
@@ -259,14 +259,6 @@ def obter_pratos_onboarding(alergias=None, categorias=None, restricao=None, limi
         for valor in (categorias or [])
         if str(valor).strip()
     }
-
-    restricoes = {
-        "vegetariano": {"vegetarian", "ovo-vegetariano"},
-        "vegano": {"vegan"},
-        "gluten": {"gluten-free", "gluten free"},
-        "lactose": {"dairy-free", "lactose-free", "lactose free"},
-    }
-    tags_restricao = restricoes.get(str(restricao or "").casefold(), set())
 
     candidatos = []
     for prato in _PRATOS_LISTA:
@@ -284,8 +276,6 @@ def obter_pratos_onboarding(alergias=None, categorias=None, restricao=None, limi
             for alergia in alergias
             for ingrediente in ingredientes
         ):
-            continue
-        if tags_restricao and not tags.intersection(tags_restricao):
             continue
         if categorias and not any(
             categoria in tag or tag in categoria

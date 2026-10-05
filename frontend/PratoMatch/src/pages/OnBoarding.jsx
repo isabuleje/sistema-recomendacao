@@ -1,5 +1,5 @@
 import OnBoardingHeader from "../components/onboarding/OnBoardingHeader";
-import RestricaoAlimentar from "../components/onboarding/etapas/Etapa-Um";
+import SelecaoAlergias from "../components/onboarding/etapas/Etapa-Um";
 import EscolhaCulinaria from "../components/onboarding/etapas/Etapa-Dois";
 import EscolhaPratos from "../components/onboarding/etapas/Etapa-Tres";
 
@@ -18,9 +18,6 @@ const OnBoarding = () => {
 
     categorias,
     listaAlergias,
-
-    restricao,
-    setRestricao,
 
     alergia,
     setAlergia,
@@ -56,9 +53,7 @@ const OnBoarding = () => {
         {erro && <div className="onboarding-erro">{erro}</div>}
 
         {fase === 1 && (
-          <RestricaoAlimentar
-            restricao={restricao}
-            setRestricao={setRestricao}
+          <SelecaoAlergias
             alergia={alergia}
             setAlergia={setAlergia}
             alergias={alergias}

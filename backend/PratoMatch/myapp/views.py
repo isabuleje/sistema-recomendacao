@@ -19,12 +19,7 @@ from recomendacao.main import (
     obter_alergias,
 )
 from recomendacao.algoritmos import recomendar_para
-from .models import (
-    PerfilUsuario,
-    Alergia,
-    PreferenciaAlimentar,
-    OnBoardingPrato
-)
+from .models import PerfilUsuario, Alergia, OnBoardingPrato
 
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from .models import PerfilUsuario
@@ -275,7 +270,6 @@ def pratos_onboarding(request):
         "pratos": obter_pratos_onboarding(
             alergias=lista_query("alergias"),
             categorias=lista_query("categorias"),
-            restricao=request.GET.get("restricao"),
         )
     })
     
@@ -286,13 +280,11 @@ def salvar_onboarding(request):
 
     dados = request.data
 
-    preferencias = dados.get("preferencias", [])
     alergias = dados.get("alergias", [])
     categorias = dados.get("categorias", [])
     pratos_curtidos = dados.get("pratos_curtidos", [])
 
     for nome_campo, valor in (
-        ("preferencias", preferencias),
         ("alergias", alergias),
         ("categorias", categorias),
         ("pratos_curtidos", pratos_curtidos),
@@ -314,12 +306,6 @@ def salvar_onboarding(request):
             perfil, _ = PerfilUsuario.objects.get_or_create(usuario=request.user)
 
             perfil.preferencias.clear()
-            for nome in preferencias:
-                if isinstance(nome, str) and nome.strip():
-                    preferencia, _ = PreferenciaAlimentar.objects.get_or_create(
-                        nome=nome.strip()
-                    )
-                    perfil.preferencias.add(preferencia)
 
             perfil.alergias.clear()
             for nome in alergias:
@@ -515,15 +501,18 @@ def recomendados(request):
 
     usuario_id = request.user.id
     chave = f"recomendados:{usuario_id}"
+    ids_avaliados = set(
+        Interacao.objects.filter(
+            usuario_id=usuario_id,
+            nota__gte=1,
+            nota__lte=5,
+        ).values_list("prato_id", flat=True)
+    )
 
     ids = cache.get(chave)
     if ids is None:
         try:
-            quantidade_avaliacoes = Interacao.objects.filter(
-                usuario_id=usuario_id,
-                nota__gte=1,
-                nota__lte=5,
-            ).count()
+            quantidade_avaliacoes = len(ids_avaliados)
 
             if quantidade_avaliacoes < 5:
                 perfil = PerfilUsuario.objects.filter(
@@ -537,15 +526,11 @@ def recomendados(request):
                 if perfil is None:
                     ids = []
                 else:
-                    preferencia = list(
-                        perfil.preferencias.values_list("nome", flat=True)
-                    )
                     candidatos = obter_pratos_onboarding(
                         alergias=perfil.alergias.values_list("nome", flat=True),
                         categorias=perfil.categorias_preferidas.values_list(
                             "nome", flat=True
                         ),
-                        restricao=preferencia[0] if preferencia else None,
                         limite=60,
                     )
                     escolhidos = set(
@@ -555,14 +540,32 @@ def recomendados(request):
                         prato["id"]
                         for prato in candidatos
                         if prato["id"] not in escolhidos
+                        and prato["id"] not in ids_avaliados
                     ]
             else:
-                placar = recomendar_para(usuario_id, limite=24)
-                ids = placar["prato_id"].astype(int).tolist()
+                placar = recomendar_para(
+                    usuario_id,
+                    limite=24,
+                    imprimir=False,
+                )
+                ids = [
+                    int(prato_id)
+                    for prato_id in placar["prato_id"].tolist()
+                    if int(prato_id) not in ids_avaliados
+                ]
         except Exception as e:
             print("Erro no algoritmo de recomendação:", e)
             return Response({"erro": "não foi possível gerar recomendações"}, status=500)
         cache.set(chave, ids, 60 * 10)   # 10 minutos
 
+    ids = [
+        int(prato_id)
+        for prato_id in ids
+        if int(prato_id) not in ids_avaliados
+    ]
     pratos = [_PRATOS_POR_ID[i] for i in ids if i in _PRATOS_POR_ID]
+    print(
+        f"[recomendados] usuario={usuario_id} "
+        f"quantidade={len(pratos)} dados={pratos}"
+    )
     return Response({"pratos": pratos})
