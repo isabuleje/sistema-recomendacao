@@ -75,7 +75,7 @@ function Cadastro() {
         {/* Sign Up Form */}
         <div className={`${styles.formContainer} ${styles.signUpContainer}`}>
           <form className={styles.cadastroForm} onSubmit={cadastrar}>
-            <h1 style={{ marginBottom: "40px" }}>Criar Conta</h1>
+            <h1> Cadastrar</h1>
             <input
               className={styles.cadastroInput}
               type="text"
