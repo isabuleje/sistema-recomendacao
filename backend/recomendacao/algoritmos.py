@@ -27,26 +27,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 #NA VERDADE AGORA ISSO SE CHAMA PEARSON
 # (as funções do k-NN abaixo ficam INTOCADAS e agora sem uso, só pra você poder comparar depois)
-def calcular_similaridade_cosseno(lista_1: list[float], idxlista_1: list[int], lista_2: list[float], idxlista_2: list[int], min: int = 3) -> float:
+"""def calcular_similaridade_cosseno(lista_1: list[float], idxlista_1: list[int], lista_2: list[float], idxlista_2: list[int], min: int = 3) -> float:
     lista_1_comum: list[float] = []
     lista_2_comum: list[float] = []
     if idxlista_1 is None:
         return -1.0
     mapa2 = {idx:nota for idx, nota in zip(idxlista_2, lista_2)}
- 
+
     for idx, nota in zip(idxlista_1, lista_1):
         if idx in mapa2:
             lista_1_comum.append(nota)
             lista_2_comum.append(mapa2[idx])
     if len(lista_1_comum) < min:
         return 0.0
- 
+
     tamanho = len(lista_1_comum)
     media1 = sum(lista_1_comum)/tamanho
     media2 = sum(lista_2_comum)/tamanho
     lista_1_comum = [n - media1 for n in lista_1_comum]
     lista_2_comum = [n - media2 for n in lista_2_comum]
- 
+
     # (X * Y)
     produto: float = (sum(x * y for x, y in zip(lista_1_comum, lista_2_comum)))
     # ||X||
@@ -58,7 +58,7 @@ def calcular_similaridade_cosseno(lista_1: list[float], idxlista_1: list[int], l
     except (ZeroDivisionError):
         coef = 0.0
     return coef
- 
+
 #usando id ('u') de usuário de PP_users.csv
 #usar lista pré-carregada sempre que possível por favor
 def id_similaridade_cosseno(id_usuario_1: int, id_usuario_2: int, lista: DataFrame | None = None, min: int = 3) -> float:
@@ -69,7 +69,7 @@ def id_similaridade_cosseno(id_usuario_1: int, id_usuario_2: int, lista: DataFra
         usuario2 = lista.loc[id_usuario_2]
     except (KeyError):
         return 0.0
- 
+
     return calcular_similaridade_cosseno(
         (usuario1['ratings']),
         (usuario1['items']),
@@ -77,7 +77,7 @@ def id_similaridade_cosseno(id_usuario_1: int, id_usuario_2: int, lista: DataFra
         (usuario2['items']),
         min=min
     )
- 
+
 def lista_vizinhos(id: int, lista: DataFrame | None = None, fazer_print: bool = False, min: int = 3) -> DataFrame:
     final: dict = {'u': [], 'similaridade': []}
     for id2 in lista.index:
@@ -91,7 +91,7 @@ def lista_vizinhos(id: int, lista: DataFrame | None = None, fazer_print: bool = 
     if fazer_print:
         print("fim")
     return DataFrame(final).sort_values('similaridade')
- 
+
 def k_nn(id: int, k: int = 3, lista: DataFrame | None = None, fazer_print: bool = False, min: int = 3) -> DataFrame:
     vizinhos: DataFrame = lista_vizinhos(id, lista, fazer_print, min).iloc[-k:].iloc[::-1]
     tabela_influencia: dict = {'u':[], 'influencia':[]}
@@ -99,9 +99,10 @@ def k_nn(id: int, k: int = 3, lista: DataFrame | None = None, fazer_print: bool 
     for linha in vizinhos['u']:
         tabela_influencia['u'].append(linha)
         tabela_influencia['influencia'].append(vizinhos.loc[vizinhos['u'] == linha, 'similaridade'].item() / total)
-    return DataFrame(tabela_influencia)
- 
- 
+    return DataFrame(tabela_influencia)"""
+#deu muito trabalho fazer isso nao quero apagar mas agora a gente usa SVD
+
+
 # NOVO: treino do SVD (estilo Funk). previsão = mu + bu[u] + bi[i] + P[u] . Q[i]
 def treinar_svd(usuarios, pratos, notas, k: int = 30, epocas: int = 10, lr: float = 0.005, reg: float = 0.02, reg_bi: float = 0.1, seed: int = 0, imprimir: bool = True) -> dict:
     rng = np.random.default_rng(seed)
@@ -109,14 +110,14 @@ def treinar_svd(usuarios, pratos, notas, k: int = 30, epocas: int = 10, lr: floa
     ids_u, u_idx = np.unique(np.asarray(usuarios), return_inverse=True)
     ids_p, p_idx = np.unique(np.asarray(pratos), return_inverse=True)
     r = np.asarray(notas, dtype=float)
- 
+
     mu = r.mean()
     bu = np.zeros(len(ids_u))
     bi = np.zeros(len(ids_p))
     P = rng.normal(0, 0.1, (len(ids_u), k))
     Q = rng.normal(0, 0.1, (len(ids_p), k))
     contagem = np.bincount(p_idx, minlength=len(ids_p)) #quantas avaliações cada receita tem
- 
+
     for epoca in range(epocas):
         inicio = time.perf_counter()
         soma_erro2 = 0.0
@@ -125,17 +126,16 @@ def treinar_svd(usuarios, pratos, notas, k: int = 30, epocas: int = 10, lr: floa
             erro = r[n] - (mu + bu[u] + bi[i] + P[u] @ Q[i])
             soma_erro2 += erro ** 2
             bu[u] += lr * (erro - reg * bu[u])
-            bi[i] += lr * (erro - reg_bi * bi[i]) #reg_bi maior segura receita com poucas avaliações
-            pu_antigo = P[u].copy() #o Q usa o P antigo
+            bi[i] += lr * (erro - reg_bi * bi[i])
+            pu_antigo = P[u].copy()
             P[u] += lr * (erro * Q[i] - reg * P[u])
             Q[i] += lr * (erro * pu_antigo - reg * Q[i])
         if imprimir:
             print(f'época {epoca + 1}/{epocas}: RMSE treino = {(soma_erro2 / len(r)) ** 0.5:.4f} ({time.perf_counter() - inicio:.1f}s)')
- 
+
     return {'mu': mu, 'bu': bu, 'bi': bi, 'P': P, 'Q': Q, 'contagem': contagem, 'ids_u': ids_u, 'ids_p': ids_p,
             'pos_u': {int(x): n for n, x in enumerate(ids_u)}, 'pos_p': {int(x): n for n, x in enumerate(ids_p)}}
- 
-# NOVO: usuário que não estava no treino (ou que precisou do onboarding): ajusta só bu e p, com Q e bi fixos
+
 def vetor_usuario_novo(modelo: dict, pratos: list, notas: list, passos: int = 200, lr: float = 0.02, reg: float = 0.02):
     pares = [(modelo['pos_p'][int(p)], float(n)) for p, n in zip(pratos, notas) if int(p) in modelo['pos_p']]
     bu = 0.0
@@ -146,10 +146,7 @@ def vetor_usuario_novo(modelo: dict, pratos: list, notas: list, passos: int = 20
             bu += lr * (erro - reg * bu)
             p += lr * (erro * modelo['Q'][i] - reg * p)
     return bu, p
- 
- 
-# MUDOU: ganhou os parâmetros modelo e minimo_de_avaliacoes_por_receita (no final). k, valorizacao_de_frequencia
-# e minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar continuam na assinatura mas o SVD não usa.
+
 def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, lista_trocas: DataFrame | None = None, valorizacao_de_frequencia: float = 0.1, alergias_dict: dict = {}, lista_escolhas_onboarding: DataFrame | None = None, lista: DataFrame | None = None, lista_receitas: DataFrame | None = None, interacoes: DataFrame | None = None, raw_receitas: DataFrame | None = None, alergias: list = [], minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar: int = 3, imprimir_metricas: bool = False, minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding: int = 5, modelo: dict | None = None, minimo_de_avaliacoes_por_receita: int = 3):
  
     if imprimir_metricas:
@@ -176,9 +173,7 @@ def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, lista_trocas
         #print(lista.loc[id])
     
     receitas_usuario: list[int] = (lista.at[id, 'items'])
- 
-    # MUDOU: aqui ficava o k_nn + a agregação das notas dos vizinhos (receitas_novas, receitas_frequencia, receitas_valor...)
-    # agora: pega o vetor do usuário e pontua todas as receitas de uma vez
+
     if modelo is None:
         modelo = _modelo()
     if id in modelo['pos_u'] and not usou_onboarding:
@@ -200,7 +195,7 @@ def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, lista_trocas
         'quantidade de avaliacoes': modelo['contagem'][posicoes],
         'valor interno de classificacao': scores[posicoes],
     }).reset_index(drop=True)
- 
+
     if len(placar) == 0:
         ids_disponiveis = [
             int(prato_id)
@@ -215,7 +210,7 @@ def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, lista_trocas
             'quantidade de avaliacoes': 1,
             'valor interno de classificacao': 1.0,
         })
- 
+
     filtro_ingredientes: list = [lista_trocas.loc[alergias_dict[chave]]['replaced'] if alergias_dict[chave] in lista_trocas.index else alergias_dict[chave] for chave in alergias]
     contador: int = 0
     contador_indice: int = 0
@@ -251,13 +246,11 @@ def _obter_recomendacoes(id: int = 0, k: int = 3, limite: int = 50, lista_trocas
                 #print('tinha ovo nessa receita e ela foi pulada por causa da sua alergia\n', receita, '\nna verdade foi acidente a lista registrar como string mas serve pra coisas funcionarem no plural como egg ser parte de eggs. a receita era essa: id', placar.at[contador_indice, 'prato_id'].item(), '\n')
                 placar.drop(contador_indice, inplace = True)
             contador_indice += 1
- 
- 
+
     if imprimir_metricas:
         print(f'{time.perf_counter() - inicio}s: FILTROS FINAIS EXECUTADOS E ORGANIZAÇÃO DA LISTA FINAL DE RESPOSTAS PREPARADA. PROCESSO FINALIZADO')
     return placar.head(limite)
- 
-# INTOCADA
+
 def obter_recomendacoes(id: int = 0, k: int = 30, limite: int = 50, valorizacao_de_frequencia: float = 0.1, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar: int = 3, imprimir_metricas: bool = False, lista_trocas: DataFrame | None = None, minimo_de_receitas_registradas_pra_nao_usar_as_do_onboarding: int = 5):
     if conexao is None:
         return None
@@ -274,14 +267,14 @@ def obter_recomendacoes(id: int = 0, k: int = 30, limite: int = 50, valorizacao_
     if lista_trocas is None:
         lista_trocas = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl")
     lista_trocas.set_index('raw_ingr', inplace=True)
- 
+
     try:
         alergias = pd.read_sql("SELECT * FROM myapp_perfilusuario_alergias", con=conexao).groupby('perfilusuario_id')['alergia_id'].apply(list)[(lista.at[id, 'id'])]
     except (KeyError):
         alergias = []
- 
+
     alergias_dict: dict = pd.read_sql("SELECT * FROM myapp_alergia", con=conexao).set_index('id').to_dict()['nome']
- 
+
     return _obter_recomendacoes(
         alergias=alergias, lista=lista, lista_receitas=lista_receitas, interacoes=interacoes, lista_escolhas_onboarding=lista_escolhas_onboarding,
         alergias_dict=alergias_dict,
@@ -299,9 +292,7 @@ def obter_recomendacoes(id: int = 0, k: int = 30, limite: int = 50, valorizacao_
 #verificados = pd.read_sql("SELECT * FROM myapp_perfilusuario", con=conexao).set_index('usuario_id')
 #print(verificados)
 #verificados = [16]
- 
-# MUDOU: ganhou o parâmetro minimo_de_avaliacoes_por_receita. O laço único virou dois: um que ESCONDE as
-# receitas de todos os usuários de teste, depois um treino único do SVD sem elas, e um que BUSCA e confere.
+
 def recall_arroba_n(k: int = 2000, n: int = 500, rodadas: int = 3, minimo_receitas_por_usuario_teste: int = 55, receitas_previstas: int = 5, lista_trocas: DataFrame | None = None, conexao: sqlite3.Connection | None = None, raw_receitas: DataFrame = DataFrame(), imprimir_metricas: bool = False, minimo_de_avaliacoes_por_receita: int = 3) -> float:
     if conexao is None:
         return None
@@ -319,7 +310,7 @@ def recall_arroba_n(k: int = 2000, n: int = 500, rodadas: int = 3, minimo_receit
     lista['ratings'] = lista.apply(lambda linha: notas_por_id_de_usuario.get(linha['usuario_id'], []), axis=1)
     lista = lista.set_index('usuario_id')
     lista_escolhas_onboarding: DataFrame = pd.read_sql("SELECT * FROM myapp_onboardingprato", con=conexao)
- 
+
     por_usuario = interacoes.groupby('usuario_id')['prato_id'].apply(list)
     elegiveis = por_usuario[por_usuario.apply(len) > minimo_receitas_por_usuario_teste].index.to_list()
     if len(elegiveis) == 0:
@@ -327,9 +318,8 @@ def recall_arroba_n(k: int = 2000, n: int = 500, rodadas: int = 3, minimo_receit
     total = 0
     ids = random.sample(elegiveis, rodadas)
     rodadas_completas = 0
-    escondidos: dict = {} # NOVO: {id do usuário : {prato escondido : nota}}
- 
-    # PRIMEIRO LAÇO (só esconde)
+    escondidos: dict = {}
+
     for id in ids:
         pratos = lista.loc[id]['items'].copy()
         notas = lista.loc[id]['ratings'].copy()
@@ -347,22 +337,21 @@ def recall_arroba_n(k: int = 2000, n: int = 500, rodadas: int = 3, minimo_receit
         lista.at[id, 'ratings'] = list(dict_testes.values())
         #print('receitas a buscar:', tpratos, tnotas)
         escondidos[id] = dict(zip(tpratos, tnotas)) # NOVO
- 
-    # NOVO: treina UMA vez com tudo que sobrou (sem as receitas escondidas, senão o teste vaza)
+
     usuarios_treino = [u for u, itens in lista['items'].items() for _ in itens]
     pratos_treino = [p for itens in lista['items'] for p in itens]
     notas_treino = [nt for nts in lista['ratings'] for nt in nts]
     modelo_teste = treinar_svd(usuarios_treino, pratos_treino, notas_treino, epocas=5, imprimir=imprimir_metricas)
- 
+
     # SEGUNDO LAÇO (busca, confere e devolve as receitas)
     for id in ids:
         dict_testes = escondidos[id] # MUDOU: antes era dict(zip(tpratos, tnotas)) feito no laço único
         tpratos = list(dict_testes.keys())
- 
+
         alergias = []
- 
+
         alergias_dict: dict = pd.read_sql("SELECT * FROM myapp_alergia", con=conexao).set_index('id').to_dict()['nome']
- 
+
         resultado_encontrado = _obter_recomendacoes(
             alergias=alergias, lista=lista, lista_receitas=lista_receitas, interacoes=interacoes, lista_escolhas_onboarding=lista_escolhas_onboarding,
             alergias_dict=alergias_dict,
@@ -396,24 +385,22 @@ def recall_arroba_n(k: int = 2000, n: int = 500, rodadas: int = 3, minimo_receit
             rodadas_completas += 1
             #print('rodada completa resultado da rodada:', achado/(receitas_previstas - descontado))
     return total / rodadas_completas if rodadas_completas != 0 else None
- 
- 
+
 #isso daq é oq importa pro views
 from functools import lru_cache #guarda o cache pra n precisar ler o csv toda vez, mt mais rapido
 from pathlib import Path 
 from django.db import connection
- 
+
 CAMINHO_RAW = Path(__file__).resolve().parents[1] / "dataset" / "RAW_recipes.csv"
 CAMINHO_BANCO = Path(__file__).resolve().parents[1] / "PratoMatch" / "db.sqlite3"
-CAMINHO_MODELO = Path(__file__).resolve().parents[1] / "dataset" / "modelo_svd.npz" # NOVO
- 
+CAMINHO_MODELO = Path(__file__).resolve().parents[1] / "dataset" / "modelo_svd.npz"
+
 #vai deixar guardado no cache apenas 1 resultado
 @lru_cache(maxsize=1)
 def _raw_receitas():
     return pd.read_csv(CAMINHO_RAW).set_index("id")
- 
-# NOVO: "treina uma vez". Carrega do disco se o arquivo existir; senão treina com o banco e salva.
-# Pra forçar um novo treino (mudou hiperparâmetro, por ex.), apaga o modelo_svd.npz
+
+
 @lru_cache(maxsize=1)
 def _modelo():
     if CAMINHO_MODELO.exists():
@@ -465,6 +452,6 @@ def recomendar_para(usuario_id: int, limite: int = 60, imprimir: bool = True):
  
 if __name__ == '__main__':
     #recomendar_para(33, imprimir=False)
-    print("média de recall (500 rodadas)")
-    print(recall_arroba_n(conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"), raw_receitas=_raw_receitas(), imprimir_metricas=False, rodadas=500, k = 15))
+    print("média de recall (20 rodadas)")
+    print(recall_arroba_n(conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"), raw_receitas=_raw_receitas(), imprimir_metricas=False, rodadas=20, k = 15))
  
