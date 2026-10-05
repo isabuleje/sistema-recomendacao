@@ -412,24 +412,33 @@ CAMINHO_MODELO = Path(__file__).resolve().parents[1] / "dataset" / "modelo_svd.n
 def _raw_receitas():
     return pd.read_csv(CAMINHO_RAW).set_index("id")
  
-# NOVO: "treina uma vez". Carrega do disco se o arquivo existir; senão treina com o banco e salva.
-# Pra forçar um novo treino (mudou hiperparâmetro, por ex.), apaga o modelo_svd.npz
-@lru_cache(maxsize=1)
-def _modelo():
-    if CAMINHO_MODELO.exists():
-        with np.load(CAMINHO_MODELO) as arquivo:
-            modelo = {chave: arquivo[chave] for chave in arquivo.files}
-        modelo['mu'] = float(modelo['mu'])
-        modelo['pos_u'] = {int(x): n for n, x in enumerate(modelo['ids_u'])}
-        modelo['pos_p'] = {int(x): n for n, x in enumerate(modelo['ids_p'])}
-        return modelo
+# MUDOU: o treino NÃO acontece mais dentro da requisição (treinar leva vários minutos e travava o frontend).
+# Treine uma vez, fora do servidor:  python recomendador.py --treinar
+# Isso gera dataset/modelo_svd.npz. Usuário novo ou com avaliações novas NÃO precisa de retreino:
+# vetor_usuario_novo ajusta o vetor dele na hora (é rápido). Retreine só de vez em quando (mudou hiperparâmetro, entrou muita gente/prato).
+def treinar_e_salvar_modelo(epocas: int = 10) -> dict:
     conexao = sqlite3.connect(CAMINHO_BANCO, timeout=30)
     try:
         df = pd.read_sql("SELECT usuario_id, prato_id, nota FROM myapp_interacao", con=conexao)
     finally:
         conexao.close()
-    modelo = treinar_svd(df['usuario_id'], df['prato_id'], df['nota'])
-    np.savez(CAMINHO_MODELO, **{chave: modelo[chave] for chave in ('mu', 'bu', 'bi', 'P', 'Q', 'contagem', 'ids_u', 'ids_p')})
+    modelo = treinar_svd(df['usuario_id'], df['prato_id'], df['nota'], epocas=epocas)
+    # grava num arquivo temporário e troca no final, pra nunca deixar um .npz pela metade
+    temporario = CAMINHO_MODELO.with_name(CAMINHO_MODELO.stem + "_tmp.npz")
+    np.savez(temporario, **{chave: modelo[chave] for chave in ('mu', 'bu', 'bi', 'P', 'Q', 'contagem', 'ids_u', 'ids_p')})
+    os.replace(temporario, CAMINHO_MODELO)
+    return modelo
+
+# só carrega do disco (e guarda em cache); se o arquivo não existe, avisa em vez de treinar no meio da requisição
+@lru_cache(maxsize=1)
+def _modelo():
+    if not CAMINHO_MODELO.exists():
+        raise FileNotFoundError(f"{CAMINHO_MODELO} não existe. Rode uma vez: python recomendador.py --treinar")
+    with np.load(CAMINHO_MODELO) as arquivo:
+        modelo = {chave: arquivo[chave] for chave in arquivo.files}
+    modelo['mu'] = float(modelo['mu'])
+    modelo['pos_u'] = {int(x): n for n, x in enumerate(modelo['ids_u'])}
+    modelo['pos_p'] = {int(x): n for n, x in enumerate(modelo['ids_p'])}
     return modelo
  
  
@@ -464,7 +473,10 @@ def recomendar_para(usuario_id: int, limite: int = 60, imprimir: bool = True):
     return resultado
  
 if __name__ == '__main__':
+    if '--treinar' in sys.argv:
+        treinar_e_salvar_modelo()
+        print(f'modelo salvo em {CAMINHO_MODELO}')
+        sys.exit(0)
     #recomendar_para(33, imprimir=False)
     print("média de recall (500 rodadas)")
     print(recall_arroba_n(conexao=sqlite3.connect("backend/PratoMatch/db.sqlite3"), raw_receitas=_raw_receitas(), imprimir_metricas=False, rodadas=500, k = 15))
- 
