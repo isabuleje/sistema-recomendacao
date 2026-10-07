@@ -3,21 +3,18 @@ import { MIN_PRATOS, TOTAL_FASES } from "../constants/onboardingData.js";
 import {
   salvarOnboarding,
   listarAlergias,
-  buscarCategorias,
   buscarPratosOnboarding,
 } from "../services/onboardingService.js";
 import { useNavigate } from "react-router-dom";
 
 export function useOnboarding() {
-  const [fase, setFase] = useState(1); //sao 3 fases
+  const [fase, setFase] = useState(1); // são 2 fases
 
-  const [categorias, setCategorias] = useState([]);
   const [listaAlergias, setListaAlergias] = useState([]);
 
   const [alergia, setAlergia] = useState(""); //texto q esta sendo digitado no input das alergias
   const [alergias, setAlergias] = useState([]); //alergias selecionadas pelo usuario
 
-  const [culinariasSelecionadas, setCulinariasSelecionadas] = useState([]);
   const [pratosSelecionados, setPratosSelecionados] = useState([]);
   const [pratos, setPratos] = useState([]);
   const [carregandoPratos, setCarregandoPratos] = useState(false);
@@ -27,33 +24,27 @@ export function useOnboarding() {
 
   const navigate = useNavigate();
 
-  // carrega os dados necessários (categorias e alergias)
+  // Carrega os dados necessários para o onboarding.
   useEffect(() => {
     let ativo = true; // flag para controlar se o componente ainda está montado
 
     async function carregarDados() {
-      const [categoriasRes, alergiasRes] = await Promise.allSettled([
-        buscarCategorias(),
-        listarAlergias(),
-      ]);
+      const alergiasRes = await Promise.allSettled([listarAlergias()]);
+      const [resultadoAlergias] = alergiasRes;
 
       if (!ativo) return; //senao foi montado, nao faz nada
 
-      if (categoriasRes.status === "fulfilled") {
-        setCategorias(
-          Array.isArray(categoriasRes.value) ? categoriasRes.value : [],
-        );
-      } else {
-        console.log("Erro ao buscar categorias:", categoriasRes.reason);
-        setErro("Não foi possível carregar a lista de categorias.");
-      }
-
-      if (alergiasRes.status === "fulfilled") {
+      if (resultadoAlergias.status === "fulfilled") {
         setListaAlergias(
-          Array.isArray(alergiasRes.value) ? alergiasRes.value : [],
+          Array.isArray(resultadoAlergias.value)
+            ? resultadoAlergias.value
+            : [],
         );
       } else {
-        console.error("Erro ao buscar alergias:", alergiasRes.reason);
+        console.error(
+          "Erro ao buscar alergias:",
+          resultadoAlergias.reason,
+        );
         setErro("Não foi possível carregar a lista de alergias.");
       }
     }
@@ -64,9 +55,9 @@ export function useOnboarding() {
     };
   }, []);
 
-  // Carrega os pratos da fase 3 quando alergias ou categorias mudam.
+  // Carrega os pratos da fase 2 quando as alergias mudam.
   useEffect(() => {
-    if (fase !== 3) return;
+    if (fase !== 2) return;
 
     let ativo = true;
 
@@ -76,7 +67,6 @@ export function useOnboarding() {
       try {
         const resultado = await buscarPratosOnboarding({
           alergias,
-          categorias: culinariasSelecionadas,
         });
         if (ativo) {
           setPratos(resultado);
@@ -98,7 +88,7 @@ export function useOnboarding() {
     return () => {
       ativo = false;
     };
-  }, [fase, alergias, culinariasSelecionadas]);
+  }, [fase, alergias]);
 
   // Adiciona alergias, e evita que uma mesma alergia seja selecionada duas vezes
   const adicionarAlergia = (ingrediente) => {
@@ -118,18 +108,7 @@ export function useOnboarding() {
     );
   };
 
-  // Alterna a seleção de uma culinária (categoria/ fase 2)
-  const toggleCulinaria = (item) => {
-    setCulinariasSelecionadas((atual) => {
-      if (atual.includes(item)) {
-        return atual.filter((culinaria) => culinaria !== item);
-      } else {
-        return [...atual, item];
-      }
-    });
-  };
-
-  // Alterna a seleção de um prato (fase 3)
+  // Alterna a seleção de um prato (fase 2)
   const togglePrato = (id) => {
     setPratosSelecionados((atual) =>{
       if (atual.includes(id)) {
@@ -159,7 +138,6 @@ export function useOnboarding() {
     try {
       await salvarOnboarding({
         alergias,
-        categorias: culinariasSelecionadas,
         pratos_curtidos: pratosSelecionados,
       });
 
@@ -190,7 +168,6 @@ export function useOnboarding() {
     voltar,
 
     //dados do onboarding
-    categorias,
     listaAlergias,
     pratos,
 
@@ -200,8 +177,6 @@ export function useOnboarding() {
     alergias,
     adicionarAlergia,
     removerAlergia,
-    culinariasSelecionadas,
-    toggleCulinaria,
     pratosSelecionados,
     togglePrato,
     

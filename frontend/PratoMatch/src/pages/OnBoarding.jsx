@@ -1,6 +1,5 @@
 import OnBoardingHeader from "../components/onboarding/OnBoardingHeader";
 import SelecaoAlergias from "../components/onboarding/etapas/Etapa-Um";
-import EscolhaCulinaria from "../components/onboarding/etapas/Etapa-Dois";
 import EscolhaPratos from "../components/onboarding/etapas/Etapa-Tres";
 
 import { TOTAL_FASES} from "../constants/onboardingData.js";
@@ -9,14 +8,12 @@ import { useOnboarding } from "../hooks/useOnboarding";
 
 import "../components/onboarding/css/OnBoardingLayout.css";
 import "../components/onboarding/css/OnBoardingFase1.css";
-import "../components/onboarding/css/OnBoardingFase2.css";
 import "../components/onboarding/css/OnBoardingFase3.css";
 
 const OnBoarding = () => {
   const {
     fase,
 
-    categorias,
     listaAlergias,
 
     alergia,
@@ -25,9 +22,6 @@ const OnBoarding = () => {
     alergias,
     adicionarAlergia,
     removerAlergia,
-
-    culinariasSelecionadas,
-    toggleCulinaria,
 
     pratosSelecionados,
     pratos,
@@ -65,17 +59,6 @@ const OnBoarding = () => {
         )}
 
         {fase === 2 && (
-          <EscolhaCulinaria
-            selecionadas={culinariasSelecionadas}
-            onToggle={toggleCulinaria}
-            onVoltar={voltar}
-            onAvancar={avancar}
-            podeAvancar={culinariasSelecionadas.length > 0}
-            categorias={categorias}
-          />
-        )}
-
-        {fase === 3 && (
           <EscolhaPratos
             selecionados={pratosSelecionados}
             pratos={pratos}
