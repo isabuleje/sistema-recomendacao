@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { salvarAvaliacao, buscarAvaliados } from "../services/avaliacaoService.js";
+import { registrarAvaliacao } from "../utils/atualizacaoRecomendacoes.js";
 
 
 /*Hook responsável por gerenciar a avaliação de um prato*/
@@ -28,6 +29,7 @@ export function useAvaliacao(pratoId, notaInicial = 0) {
       const resposta = await salvarAvaliacao(pratoId, novaNota);
 
       setNota(resposta.nota);
+      registrarAvaliacao(pratoId);
       return resposta;
     } catch (error) {
       setNota(notaAnterior);
