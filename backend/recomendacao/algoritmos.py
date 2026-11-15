@@ -22,26 +22,50 @@ PASTA_DATASET = PASTA_BACKEND / "dataset"
 
 ARQUIVO_RECEITAS = PASTA_DATASET / "PP_recipes.csv"
 
-def tf_idf(base: sqlite3.Connection) -> pd.DataFrame:
 
-    #temporario
-    receitas = pd.read_csv(ARQUIVO_RECEITAS, usecols=["id", "ingredient_ids"]).head(1000)
-
-    tfidf = TfidfVectorizer(token_pattern=r"\d+")
+def tf_idf(receitas: pd.DataFrame):
+    tfidf = TfidfVectorizer(token_pattern=r"\d+", dtype=np.float32)
     X = tfidf.fit_transform(receitas["ingredient_ids"].astype(str))
+    return tfidf, X
 
-    k = 10
-    modelo = NearestNeighbors(n_neighbors=k + 1, metric="cosine", algorithm="brute", n_jobs=-1)
-    modelo.fit(X)
-    distancias, indices = modelo.kneighbors(X)
-
+def ranking_receitas_usuario(id_usuario, interacoes, receitas, X, n=10):
     ids = receitas["id"].to_numpy()
-    similares = pd.DataFrame({
-        "id": ids.repeat(k),
-        "vizinho_id": ids[indices[:, 1:]].ravel(),
-        "similaridade": (1 - distancias[:, 1:]).ravel(),
-    })
-    
-    return similares
+    linha_da_receita = pd.Series(np.arange(len(ids)), index=ids)
 
-print(tf_idf(None))
+    # interações desse usuário, só com receitas que estão na matriz
+    inter = interacoes[interacoes["usuario_id"] == id_usuario]
+    inter = inter[inter["prato_id"].isin(linha_da_receita.index)]
+    if inter.empty:
+        return pd.DataFrame(columns=["id", "score"])
+
+    linhas = linha_da_receita[inter["prato_id"]].to_numpy()
+    pesos = inter["nota"].to_numpy(dtype=np.float32)
+
+    # perfil: soma das receitas que ele avaliou, ponderada pela nota
+    perfil = np.asarray(X[linhas].T.dot(pesos)).ravel()
+
+    # score de cada receita = similaridade com o perfil
+    scores = np.asarray(X.dot(perfil)).ravel()
+    scores[linhas] = -np.inf  # não recomenda o que ele já avaliou
+
+    top = np.argsort(-scores)[:n]
+    return pd.DataFrame({"id": ids[top], "score": scores[top]})
+
+def recomendar_para(id_usuario: int, conexao: sqlite3.Connection):
+    receitas = pd.read_csv(ARQUIVO_RECEITAS, usecols=["id", "ingredient_ids"])
+    tfidf, X = tf_idf(receitas)
+    interacoes = pd.read_sql("SELECT * FROM myapp_interacao", conexao)
+    return ranking_receitas_usuario(id_usuario, interacoes, receitas, X)
+
+"""
+conexao = sqlite3.connect("backend/PratoMatch/db.sqlite3")
+#print(receita_ranking_por_usuario(conexao), 11))
+receitas = pd.read_csv(ARQUIVO_RECEITAS, usecols=["id", "ingredient_ids"])
+tfidf, X = tf_idf(receitas)
+interacoes = pd.read_sql("SELECT * FROM myapp_interacao", conexao)
+id_teste = interacoes["usuario_id"].value_counts().index[0]
+ranking = ranking_receitas_usuario(id_teste, interacoes, receitas, X)
+print(ranking)
+"""
+if __name__ == "__main__":
+    print(recomendar_para(11, sqlite3.connect("backend/PratoMatch/db.sqlite3")))
