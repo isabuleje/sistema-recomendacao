@@ -154,4 +154,12 @@ class OnBoardingPrato(models.Model):
 
     def __str__(self):
         return f"{self.perfil} - {self.prato.nome} - Interesse: {self.interesse}"
-    
+
+#Tabela pra guardar a raridade de cada ingrediente    
+class RaridadeIngrediente(models.Model):
+    id = models.IntegerField(primary_key=True)
+    nome = models.CharField(max_length=100, unique=True)
+    raridade = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+
+    def __str__(self):
+        return f"{self.nome} - Raridade: {self.raridade}"

@@ -10,27 +10,22 @@ import sys
 from pathlib import Path
 import numpy as np
 
-#ADICIONAR ESSES NO REQUIREMENTS DEPOIS
 from sklearn.feature_extraction.text import TfidfVectorizer # (pip install scikit-learn)
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.neighbors import NearestNeighbors
 
 #from backend.PratoMatch.myapp.views import ingredientes
 
-BASE_DIR_DJANGO = Path(__file__).resolve().parents[1]
-DJANGO_DIR = BASE_DIR_DJANGO / "PratoMatch"
+PASTA_ATUAL = Path(__file__).resolve().parent
+PASTA_BACKEND = PASTA_ATUAL.parent
+PASTA_DATASET = PASTA_BACKEND / "dataset"
 
-sys.path.insert(0, str(DJANGO_DIR))
-
-os.environ.setdefault(
-    "DJANGO_SETTINGS_MODULE",
-    "configs.settings"
-)
+ARQUIVO_RECEITAS = PASTA_DATASET / "PP_recipes.csv"
 
 def tf_idf(base: sqlite3.Connection) -> pd.DataFrame:
 
     #temporario
-    receitas = pd.read_csv("backend/dataset/PP_recipes.csv", usecols=["id", "ingredient_ids"]).head(1000)
+    receitas = pd.read_csv(ARQUIVO_RECEITAS, usecols=["id", "ingredient_ids"]).head(1000)
 
     tfidf = TfidfVectorizer(token_pattern=r"\d+")
     X = tfidf.fit_transform(receitas["ingredient_ids"].astype(str))
