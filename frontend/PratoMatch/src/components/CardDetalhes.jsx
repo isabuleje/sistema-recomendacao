@@ -92,6 +92,11 @@ const CardDetalhes = ({
                 </span>
               </div>
 
+              <div className="card-detalhes-tempo-visualizado">
+                <span style={{ fontWeight: "600" }}>Tempo visualizado:</span>
+                <span>{tempo} segundos</span>
+              </div>
+
               <div className="card-detalhes-avaliacao-usuario">
                 <span style={{ fontWeight: "600" }}>Sua avaliação:</span>
                 <div

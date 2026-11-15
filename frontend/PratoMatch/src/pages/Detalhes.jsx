@@ -2,13 +2,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import CardDetalhes from "../components/CardDetalhes.jsx";
 import { useAvaliacao } from "../hooks/useAvaliados.jsx";
 import { imagemDoPrato } from "../utils/imagensPratos.js";
+import { useTempo } from "../hooks/useTempo.jsx";
 
 const CardDetalhesPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const prato = state?.prato;
   const avaliacao = useAvaliacao(prato?.id, prato?.nota_usuario);
-
+  const tempo = useTempo(prato?.id, prato?.tempo_visualizado);
   if (!prato) {
     return (
       <main className="home-page">
@@ -43,6 +44,9 @@ const CardDetalhesPage = () => {
         estrelas={prato.estrelas || 0}
         avaliacaoUsuario={avaliacao.nota}
         onAvaliar={avaliacao.avaliar}
+        tempoVisualizado={tempo.tempoVisualizado}
+        salvando={tempo.salvando}
+        onSalvarTempoVisualizado={tempo.salvarTempoVisualizado}
       />
       {avaliacao.salvando && <p>Salvando avaliação...</p>}
       {avaliacao.erro && <p role="alert">{avaliacao.erro}</p>}

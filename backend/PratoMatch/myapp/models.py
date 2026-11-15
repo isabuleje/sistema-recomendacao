@@ -50,9 +50,7 @@ class Interacao(models.Model):
     interesse = models.BooleanField(
         default=False
     )
-    
-    #Status do prato pode ser  "Avaliado" e "Favoritado" (tirei o visualizado pq n tem porque ter)
-    #Vai ter favorito sim na real, lembrei q tem o coração no front
+
     status = models.CharField(
         max_length=20,
         choices=[
@@ -62,6 +60,16 @@ class Interacao(models.Model):
         null=True,
         blank=True,
         default=None,
+    )
+
+    #tempo visualizado em segundos
+    tempo_visualizado = models.IntegerField(
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(1000000)
+        ],
+        null=True,
+        default=0,
     )
     
     class Meta:
@@ -186,3 +194,5 @@ class IngredienteReceita(models.Model):
                 name="unique_ingrediente_prato"
             )
         ]
+
+
