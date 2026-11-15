@@ -40,6 +40,30 @@ def listar_pratos(request):
 
     return Response(serializer.data)
 
+@api_view(['POST'])
+def salvar_tempo_visualizado(request):
+    prato_id = request.data.get("prato_id")
+    tempo_visualizado = request.data.get("tempo_visualizado")
+
+    if not request.user.is_authenticated:
+        return Response({"erro": "Usuário não autenticado"}, status=401)
+
+    interacao, criada = Interacao.objects.get_or_create(
+        usuario=request.user,
+        prato_id=prato_id,
+        defaults={"tempo_visualizado": tempo_visualizado},
+    )
+    return Response({"sucesso": True})
+
+@api_view(['GET'])
+def buscar_tempo_visualizado(request):
+    prato_id = request.data.get("prato_id")
+    if not request.user.is_authenticated:
+        return Response({"erro": "Usuário não autenticado"}, status=401)
+
+    interacao = Interacao.objects.get(usuario=request.user, prato_id=prato_id)
+    return Response({"tempo_visualizado": prato.tempo_visualizado})
+
 
 @api_view(['GET'])
 def listar_avaliados(request):
