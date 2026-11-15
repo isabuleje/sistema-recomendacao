@@ -2,12 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-'''
-agr pode usar simr
-'''
 
-#eu ja tinha tirado os ingredientes de dentro do prato, mas esqueci de tirar isso kkkkk
-    
 class Categoria(models.Model):
     nome = models.CharField(max_length=100, unique=True)
 
@@ -18,7 +13,13 @@ class Categoria(models.Model):
 class Prato(models.Model):
     id = models.IntegerField(primary_key=True)
     nome = models.CharField(max_length=100)
-        
+    
+    #se as categorias voltarem a vida
+    categorias = models.ManyToManyField(
+        Categoria,
+        blank=True,
+        related_name="pratos"
+    )
     def __str__(self):
         return self.nome
     
@@ -156,10 +157,32 @@ class OnBoardingPrato(models.Model):
         return f"{self.perfil} - {self.prato.nome} - Interesse: {self.interesse}"
 
 #Tabela pra guardar a raridade de cada ingrediente    
-class RaridadeIngrediente(models.Model):
+class Ingrediente(models.Model):
     id = models.IntegerField(primary_key=True)
     nome = models.CharField(max_length=100, unique=True)
     raridade = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
 
     def __str__(self):
-        return f"{self.nome} - Raridade: {self.raridade}"
+        return self.nome
+
+#Id das receitas x Id dos ingredientes da receita
+class IngredienteReceita(models.Model):
+    prato = models.ForeignKey(
+        Prato,
+        on_delete=models.CASCADE,
+        related_name="ingredientes_relacionados"
+    )
+
+    ingrediente = models.ForeignKey(
+        Ingrediente,
+        on_delete=models.CASCADE,
+        related_name="pratos_relacionados"
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["prato", "ingrediente"],
+                name="unique_ingrediente_prato"
+            )
+        ]
