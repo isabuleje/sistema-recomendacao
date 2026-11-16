@@ -42,27 +42,74 @@ def listar_pratos(request):
 
 @api_view(['POST'])
 def salvar_tempo_visualizado(request):
-    prato_id = request.data.get("prato_id")
-    tempo_visualizado = request.data.get("tempo_visualizado")
-
     if not request.user.is_authenticated:
         return Response({"erro": "Usuário não autenticado"}, status=401)
 
-    interacao, criada = Interacao.objects.get_or_create(
-        usuario=request.user,
-        prato_id=prato_id,
-        defaults={"tempo_visualizado": tempo_visualizado},
+    prato_id = request.data.get("prato_id")
+    tempo_visualizado = request.data.get("tempo_visualizado")
+    if tempo_visualizado is None:
+        tempo_visualizado = request.data.get("tempoVisualizado")
+
+    try:
+        prato_id = int(prato_id)
+        tempo_visualizado = int(tempo_visualizado)
+    except (TypeError, ValueError):
+        return Response(
+            {"erro": "prato_id e tempo_visualizado devem ser números inteiros"},
+            status=400,
+        )
+
+    if tempo_visualizado < 0:
+        return Response(
+            {"erro": "tempo_visualizado não pode ser negativo"},
+            status=400,
+        )
+
+    pratos_encontrados = obter_pratos(ids=[prato_id])
+    dados_prato = pratos_encontrados[0] if pratos_encontrados else None
+    if dados_prato is None:
+        return Response({"erro": "Prato não encontrado"}, status=404)
+
+    prato, _ = Prato.objects.get_or_create(
+        id=prato_id,
+        defaults={"nome": dados_prato["nome"]},
     )
-    return Response({"sucesso": True})
+
+    interacao, _ = Interacao.objects.get_or_create(
+        usuario=request.user,
+        prato=prato,
+        defaults={"tempo_visualizado": tempo_visualizado, "nota": 0},
+    )
+    if interacao.tempo_visualizado != tempo_visualizado:
+        interacao.tempo_visualizado = tempo_visualizado
+        interacao.save(update_fields=["tempo_visualizado"])
+
+    return Response({
+        "prato_id": interacao.prato_id,
+        "tempo_visualizado": interacao.tempo_visualizado,
+    })
 
 @api_view(['GET'])
 def buscar_tempo_visualizado(request):
-    prato_id = request.data.get("prato_id")
     if not request.user.is_authenticated:
         return Response({"erro": "Usuário não autenticado"}, status=401)
 
-    interacao = Interacao.objects.get(usuario=request.user, prato_id=prato_id)
-    return Response({"tempo_visualizado": prato.tempo_visualizado})
+    prato_id = request.query_params.get("prato_id")
+    try:
+        prato_id = int(prato_id)
+    except (TypeError, ValueError):
+        return Response(
+            {"erro": "prato_id deve ser um número inteiro"},
+            status=400,
+        )
+
+    interacao = (
+        Interacao.objects
+        .filter(usuario=request.user, prato_id=prato_id)
+        .first()
+    )
+    tempo = interacao.tempo_visualizado if interacao and interacao.tempo_visualizado else 0
+    return Response({"tempo_visualizado": tempo})
 
 
 @api_view(['GET'])

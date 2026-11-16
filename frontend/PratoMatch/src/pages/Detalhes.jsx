@@ -45,8 +45,6 @@ const CardDetalhesPage = () => {
         avaliacaoUsuario={avaliacao.nota}
         onAvaliar={avaliacao.avaliar}
         tempoVisualizado={tempo.tempoVisualizado}
-        salvando={tempo.salvando}
-        onSalvarTempoVisualizado={tempo.salvarTempoVisualizado}
       />
       {avaliacao.salvando && <p>Salvando avaliação...</p>}
       {avaliacao.erro && <p role="alert">{avaliacao.erro}</p>}

@@ -23,7 +23,7 @@ export async function salvarTempoVisualizado(prato_id, tempoVisualizado) {
     },
     body: JSON.stringify({
       prato_id,
-      tempoVisualizado,
+      tempo_visualizado: tempoVisualizado,
     }),
   });
 }
@@ -32,6 +32,6 @@ export async function salvarTempoVisualizado(prato_id, tempoVisualizado) {
 Função GET para buscar o tempo de visualização de um prato
     - pratoId (ID do prato)
 */
-export async function buscarTempoVisualizado(prato_id) {
-  return apiFetch(`/tempo/visualizado/${prato_id}/`);
+export async function buscarTempoVisualizado(pratoId) {
+  return apiFetch(`/tempo/visualizado/buscar/?prato_id=${pratoId}`);
 }

@@ -27,6 +27,7 @@ const CardDetalhes = ({
   imagem,
   categorias,
   tempo,
+  tempoVisualizado = 0,
   ingredientes,
   passos,
   avaliacoes = 0,
@@ -57,7 +58,17 @@ const CardDetalhes = ({
     onAvaliar?.(nota);
   };
 
+  //deve ter alguma biblioteca pra isso, mas o google me deu logo essas formulas quando eu perguntei ent da pra usar
   const temTempo = tempo !== undefined && tempo !== null && tempo !== "";
+  const segundosVisualizados = Math.max(0, Number(tempoVisualizado) || 0);
+  const horas = Math.floor(segundosVisualizados / 3600);
+  const minutos = Math.floor((segundosVisualizados % 3600) / 60);
+  const segundos = segundosVisualizados % 60;
+  const doisDigitos = (valor) => String(valor).padStart(2, "0");
+  const tempoFormatado =
+    horas > 0
+      ? `${horas}:${doisDigitos(minutos)}:${doisDigitos(segundos)}`
+      : `${doisDigitos(minutos)}:${doisDigitos(segundos)}`;
 
 
   const renderizarPasso = (passo, indiceReal) => (
@@ -92,9 +103,12 @@ const CardDetalhes = ({
                 </span>
               </div>
 
-              <div className="card-detalhes-tempo-visualizado">
-                <span style={{ fontWeight: "600" }}>Tempo visualizado:</span>
-                <span>{tempo} segundos</span>
+              <div
+                className="card-detalhes-tempo-visualizado"
+                aria-live="polite"
+              >
+                <span>Tempo visualizado</span>
+                <span className="card-detalhes-tempo-valor">{tempoFormatado}</span>
               </div>
 
               <div className="card-detalhes-avaliacao-usuario">
