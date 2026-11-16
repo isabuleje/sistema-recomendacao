@@ -39,17 +39,41 @@ def ranking_receitas_usuario(id_usuario, interacoes, receitas, X, n=10):
         return pd.DataFrame(columns=["id", "score"])
 
     linhas = linha_da_receita[inter["prato_id"]].to_numpy()
-    pesos = inter["nota"].to_numpy(dtype=np.float32)
+    pesos = obter_peso(inter).to_numpy(dtype=np.float32)
 
     # perfil: soma das receitas que ele avaliou, ponderada pela nota
     perfil = np.asarray(X[linhas].T.dot(pesos)).ravel()
-
+    print(pesos)
     # score de cada receita = similaridade com o perfil
     scores = np.asarray(X.dot(perfil)).ravel()
     scores[linhas] = -np.inf  # não recomenda o que ele já avaliou
 
     top = np.argsort(-scores)[:n]
     return pd.DataFrame({"id": ids[top], "score": scores[top]})
+
+def obter_peso(interacoes: pd.DataFrame):
+    print(interacoes)
+    pesos = []
+    notas = interacoes["nota"]
+    media = notas.mean()
+
+    n = 10
+    
+    for index in interacoes.index:
+        interacao = interacoes.loc[index]
+        tempo = interacao["tempo_visualizado"]
+        nota = interacao["nota"] - media
+        peso_tempo: float
+        if tempo < 3600:
+            #       (360T^3 - T^4) / 1800000000 da uma curva legal
+            peso_tempo = ( (360*(tempo**3)) - (tempo**4) ) / 1800000000 
+            # mais ou menos 3 minutos aberto = 1.5x mais valor, 1 hora aberto = aproximadamente 2x mais valor, limite da curva
+        else:
+            peso_tempo = 2.0
+        influencia_tempo = min(len(notas)/n, 1)
+        peso: float = (nota * (1 + (peso_tempo*influencia_tempo)))
+        pesos.append(peso)
+    return pd.DataFrame(pesos)
 
 def recomendar_para(id_usuario: int, conexao: sqlite3.Connection):
     receitas = pd.read_csv(ARQUIVO_RECEITAS, usecols=["id", "ingredient_ids"])
