@@ -43,7 +43,6 @@ def ranking_receitas_usuario(id_usuario, interacoes, receitas, X, n=10):
 
     # perfil: soma das receitas que ele avaliou, ponderada pela nota
     perfil = np.asarray(X[linhas].T.dot(pesos)).ravel()
-    print(pesos)
     # score de cada receita = similaridade com o perfil
     scores = np.asarray(X.dot(perfil)).ravel()
     scores[linhas] = -np.inf  # não recomenda o que ele já avaliou
@@ -52,7 +51,6 @@ def ranking_receitas_usuario(id_usuario, interacoes, receitas, X, n=10):
     return pd.DataFrame({"id": ids[top], "score": scores[top]})
 
 def obter_peso(interacoes: pd.DataFrame):
-    print(interacoes)
     pesos = []
     notas = interacoes["nota"]
     media = notas.mean()
