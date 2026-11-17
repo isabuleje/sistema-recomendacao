@@ -1,6 +1,6 @@
 import OnBoardingHeader from "../components/onboarding/OnBoardingHeader";
 import SelecaoAlergias from "../components/onboarding/etapas/Etapa-Um";
-import EscolhaCulinaria from "../components/onboarding/etapas/Etapa-Dois";
+import EscolhaCulinaria from "../components/OnBoarding/etapas/Etapa-dois";
 import EscolhaPratos from "../components/onboarding/etapas/Etapa-Tres";
 
 import { TOTAL_FASES} from "../constants/onboardingData.js";
