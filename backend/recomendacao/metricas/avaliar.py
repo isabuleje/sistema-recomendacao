@@ -1,15 +1,26 @@
 import argparse
 import json
 from pathlib import Path
+import numpy as np
 import pandas as pd
 from recomendacao.algoritmos import ranking_receitas_usuario, tf_idf
 from recomendacao.metricas import (cobertura_catalogo, ndcg_at_k, precision_at_k, recall_at_k,)
+from recomendacao.metricas.baselines import (
+    avaliar_rankings,
+    ranking_aleatorio,
+    ranking_popular,
+)
 
 #Pra rodar usar: python -m recomendacao.metricas.avaliar (na base do backend)
 
 DATASET = Path(__file__).resolve().parents[2] / "dataset"
 
-def avaliar(k=10, nota_minima=4, limite_usuarios=None):
+def avaliar(
+    k=10,
+    nota_minima=4,
+    limite_usuarios=None,
+    protocolo="leave-one-out",
+):
     #esses caminhos com ctz vao dar problema xd
     receitas = pd.read_csv(DATASET / "PP_recipes.csv", usecols=["id", "ingredient_ids"])
     treino = pd.read_csv(DATASET / "interactions_train.csv", usecols=["user_id", "recipe_id", "rating"])
@@ -17,7 +28,6 @@ def avaliar(k=10, nota_minima=4, limite_usuarios=None):
 
     # Padroniza os nomes das colunas
     treino = treino.rename(columns={"user_id": "usuario_id", "recipe_id": "prato_id", "rating": "nota",})
-r
     # Padroniza os tipos dos identificadores
     receitas["id"] = pd.to_numeric(receitas["id"], errors="coerce")
     treino["usuario_id"] = pd.to_numeric(treino["usuario_id"], errors="coerce")
@@ -47,7 +57,18 @@ r
     treino = treino[treino["prato_id"].isin(ids_receitas)]
     teste = teste[teste["recipe_id"].isin(ids_receitas)]
 
-    # Receitas relevantes no conjunto de teste
+    if protocolo == "leave-one-out":
+        candidatos = treino[treino["nota"] >= nota_minima]
+        indices_teste = candidatos.groupby("usuario_id", sort=False).tail(1).index
+        teste_avaliacao = treino.loc[indices_teste].rename(
+            columns={"usuario_id": "user_id", "prato_id": "recipe_id", "nota": "rating"}
+        )
+        treino = treino.drop(index=indices_teste)
+    elif protocolo == "arquivo":
+        teste_avaliacao = teste
+    else:
+        raise ValueError("protocolo deve ser 'leave-one-out' ou 'arquivo'")
+
     relevantes = {
         usuario: set(
             grupo.loc[
@@ -55,7 +76,7 @@ r
                 "recipe_id"
             ]
         )
-        for usuario, grupo in teste.groupby("user_id")
+        for usuario, grupo in teste_avaliacao.groupby("user_id")
     }
 
     # Usuários que possuem histórico e receitas relevantes
@@ -66,8 +87,15 @@ r
         if itens and usuario in usuarios_treino
     )
 
-    if limite_usuarios is not None:
-        usuarios = usuarios[:limite_usuarios]
+    if limite_usuarios is not None and limite_usuarios < len(usuarios):
+        rng_usuarios = np.random.default_rng(42)
+        usuarios = sorted(
+            rng_usuarios.choice(
+                usuarios,
+                size=limite_usuarios,
+                replace=False,
+            ).tolist()
+        )
 
     if not usuarios:
         raise ValueError(
@@ -95,7 +123,7 @@ r
             treino,
             receitas,
             matriz,
-            n=len(ids_receitas),
+            n=k,
         )
 
         # Exclui receitas já avaliadas
@@ -124,6 +152,29 @@ r
         recalls.append(recall_at_k(recomendacoes, itens_relevantes, k))
         ndcgs.append(ndcg_at_k(recomendacoes, itens_relevantes, k))
 
+    metricas = {
+        "precision": precision_at_k,
+        "recall": recall_at_k,
+        "ndcg": ndcg_at_k,
+    }
+    rng = np.random.default_rng(42)
+    rankings_baseline = {"aleatorio": {}, "popular": {}}
+    for usuario in usuarios:
+        conhecidas = set(
+            treino.loc[treino["usuario_id"] == usuario, "prato_id"]
+        )
+        rankings_baseline["aleatorio"][usuario] = ranking_aleatorio(
+            sorted(ids_receitas),
+            conhecidas,
+            rng,
+            k,
+        )
+        rankings_baseline["popular"][usuario] = ranking_popular(
+            treino,
+            conhecidas,
+            k,
+        )
+
     # Todas as recomendações realizadas
     recomendacoes_totais = [
         item
@@ -149,24 +200,12 @@ r
             recomendacoes_totais,
             len(ids_receitas),
         ),
-        "diagnostico": {
-            "total_receitas_catalogo": len(ids_receitas),
-            "total_recomendacoes": total_recomendacoes,
-            "total_relevantes_teste": total_relevantes,
-            "media_recomendacoes_por_usuario": (
-                total_recomendacoes / len(usuarios)
-            ),
-            "media_relevantes_por_usuario": (
-                total_relevantes / len(usuarios)
-            ),
-            "usuarios_com_ranking_completo": sum(
-                tamanho == k for tamanho in tamanhos_ranking
-            ),
-            "usuarios_com_ranking_incompleto": sum(
-                tamanho < k for tamanho in tamanhos_ranking
-            ),
-            "itens_unicos_recomendados": len(set(recomendacoes_totais)),
-        },
+        "baselines": avaliar_rankings(
+            rankings_baseline,
+            relevantes,
+            k,
+            metricas,
+        ),
     }
 
 
@@ -176,23 +215,39 @@ def main():
         description="Avalia o recomendador TF-IDF com os CSVs reais."
     )
 
-    parser.add_argument("-k", type=int, default=10)
+    parser.add_argument(
+        "-k",
+        type=int,
+        nargs="+",
+        default=[5, 10],
+        help="um ou mais valores de K (padrão: 5 10)",
+    )
+    parser.add_argument(
+        "--protocolo",
+        choices=["leave-one-out", "arquivo"],
+        default="leave-one-out",
+        help="separação usada na avaliação (padrão: leave-one-out)",
+    )
     parser.add_argument("--nota-minima", type=float, default=4)
     parser.add_argument("--limite-usuarios", type=int)
 
     args = parser.parse_args()
 
-    if args.k < 1:
-        parser.error("-k deve ser maior ou igual a 1")
+    if any(k < 1 for k in args.k):
+        parser.error("todos os valores de -k devem ser maiores ou iguais a 1")
 
     if args.limite_usuarios is not None and args.limite_usuarios < 1:
         parser.error("--limite-usuarios deve ser maior que 0")
 
-    resultado = avaliar(
-        args.k,
-        args.nota_minima,
-        args.limite_usuarios,
-    )
+    resultado = {
+        f"@{k}": avaliar(
+            k,
+            args.nota_minima,
+            args.limite_usuarios,
+            args.protocolo,
+        )
+        for k in args.k
+    }
 
     print(json.dumps(resultado, indent=2, ensure_ascii=False))
 
