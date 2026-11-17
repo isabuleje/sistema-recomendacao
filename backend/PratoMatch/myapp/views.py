@@ -19,6 +19,7 @@ from recomendacao.main import (
     obter_alergias,
 )
 from recomendacao.algoritmos import recomendar_para
+from recomendacao.categorias import ordenar_por_categorias
 from .models import PerfilUsuario, Alergia, OnBoardingPrato
 
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
@@ -584,16 +585,16 @@ def recomendados(request):
     if ids is None:
         try:
             quantidade_avaliacoes = len(ids_avaliados)
+            perfil = PerfilUsuario.objects.filter(
+                usuario_id=usuario_id,
+            ).prefetch_related(
+                "alergias",
+                "categorias_preferidas",
+                "preferencias",
+                "pratos_onboarding",
+            ).first()
 
             if quantidade_avaliacoes < 5:
-                perfil = PerfilUsuario.objects.filter(
-                    usuario_id=usuario_id,
-                ).prefetch_related(
-                    "alergias",
-                    "categorias_preferidas",
-                    "preferencias",
-                    "pratos_onboarding",
-                ).first()
                 if perfil is None:
                     ids = []
                 else:
@@ -624,6 +625,16 @@ def recomendados(request):
                     for prato_id in placar["prato_id"].tolist()
                     if int(prato_id) not in ids_avaliados
                 ]
+                ids = ordenar_por_categorias(
+                    ids,
+                    _PRATOS_POR_ID,
+                    (
+                        perfil.categorias_preferidas.values_list("nome", flat=True)
+                        if perfil is not None
+                        else []
+                    ),
+                    limite=24,
+                )
         except Exception as e:
             print("Erro no algoritmo de recomendação:", e)
             return Response({"erro": "não foi possível gerar recomendações"}, status=500)
