@@ -7,7 +7,7 @@ A aplicação é formada por:
 - **Frontend:** React 19, React Router e Vite.
 - **Backend:** Django 6.1 e Django REST Framework.
 - **Banco de dados:** SQLite, usado pelo Django.
-- **Recomendador:** filtragem colaborativa por similaridade de cosseno e k-NN.
+- **Recomendador:** filtragem baseada em conteúdo com TF-IDF, perfil do usuário e similaridade de cosseno.
 
 > 🎥 **Vídeo de demonstração:** [ADICIONAR LINK AQUI]
 
@@ -35,20 +35,21 @@ O sistema permite:
 
 | **Conceito**                 | **Neste projeto**                                                                                       |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------- |
-| **Filtragem colaborativa**   | Usuários são comparados pelas notas dadas aos mesmos pratos.                                             |
+| **Filtragem baseada em conteúdo** | Cada prato é representado por TF-IDF dos ingredientes e comparado ao perfil do usuário.             |
 | **Interação usuário × item** | Cada interação relaciona um usuário a um prato e registra uma nota de 1 a 5.                              |
-| **Similaridade de cosseno**  | Mede a semelhança entre os vetores de avaliações de dois usuários.                                       |
-| **k-NN**                     | Seleciona os usuários mais semelhantes para gerar candidatos a recomendação.                             |
-| **Conteúdo dos pratos**      | Ingredientes, categorias, tempo, passos e avaliações são usados para exibir e filtrar as receitas.      |
-| **Sistema híbrido**          | A recomendação usa filtragem colaborativa e filtros de alergias/preferências do perfil.                  |
+| **Similaridade de cosseno**  | Mede a semelhança entre o vetor de preferência do usuário e cada prato candidato.                       |
+| **Perfil do usuário**        | É a soma ponderada dos vetores dos pratos avaliados, considerando nota e tempo visualizado.             |
+| **Conteúdo dos pratos**      | Ingredientes e categorias são usados na representação, filtragem e explicação das recomendações.       |
+| **Sistema híbrido**          | O ranking de conteúdo recebe a influência das categorias escolhidas no onboarding.                       |
 | **Cold start**               | O onboarding fornece pratos de interesse até que o usuário tenha histórico suficiente de avaliações.   |
 | **Personalização**           | Pratos já avaliados são removidos e os candidatos são filtrados conforme as alergias cadastradas.       |
 
-### 2.1 Filtragem colaborativa
+### 2.1 Filtragem baseada em conteúdo
 
-O sistema compara as avaliações dos usuários considerando apenas os pratos em comum. A similaridade de cosseno é calculada quando existem pelo menos três pratos avaliados em comum. Os vizinhos mais semelhantes influenciam a nota prevista dos pratos que o usuário ainda não avaliou.
-
-O ranking final combina a nota prevista com a frequência com que um prato aparece entre os vizinhos. Em seguida, os pratos já avaliados e os que contêm ingredientes associados às alergias do usuário são removidos.
+Cada receita é transformada em um vetor TF-IDF a partir dos IDs de seus ingredientes.
+O perfil do usuário é obtido pela soma desses vetores, ponderada pela diferença
+entre a nota dada e a média das notas do próprio usuário. A similaridade de cosseno
+entre o perfil e cada receita gera o ranking Top-N, excluindo os pratos já avaliados.
 
 ---
 
@@ -80,6 +81,8 @@ Os arquivos locais atualmente contêm:
 - `interactions_test.csv`: **12.455** registros.
 
 Os arquivos brutos são carregados diretamente pelo módulo de recomendação. Os arquivos de treino, validação e teste ficam disponíveis para avaliações offline.
+O comando de avaliação usa somente treino para construir o perfil e teste para medir
+as recomendações, com nota mínima 4 como critério de relevância.
 
 ### 3.3 Preparação dos dados
 
@@ -100,14 +103,14 @@ Os arquivos brutos são carregados diretamente pelo módulo de recomendação. O
 Dados das receitas e interações
               ↓
 Limpeza e conversão dos campos
-              ↓
-Histórico de avaliações por usuário
-              ↓
-Similaridade de cosseno entre usuários
-              ↓
-Seleção dos vizinhos (k-NN)
-              ↓
-Ranking por nota prevista e frequência
+             ↓
+Vetorização TF-IDF dos ingredientes
+             ↓
+Perfil de conteúdo do usuário
+             ↓
+Similaridade de cosseno perfil × prato
+             ↓
+Ranking Top-N
               ↓
 Filtros de alergias e pratos já conhecidos
               ↓
@@ -116,26 +119,24 @@ Recomendações exibidas no frontend
 
 ### 4.2 Algoritmo de recomendação
 
-**Algoritmo utilizado:** filtragem colaborativa baseada em usuários, com similaridade de cosseno e k-NN.
+**Algoritmo utilizado:** filtragem baseada em conteúdo, com TF-IDF e similaridade de cosseno.
 
 Para cada usuário, o sistema:
 
-1. encontra usuários com avaliações semelhantes;
-2. seleciona os vizinhos mais próximos;
-3. coleta pratos avaliados pelos vizinhos e ainda não avaliados pelo usuário;
-4. calcula uma nota prevista ponderada pela influência dos vizinhos;
-5. considera a frequência de aparição dos pratos;
-6. remove pratos incompatíveis com alergias e pratos já conhecidos;
-7. retorna o ranking final.
+1. transforma os ingredientes dos pratos em vetores TF-IDF;
+2. constrói o perfil do usuário a partir dos pratos avaliados;
+3. calcula a similaridade entre o perfil e todos os pratos;
+4. prioriza as categorias selecionadas no onboarding;
+5. remove pratos já avaliados;
+6. retorna o ranking final.
 
 Parâmetros principais:
 
 | Parâmetro | Valor padrão | Descrição |
 | --------- | ------------ | --------- |
-| `k` | `1` na chamada da API | Quantidade de vizinhos usados na recomendação |
-| `limite` | `60` | Quantidade máxima de recomendações retornadas |
-| `minimo_de_avaliacoes_pro_mesmo_prato_pra_nao_desconsiderar` | `3` | Avaliações em comum mínimas para calcular similaridade |
-| `valorizacao_de_frequencia` | `0.2` | Peso adicional para pratos recorrentes entre os vizinhos |
+| `N` | `24` na API / `5` e `10` na avaliação | Quantidade máxima de recomendações |
+| `nota` | média individual do usuário | Peso da interação no perfil |
+| `tempo_visualizado` | registrado em segundos | Ajuste do peso da interação |
 
 ### 4.3 Tratamento dos pratos já conhecidos
 
@@ -160,13 +161,24 @@ Quando o usuário possui menos de cinco pratos avaliados, os pratos selecionados
 
 ### 5.1 Protocolo de avaliação
 
-O projeto possui rotinas de avaliação offline em `backend/recomendacao/metricas.py` e `backend/recomendacao/algoritmos.py`.
+O projeto possui rotinas de avaliação offline em `backend/recomendacao/metricas/avaliar.py` e `backend/recomendacao/algoritmos.py`.
 
 As divisões disponíveis são:
 
 - `interactions_train.csv`;
 - `interactions_validation.csv`;
 - `interactions_test.csv`.
+
+Para executar a avaliação com `K=5` e `K=10`:
+
+```bash
+cd backend
+python -m recomendacao.metricas.avaliar --limite-usuarios 100
+```
+
+O resultado inclui o sistema e os baselines aleatório e popular, além de
+Precision, Recall, nDCG e cobertura do catálogo. A semente do baseline aleatório
+é fixa em `42`.
 
 O módulo de métricas implementa `MRR@K` e a criação de ground truth a partir de interações com nota mínima. Os valores finais de avaliação devem ser preenchidos após a execução do experimento definido para o projeto.
 
@@ -273,8 +285,9 @@ O perfil permite visualizar e alterar preferências e alergias, alterar a senha 
 
 ## 8. Limitações
 
-- O recomendador depende de usuários com avaliações em comum.
-- A recomendação é baseada principalmente em avaliações, e não em um modelo treinado de conteúdo.
+- O recomendador depende da qualidade e da cobertura dos ingredientes cadastrados.
+- A representação atual usa IDs de ingredientes; ela não captura totalmente sinônimos,
+  texto livre ou semântica culinária.
 - O tratamento de alergias depende do mapeamento disponível em `ingr_map.pkl`.
 - Os resultados experimentais ainda precisam ser documentados.
 - O banco SQLite é adequado para desenvolvimento, mas não é a opção indicada para produção.
@@ -350,6 +363,13 @@ backend/
 │   ├── configs/
 │   └── myapp/
 ├── recomendacao/
+|   ├── metricas/
+|   |   ├── avaliar.py
+|   |   ├── baselines.py
+|   |   ├── cobertura_catalogo.py
+|   |   ├── nDCG.py
+|   |   ├── precision.py
+|   |   ├── recall.py
 │   ├── algoritmos.py
 │   ├── main.py
 │   └── metricas.py
