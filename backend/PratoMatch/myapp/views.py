@@ -20,6 +20,7 @@ from recomendacao.main import (
 )
 from recomendacao.algoritmos import recomendar_para
 from recomendacao.categorias import ordenar_por_categorias
+from recomendacao.explicacoes import explicar_recomendacao
 from .models import PerfilUsuario, Alergia, OnBoardingPrato
 
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
@@ -572,6 +573,14 @@ def recomendados(request):
         return Response({"erro": "não autenticado"}, status=401)
 
     usuario_id = request.user.id
+    perfil = PerfilUsuario.objects.filter(
+        usuario_id=usuario_id,
+    ).prefetch_related(
+        "alergias",
+        "categorias_preferidas",
+        "preferencias",
+        "pratos_onboarding",
+    ).first()
     chave = f"recomendados:{usuario_id}"
     ids_avaliados = set(
         Interacao.objects.filter(
@@ -585,15 +594,6 @@ def recomendados(request):
     if ids is None:
         try:
             quantidade_avaliacoes = len(ids_avaliados)
-            perfil = PerfilUsuario.objects.filter(
-                usuario_id=usuario_id,
-            ).prefetch_related(
-                "alergias",
-                "categorias_preferidas",
-                "preferencias",
-                "pratos_onboarding",
-            ).first()
-
             if quantidade_avaliacoes < 5:
                 if perfil is None:
                     ids = []
@@ -645,7 +645,27 @@ def recomendados(request):
         for prato_id in ids
         if int(prato_id) not in ids_avaliados
     ]
-    pratos = [_PRATOS_POR_ID[i] for i in ids if i in _PRATOS_POR_ID]
+    historico_bem_avaliado = Interacao.objects.filter(
+        usuario_id=usuario_id,
+        nota__gte=4,
+    ).values_list("prato_id", flat=True)
+    categorias_usuario = (
+        perfil.categorias_preferidas.values_list("nome", flat=True)
+        if perfil is not None
+        else []
+    )
+    pratos = []
+    for prato_id in ids:
+        if prato_id not in _PRATOS_POR_ID:
+            continue
+        prato = dict(_PRATOS_POR_ID[prato_id])
+        prato["explicacao"] = explicar_recomendacao(
+            prato,
+            _PRATOS_POR_ID,
+            categorias_usuario,
+            historico_bem_avaliado,
+        )
+        pratos.append(prato)
     print(
         f"[recomendados] usuario={usuario_id} "
         f"quantidade={len(pratos)} dados={pratos}"
