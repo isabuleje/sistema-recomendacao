@@ -1,0 +1,60 @@
+.titulo-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.titulo-linha h1 {
+  margin: 0;
+}
+
+.chips-grid {
+  display: flex;
+  flex: 1;
+  align-content: flex-start;
+  max-height: calc(100svh - 20rem);
+  overflow-y: auto;
+  justify-content: center;
+  margin-top: 3.3rem;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.chip {
+  min-height: 2.2rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--bege-borda);
+  border-radius: 999px;
+  background: var(--creme-fundo);
+  color: var(--texto-principal);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.botao-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  border-color: var(--verde-primario);
+}
+
+.chip-ativo {
+  border-color: var(--verde-primario);
+  background: var(--verde-primario);
+  color: #ffffff;
+}

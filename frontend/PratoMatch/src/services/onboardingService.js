@@ -4,6 +4,7 @@ import { apiFetch, prepararCsrf } from "./api.js";
 Os serviços do onboarding possue:
   - salvarOnboarding(dados)
   - listarAlergias()
+  - buscarCategorias()
   - buscarPratosOnboarding()
 */
 
@@ -34,21 +35,33 @@ export async function listarAlergias() {
 Busca os pratos que serão apresentados
 durante o onboarding.
 
-O filtro de alergias é opcional.
+Os filtros são opcionais:
+  - alergias
+  - categorias
+  - alergias e categorias
 
 Tipo: 
 buscarPratosOnboarding({
       alergias: [1, 3],
+      categorias: ["italiana", "brasileira"]
   });
+
+Tenho quase certeza que o backend não funciona dessa maneira, uma das coisas para MUDAR
  */
 export async function buscarPratosOnboarding({
   alergias = [],
+  categorias = [],
 } = {}) {
   const params = new URLSearchParams();
 
   // Adiciona cada alergia separadamente
   alergias.forEach((item) => {
     params.append("alergias", item);
+  });
+
+  // Categorias também indo separads
+  categorias.forEach((item) => {
+    params.append("categorias", item);
   });
 
   // Os parâmetros se transformam em uma URL
@@ -62,4 +75,10 @@ export async function buscarPratosOnboarding({
 
 
   return Array.isArray(data.pratos) ? data.pratos : [];
+}
+
+/* Função GET para pegar todas as categorias*/
+export async function buscarCategorias() {
+  const data = await apiFetch("/categorias/");
+  return Array.isArray(data) ? data : (data?.categorias ?? []);
 }
