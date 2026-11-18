@@ -9,7 +9,9 @@ A aplicação é formada por:
 - **Banco de dados:** SQLite, usado pelo Django.
 - **Recomendador:** filtragem baseada em conteúdo com TF-IDF, perfil do usuário e similaridade de cosseno.
 
-> 🎥 **Vídeo de demonstração:** [ADICIONAR LINK AQUI]
+> 🎥 **Vídeo de demonstração:** 
+
+https://drive.google.com/drive/u/0/my-drive
 
 ---
 
@@ -198,12 +200,8 @@ Os exemplos e resultados numéricos devem ser adicionados após a execução da 
 ---
 
 ## 6. Resultados
+<img width="1917" height="870" alt="image" src="frontend\PratoMatch\public\Oficina - AP2.png" />
 
-
-
-![alt text](image-1.png)
-
----
 
 ## 7. Interface
 
