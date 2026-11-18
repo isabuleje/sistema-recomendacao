@@ -73,11 +73,37 @@ def obter_peso(interacoes: pd.DataFrame):
         pesos.append(peso)
     return pd.DataFrame(pesos)
 
-def recomendar_para(id_usuario: int, conexao: sqlite3.Connection):
+def recomendar_para(
+    id_usuario: int,
+    conexao: sqlite3.Connection = None,
+    limite: int = 24,
+    imprimir: bool = False,
+):
     receitas = pd.read_csv(ARQUIVO_RECEITAS, usecols=["id", "ingredient_ids"])
-    tfidf, X = tf_idf(receitas)
-    interacoes = pd.read_sql("SELECT * FROM myapp_interacao", conexao)
-    return ranking_receitas_usuario(id_usuario, interacoes, receitas, X)
+    _, X = tf_idf(receitas)
+
+    fechar_conexao = False
+    if conexao is None:
+        banco = PASTA_BACKEND / "PratoMatch" / "db.sqlite3"
+        conexao = sqlite3.connect(banco)
+        fechar_conexao = True
+
+    try:
+        interacoes = pd.read_sql("SELECT * FROM myapp_interacao", conexao)
+        ranking = ranking_receitas_usuario(
+            id_usuario,
+            interacoes,
+            receitas,
+            X,
+            n=limite,
+        )
+    finally:
+        if fechar_conexao:
+            conexao.close()
+
+    if imprimir:
+        print(ranking)
+    return ranking
 
 """
 conexao = sqlite3.connect("backend/PratoMatch/db.sqlite3")

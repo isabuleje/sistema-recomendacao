@@ -622,7 +622,7 @@ def recomendados(request):
                 )
                 ids = [
                     int(prato_id)
-                    for prato_id in placar["prato_id"].tolist()
+                    for prato_id in placar["id"].tolist()
                     if int(prato_id) not in ids_avaliados
                 ]
                 ids = ordenar_por_categorias(
@@ -649,6 +649,17 @@ def recomendados(request):
         usuario_id=usuario_id,
         nota__gte=4,
     ).values_list("prato_id", flat=True)
+    interacoes_usuario = list(
+        Interacao.objects
+        .filter(usuario_id=usuario_id)
+        .select_related("prato")
+        .order_by("-tempo_visualizado", "-nota")
+    )
+    pratos_onboarding_ids = (
+        perfil.pratos_onboarding.values_list("id", flat=True)
+        if perfil is not None
+        else []
+    )
     categorias_usuario = (
         perfil.categorias_preferidas.values_list("nome", flat=True)
         if perfil is not None
@@ -664,6 +675,8 @@ def recomendados(request):
             _PRATOS_POR_ID,
             categorias_usuario,
             historico_bem_avaliado,
+            interacoes_usuario,
+            pratos_onboarding_ids,
         )
         pratos.append(prato)
     print(
