@@ -28,18 +28,28 @@ def tf_idf(receitas: pd.DataFrame):
     X = tfidf.fit_transform(receitas["ingredient_ids"].astype(str))
     return tfidf, X
 
-def ranking_receitas_usuario(id_usuario, interacoes, receitas, X, n=10):
+def ranking_receitas_usuario(id_usuario, interacoes, receitas, X, conexao, n=10, minimo_onboarding = 5):
     ids = receitas["id"].to_numpy()
     linha_da_receita = pd.Series(np.arange(len(ids)), index=ids)
 
     # interações desse usuário, só com receitas que estão na matriz
     inter = interacoes[interacoes["usuario_id"] == id_usuario]
     inter = inter[inter["prato_id"].isin(linha_da_receita.index)]
-    if inter.empty:
-        return pd.DataFrame(columns=["id", "score"])
+    print(inter)
 
     linhas = linha_da_receita[inter["prato_id"]].to_numpy()
+    print(linhas)
+    if len(linhas) < minimo_onboarding:
+        onboarding: pd.DataFrame = pd.read_sql("SELECT perfil_id, prato_id FROM myapp_onboardingprato", conexao).groupby("perfil_id")["prato_id"].agg(list)
+        if id_usuario in onboarding:
+            onboarding_usuario: list = onboarding.loc[id_usuario]
+            for index in range(min((minimo_onboarding - len(linhas), len(onboarding_usuario)))):
+                inter.loc[len(inter)] = [None, 5, 0, "Avaliado", None, id_usuario, onboarding_usuario[index], 3600]
+
     pesos = obter_peso(inter).to_numpy(dtype=np.float32)
+
+    if inter.empty:
+        return pd.DataFrame(columns=["id", "score"])
 
     # perfil: soma das receitas que ele avaliou, ponderada pela nota
     perfil = np.asarray(X[linhas].T.dot(pesos)).ravel()
@@ -78,6 +88,7 @@ def recomendar_para(
     conexao: sqlite3.Connection = None,
     limite: int = 24,
     imprimir: bool = False,
+    minimo: int = 5
 ):
     receitas = pd.read_csv(ARQUIVO_RECEITAS, usecols=["id", "ingredient_ids"])
     _, X = tf_idf(receitas)
@@ -89,13 +100,14 @@ def recomendar_para(
         fechar_conexao = True
 
     try:
-        interacoes = pd.read_sql("SELECT * FROM myapp_interacao", conexao)
+        interacoes: pd.DataFrame = pd.read_sql("SELECT * FROM myapp_interacao", conexao)
         ranking = ranking_receitas_usuario(
             id_usuario,
             interacoes,
             receitas,
             X,
             n=limite,
+            conexao=conexao
         )
     finally:
         if fechar_conexao:
