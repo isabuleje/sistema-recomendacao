@@ -35,16 +35,15 @@ def ranking_receitas_usuario(id_usuario, interacoes, receitas, X, conexao, n=10,
     # interações desse usuário, só com receitas que estão na matriz
     inter = interacoes[interacoes["usuario_id"] == id_usuario]
     inter = inter[inter["prato_id"].isin(linha_da_receita.index)]
-    print(inter)
 
     linhas = linha_da_receita[inter["prato_id"]].to_numpy()
-    print(linhas)
     if len(linhas) < minimo_onboarding:
         onboarding: pd.DataFrame = pd.read_sql("SELECT perfil_id, prato_id FROM myapp_onboardingprato", conexao).groupby("perfil_id")["prato_id"].agg(list)
         if id_usuario in onboarding:
             onboarding_usuario: list = onboarding.loc[id_usuario]
             for index in range(min((minimo_onboarding - len(linhas), len(onboarding_usuario)))):
-                inter.loc[len(inter)] = [None, 5, 0, "Avaliado", None, id_usuario, onboarding_usuario[index], 3600]
+                inter.loc[len(inter)] = [None, 5.0, 0, "Avaliado", None, id_usuario, onboarding_usuario[index], 3600]
+                linhas = np.append(linhas, onboarding_usuario[index])
 
     pesos = obter_peso(inter).to_numpy(dtype=np.float32)
 
@@ -63,14 +62,14 @@ def ranking_receitas_usuario(id_usuario, interacoes, receitas, X, conexao, n=10,
 def obter_peso(interacoes: pd.DataFrame):
     pesos = []
     notas = interacoes["nota"]
-    media = notas.mean()
+ 
 
     n = 10
     
     for index in interacoes.index:
         interacao = interacoes.loc[index]
         tempo = interacao["tempo_visualizado"]
-        nota = interacao["nota"] - media
+        nota = interacao["nota"]
         peso_tempo: float
         if tempo < 3600:
             #       (360T^3 - T^4) / 1800000000 da uma curva legal
@@ -88,7 +87,7 @@ def recomendar_para(
     conexao: sqlite3.Connection = None,
     limite: int = 24,
     imprimir: bool = False,
-    minimo: int = 5
+    minimo_onboarding: int = 5
 ):
     receitas = pd.read_csv(ARQUIVO_RECEITAS, usecols=["id", "ingredient_ids"])
     _, X = tf_idf(receitas)
@@ -107,7 +106,8 @@ def recomendar_para(
             receitas,
             X,
             n=limite,
-            conexao=conexao
+            conexao=conexao,
+            minimo_onboarding=minimo_onboarding
         )
     finally:
         if fechar_conexao:
@@ -128,4 +128,4 @@ ranking = ranking_receitas_usuario(id_teste, interacoes, receitas, X)
 print(ranking)
 """
 if __name__ == "__main__":
-    print(recomendar_para(11, sqlite3.connect("backend/PratoMatch/db.sqlite3")))
+    print(recomendar_para(156, sqlite3.connect("backend/PratoMatch/db.sqlite3")))
