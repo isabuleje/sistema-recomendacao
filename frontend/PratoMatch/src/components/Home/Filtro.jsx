@@ -1,8 +1,30 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { buscarIngredientes } from "../../services/pratosService.js";
 import "./Filtro.css";
 
-const FilterSection = () => {
+const FilterSection = ({ ingredientes = [], onAdicionar, onRemover }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [opcoes, setOpcoes] = useState([]);
+  const [buscaIngrediente, setBuscaIngrediente] = useState("");
+
+  useEffect(() => {
+    buscarIngredientes()
+      .then(setOpcoes)
+      .catch((erro) => console.error("Erro ao buscar ingredientes:", erro));
+  }, []);
+
+  const opcoesVisiveis = opcoes
+    .filter((ingrediente) =>
+      ingrediente.toLocaleLowerCase().includes(
+        buscaIngrediente.trim().toLocaleLowerCase(),
+      ),
+    )
+    .slice(0, 20);
+
+  const selecionarIngrediente = (ingrediente) => {
+    onAdicionar?.(ingrediente);
+    setBuscaIngrediente("");
+  };
 
   return (
     <section className="filter-section">
@@ -17,35 +39,43 @@ const FilterSection = () => {
 
       {isOpen && (
         <div className="filter-options">
-          <label>
-            <input type="checkbox" name="vegetariano" />
-            Vegetariano
-          </label>
+          <input
+            type="text"
+            className="ingredient-search"
+            value={buscaIngrediente}
+            onChange={(event) => setBuscaIngrediente(event.target.value)}
+            placeholder="Buscar ingrediente"
+            aria-label="Buscar ingrediente"
+          />
 
-          <label>
-            <input type="checkbox" name="vegano" />
-            Vegano
-          </label>
+          <div className="ingredient-options">
+            {opcoesVisiveis.map((ingrediente) => (
+              <button
+                type="button"
+                className="ingredient-option"
+                key={ingrediente}
+                onClick={() => selecionarIngrediente(ingrediente)}
+              >
+                {ingrediente}
+              </button>
+            ))}
+          </div>
 
-          <label>
-            <input type="checkbox" name="onivoro" />
-            Onívoro
-          </label>
-
-          <label>
-            <input type="checkbox" name="semGluten" />
-            Sem Glúten
-          </label>
-
-          <label>
-            <input type="checkbox" name="semLactose" />
-            Sem Lactose
-          </label>
-
-          <label>
-            <input type="checkbox" name="baixaCalorias" />
-            Baixa Calorias
-          </label>
+          {ingredientes.length > 0 && (
+            <div className="selected-ingredients">
+              {ingredientes.map((ingrediente) => (
+                <button
+                  type="button"
+                  className="selected-ingredient"
+                  key={ingrediente}
+                  onClick={() => onRemover?.(ingrediente)}
+                  aria-label={`Remover ingrediente ${ingrediente}`}
+                >
+                  {ingrediente} ×
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </section>

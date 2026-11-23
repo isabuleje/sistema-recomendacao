@@ -558,13 +558,19 @@ def entrar_usuario(request):
 @api_view(['GET'])
 def pesquisar_pratos(request):
     query = request.GET.get('q', '')
+    ingredientes = [
+        item.strip()
+        for item in request.GET.getlist("ingrediente")
+        for item in item.split(",")
+        if item.strip()
+    ]
     try:
         pagina = int(request.GET.get('pagina', 1))
         por_pagina = int(request.GET.get('por_pagina', 20))
     except ValueError:
         return Response({"erro": "pagina e por_pagina devem ser números"}, status=400)
 
-    resultado = buscar_pratos(query, pagina, por_pagina)
+    resultado = buscar_pratos(query, pagina, por_pagina, ingredientes)
     return Response(resultado)
 
 @api_view(['GET'])

@@ -59,3 +59,48 @@
 
   cursor: pointer;
 }
+
+.filter-options .ingredient-search {
+  width: 220px;
+  height: 38px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 2px solid #077b66;
+  border-radius: 18px;
+  background: #fff;
+  color: #055746;
+  cursor: text;
+}
+
+.ingredient-options {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ingredient-option {
+  border: none;
+  background: transparent;
+  color: #077b66;
+  text-align: left;
+  padding: 6px 4px;
+  cursor: pointer;
+}
+
+.selected-ingredients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 220px;
+}
+
+.selected-ingredient {
+  border: none;
+  border-radius: 14px;
+  background: #c45019;
+  color: white;
+  padding: 6px 10px;
+  cursor: pointer;
+}

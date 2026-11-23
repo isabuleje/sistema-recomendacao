@@ -307,16 +307,43 @@ _NOMES_LOWER = df["name"].astype(str).str.lower()
 _IDS_DF = df["id"]
 
 
-def buscar_pratos(query="", pagina=1, por_pagina=20):
+def buscar_pratos(query="", pagina=1, por_pagina=20, ingredientes=None):
     query = (query or "").strip().lower()
+    ingredientes = [
+        str(ingrediente).strip().casefold()
+        for ingrediente in (ingredientes or [])
+        if str(ingrediente).strip()
+    ]
     por_pagina = max(1, min(por_pagina, 50))  # trava um teto, evita abuso
     pagina = max(1, pagina)
 
+    ids_correspondentes = _IDS_DF.dropna().astype(int).tolist()
+
     if query:
-        mascara = _NOMES_LOWER.str.contains(query, na=False, regex=False)
-        ids_correspondentes = _IDS_DF[mascara].dropna().astype(int).tolist()
-    else:
-        ids_correspondentes = _IDS_DF.dropna().astype(int).tolist()
+        ids_query = set(
+            _IDS_DF[
+                _NOMES_LOWER.str.contains(query, na=False, regex=False)
+            ].dropna().astype(int)
+        )
+        ids_correspondentes = [
+            id_prato for id_prato in ids_correspondentes
+            if id_prato in ids_query
+        ]
+
+    if ingredientes:
+        ids_correspondentes = [
+            id_prato
+            for id_prato in ids_correspondentes
+            if all(
+                any(
+                    ingrediente_filtro in str(ingrediente_prato).casefold()
+                    for ingrediente_prato in _PRATOS_POR_ID[id_prato].get(
+                        "ingredientes", []
+                    )
+                )
+                for ingrediente_filtro in ingredientes
+            )
+        ]
 
     total = len(ids_correspondentes)
     inicio = (pagina - 1) * por_pagina

@@ -16,6 +16,7 @@ export function useTempo(pratoId, tempoVisualizadoInicial = 0) {
     let acumulado = Number(tempoVisualizadoInicial) || 0;
     let marco = null;
     let intervalo = null;
+    let ultimaPersistencia = 0;
 
     const publicar = () => {
       const atual =
@@ -28,6 +29,7 @@ export function useTempo(pratoId, tempoVisualizadoInicial = 0) {
 
     const persistir = (segundos) => {
       if (!podeSalvar) return;
+      ultimaPersistencia = segundos;
       salvarTempoVisualizado(pratoId, segundos).catch((error) => {
         console.error("Erro ao salvar tempo de visualização:", error);
       });
@@ -55,9 +57,8 @@ export function useTempo(pratoId, tempoVisualizadoInicial = 0) {
       publicar();
 
       intervalo = setInterval(() => {
-        const anterior = acumulado;
         const atual = publicar();
-        if (atual !== anterior && atual > 0 && atual % 10 === 0) {
+        if (atual > ultimaPersistencia && atual - ultimaPersistencia >= 5) {
           persistir(atual);
         }
       }, 1000);
@@ -66,8 +67,12 @@ export function useTempo(pratoId, tempoVisualizadoInicial = 0) {
     const aoMudarVisibilidade = () => {
       if (!podeSalvar) return;
       if (document.hidden) {
-        acumulado = publicar();
+        acumulado =
+          marco == null
+            ? acumulado
+            : acumulado + Math.floor((Date.now() - marco) / 1000);
         marco = null;
+        publicar();
         persistir(acumulado);
         return;
       }

@@ -9,11 +9,22 @@ import { ATRASO_DEBOUNCE, POR_PAGINA_BUSCA } from "../constants/busca.js";
 */
 
 export function useBuscaPratos() {
+  const memoInicial = (() => {
+    try {
+      return JSON.parse(sessionStorage.getItem("busca-pratos")) || {};
+    } catch {
+      return {};
+    }
+  })();
+
   // Pratos encontrados pela pesquisa.
   const [resultados, setResultados] = useState([]);
   const [total, setTotal] = useState(0);
-  const [pagina, setPagina] = useState(1);
-  const [termo, setTermo] = useState("");
+  const [pagina, setPagina] = useState(Number(memoInicial.pagina) || 1);
+  const [termo, setTermo] = useState(memoInicial.termo || "");
+  const [ingredientes, setIngredientes] = useState(
+    Array.isArray(memoInicial.ingredientes) ? memoInicial.ingredientes : [],
+  );
   const [buscando, setBuscando] = useState(false); //se ta tendo busca, sim ou nao
   const [erroBusca, setErroBusca] = useState(null);
 
@@ -24,7 +35,12 @@ export function useBuscaPratos() {
     const termoLimpo = termo.trim();
     const idRequisicao = ++idRequisicaoAtual.current;
 
-    if (!termoLimpo) {
+    sessionStorage.setItem(
+      "busca-pratos",
+      JSON.stringify({ termo, ingredientes, pagina }),
+    );
+
+    if (!termoLimpo && ingredientes.length === 0) {
       return;
     }
 
@@ -39,6 +55,7 @@ export function useBuscaPratos() {
           pagina,
           POR_PAGINA_BUSCA,
           controller.signal,
+          ingredientes,
         );
 
         //resposta apenas a requisição de busca mais recente
@@ -67,10 +84,11 @@ export function useBuscaPratos() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [termo, pagina]);
+  }, [termo, pagina, ingredientes]);
 
   //se tem termo ent busca :D
-  const emBusca = (termo ?? "").trim().length > 0;
+  const emBusca =
+    (termo ?? "").trim().length > 0 || ingredientes.length > 0;
   const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA_BUSCA));
 
   const alterarBusca = (event) => {
@@ -86,11 +104,38 @@ export function useBuscaPratos() {
 
   const limparBusca = () => {
     setTermo("");
+    setIngredientes([]);
     setPagina(1);
     setResultados([]);
     setTotal(0);
     setBuscando(false);
     setErroBusca(null);
+  };
+
+  const adicionarIngrediente = (ingrediente) => {
+    const ingredienteLimpo = ingrediente.trim();
+    if (!ingredienteLimpo) return;
+
+    setIngredientes((atuais) =>
+      atuais.some(
+        (item) =>
+          item.toLocaleLowerCase() === ingredienteLimpo.toLocaleLowerCase(),
+      )
+        ? atuais
+        : [...atuais, ingredienteLimpo],
+    );
+    setPagina(1);
+    setResultados([]);
+    setTotal(0);
+  };
+
+  const removerIngrediente = (ingrediente) => {
+    setIngredientes((atuais) =>
+      atuais.filter((item) => item !== ingrediente),
+    );
+    setPagina(1);
+    setResultados([]);
+    setTotal(0);
   };
 
   const mudarPagina = (novaPagina) => {
@@ -101,8 +146,11 @@ export function useBuscaPratos() {
 
   return {
     termo,
+    ingredientes,
     alterarBusca,
     limparBusca,
+    adicionarIngrediente,
+    removerIngrediente,
     pagina,
     mudarPagina,
     resultados,

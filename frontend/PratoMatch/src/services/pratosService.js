@@ -30,14 +30,23 @@ export async function pesquisarPratos(
   pagina = 1,
   porPagina = 20,
   signal,
+  ingredientes = [],
 ) {
   const params = new URLSearchParams({
     q: query,
-    pagina,
-    por_pagina: porPagina,
+    pagina: String(pagina),
+    por_pagina: String(porPagina),
+  });
+  ingredientes.forEach((ingrediente) => {
+    params.append("ingrediente", ingrediente);
   });
 
   return apiFetch(`/pesquisar/?${params}`,{
     signal,
   })
+}
+
+export async function buscarIngredientes() {
+  const data = await apiFetch("/ingredientes/");
+  return Array.isArray(data.ingredientes) ? data.ingredientes : [];
 }

@@ -1,5 +1,6 @@
 import argparse
 import json
+import sqlite3
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -14,6 +15,7 @@ from recomendacao.metricas.baselines import (
 #Pra rodar usar: python -m recomendacao.metricas.avaliar (na base do backend)
 
 DATASET = Path(__file__).resolve().parents[2] / "dataset"
+BANCO = DATASET.parent / "PratoMatch" / "db.sqlite3"
 
 def avaliar(
     k=10,
@@ -108,35 +110,41 @@ def avaliar(
 
     rankings = {}
     tamanhos_ranking = []
-    for usuario in usuarios:
-        # Receitas já conhecidas pelo usuário
-        conhecidas = set(
-            treino.loc[
-                treino["usuario_id"] == usuario,
-                "prato_id"
-            ]
-        )
+    conexao = sqlite3.connect(BANCO)
+    
+    try:
+        for usuario in usuarios:
+            # Receitas já conhecidas pelo usuário
+            conhecidas = set(
+                treino.loc[
+                    treino["usuario_id"] == usuario,
+                    "prato_id"
+                ]
+            )
 
-        # Gera recomendações
-        ranking = ranking_receitas_usuario(
-            usuario,
-            treino,
-            receitas,
-            matriz,
-            n=k,
-        )
+            # Gera recomendações
+            ranking = ranking_receitas_usuario(
+                usuario,
+                treino,
+                receitas,
+                matriz,
+                conexao,
+                n=k,
+            )
 
-        # Exclui receitas já avaliadas
-        ranking = ranking[~ranking["id"].isin(conhecidas)]
+            # Exclui receitas já avaliadas
+            ranking = ranking[~ranking["id"].isin(conhecidas)]
 
-        # Remove possíveis duplicatas
-        ranking = ranking.drop_duplicates(subset=["id"])
+            # Remove possíveis duplicatas
+            ranking = ranking.drop_duplicates(subset=["id"])
 
-        # Limita a quantidade de recomendações
-        ranking = ranking.head(k)
+            # Limita a quantidade de recomendações
+            ranking = ranking.head(k)
 
-        rankings[usuario] = ranking["id"].tolist()
-        tamanhos_ranking.append(len(rankings[usuario]))
+            rankings[usuario] = ranking["id"].tolist()
+            tamanhos_ranking.append(len(rankings[usuario]))
+    finally:
+        conexao.close()
 
     # Calcula as métricas por usuário
     precisions = []

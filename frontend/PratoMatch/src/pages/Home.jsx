@@ -5,6 +5,7 @@ import "../components/Home/Categorias.css";
 import "../components/Home/Input.css";
 
 import CategorySection from "../components/Home/CategorySection.jsx";
+import FilterSection from "../components/Home/Filtro.jsx";
 import Loading from "../components/common/loading/Loading.jsx";
 
 import { useBuscaPratos } from "../hooks/useBuscaPratos.js";
@@ -23,8 +24,11 @@ const Home = () => {
 
   const {
     termo,
+    ingredientes,
     alterarBusca,
     limparBusca,
+    adicionarIngrediente,
+    removerIngrediente,
 
     pagina,
     mudarPagina,
@@ -90,6 +94,11 @@ const Home = () => {
               </button>
             )}
           </div>
+          <FilterSection
+            ingredientes={ingredientes}
+            onAdicionar={adicionarIngrediente}
+            onRemover={removerIngrediente}
+          />
         </div>
 
         {/* Resulados da busca */}
