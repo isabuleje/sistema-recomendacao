@@ -184,6 +184,20 @@ Precision, Recall, nDCG e cobertura do catálogo. A semente do baseline aleatór
 
 O módulo de métricas implementa `MRR@K` e a criação de ground truth a partir de interações com nota mínima. Os valores finais de avaliação devem ser preenchidos após a execução do experimento definido para o projeto.
 
+Para demonstrar o cálculo em uma base separada, gere e avalie a base sintética:
+
+```bash
+cd backend
+python seed_metricas.py
+python -m recomendacao.metricas.avaliar_demo -k 5
+```
+
+Essa base fica em `backend/PratoMatch/db_metricas.sqlite3` e não altera o banco
+da aplicação. Ela contém 50 usuários e 750 receitas; IDs e ingredientes vêm de
+`PP_recipes.csv`, enquanto usuários e interações são sintéticos e criados para
+a demonstração. Portanto, os resultados comprovam o funcionamento do cálculo,
+mas não devem ser apresentados como desempenho real do recomendador.
+
 ### 5.2 Métricas
 
 | **Métrica** | **Descrição** |
