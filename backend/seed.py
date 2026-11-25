@@ -22,6 +22,7 @@ import subprocess
 from pathlib import Path
 
 import pandas as pd
+import ast
 
 #O comando da maga
 BASE_DIR = Path(__file__).resolve().parent
@@ -88,11 +89,14 @@ from myapp.models import (
     PreferenciaAlimentar,
     PerfilUsuario,
     OnBoardingPrato,
+    Ingrediente,
+    IngredienteReceita
 )
 
 from recomendacao.main import (
     obter_categorias,
     obter_pratos,
+    obter_pares_receita_ingrediente,
     INTERACOES,
 )
 
@@ -410,6 +414,29 @@ def criar_onboarding(df):
 
     print(f"{len(objetos)} respostas de onboarding criadas.")
 
+#ingredientes oi
+
+from recomendacao.main import obter_pares_receita_ingrediente
+
+def criar_ingredientes(ids_pratos):
+    print("\nCriando ingredientes e associações...")
+
+    pares = obter_pares_receita_ingrediente(ids_pratos)
+    ids_ingredientes = {ing_id for _, ing_id in pares}
+
+    Ingrediente.objects.bulk_create(
+        [Ingrediente(id=i, nome=f"ingrediente_{i}") for i in ids_ingredientes],
+        batch_size=5000,
+        ignore_conflicts=True,
+    )
+
+    IngredienteReceita.objects.bulk_create(
+        [IngredienteReceita(prato_id=p, ingrediente_id=i) for p, i in pares],
+        batch_size=5000,
+        ignore_conflicts=True,
+    )
+
+    print(f"{len(ids_ingredientes)} ingredientes e {len(pares)} associações criadas.")
 
 # ============================================================
 # EXECUÇÃO
@@ -443,6 +470,7 @@ def main():
 
     criar_perfis(mapa)
     criar_interacoes(df)
+    criar_ingredientes(ids_pratos)
 
 
     if CRIAR_ONBOARDING:
@@ -461,6 +489,7 @@ def main():
     print(f"Preferências: {PreferenciaAlimentar.objects.count()}")
     print(f"Interações: {Interacao.objects.count()}")
     print(f"Onboarding: {OnBoardingPrato.objects.count()}")
+    print(f"Ingredientes: {Ingrediente.objects.count()}")
 
     print("\nPratos mais avaliados:")
 

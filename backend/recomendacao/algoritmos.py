@@ -62,18 +62,17 @@ def ranking_receitas_usuario(id_usuario, interacoes, receitas, X, conexao, n=10,
 def obter_peso(interacoes: pd.DataFrame):
     pesos = []
     notas = interacoes["nota"]
- 
 
     n = 10
     
     for index in interacoes.index:
         interacao = interacoes.loc[index]
         tempo = interacao["tempo_visualizado"]
-        nota = interacao["nota"]
+        nota = interacao["nota"] / 5.0
         peso_tempo: float
         if tempo < 3600:
             #       (360T^3 - T^4) / 1800000000 da uma curva legal
-            peso_tempo = ( (360*(tempo**3)) - (tempo**4) ) / 1800000000 
+            peso_tempo = ( (360*(tempo**3)) - (tempo**4) ) / 1800000000
             # mais ou menos 3 minutos aberto = 1.5x mais valor, 1 hora aberto = aproximadamente 2x mais valor, limite da curva
         else:
             peso_tempo = 2.0
@@ -89,7 +88,10 @@ def recomendar_para(
     imprimir: bool = False,
     minimo_onboarding: int = 5
 ):
-    receitas = pd.read_csv(ARQUIVO_RECEITAS, usecols=["id", "ingredient_ids"])
+    #receitas = pd.read_csv(ARQUIVO_RECEITAS, usecols=["id", "ingredient_ids"])
+    receitas = pd.read_sql("SELECT id FROM myapp_prato", conexao)
+    ingredientes = pd.read_sql("SELECT * FROM myapp_ingredientereceita", conexao).groupby("prato_id")["ingrediente_id"].agg(lambda s: " ".join(map(str, s)))
+    receitas["ingredient_ids"] = receitas["id"].map(ingredientes).fillna("")
     _, X = tf_idf(receitas)
 
     fechar_conexao = False
@@ -124,8 +126,8 @@ receitas = pd.read_csv(ARQUIVO_RECEITAS, usecols=["id", "ingredient_ids"])
 tfidf, X = tf_idf(receitas)
 interacoes = pd.read_sql("SELECT * FROM myapp_interacao", conexao)
 id_teste = interacoes["usuario_id"].value_counts().index[0]
-ranking = ranking_receitas_usuario(id_teste, interacoes, receitas, X)
-print(ranking)
+#ranking = ranking_receitas_usuario(id_teste, interacoes, receitas, X)
+print(id_teste)
 """
 if __name__ == "__main__":
-    print(recomendar_para(156, sqlite3.connect("backend/PratoMatch/db.sqlite3")))
+    print(recomendar_para(427013, sqlite3.connect("backend/PratoMatch/db.sqlite3")))

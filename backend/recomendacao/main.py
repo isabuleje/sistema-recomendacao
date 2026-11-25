@@ -364,3 +364,22 @@ alergias_df = pd.read_pickle(BASE_DIR / "dataset" / "ingr_map.pkl")
 
 def obter_alergias():
     return alergias_df["replaced"].drop_duplicates().tolist()
+
+PP_RECEITAS = pd.read_csv(
+    BASE_DIR / "dataset" / "PP_recipes.csv",
+    usecols=["id", "ingredient_ids"],
+)
+PP_RECEITAS["ingredient_ids"] = PP_RECEITAS["ingredient_ids"].apply(ast.literal_eval)
+
+
+def obter_pares_receita_ingrediente(ids=None):
+    """Retorna um set de (prato_id, ingrediente_id), sem duplicatas."""
+    df = PP_RECEITAS
+    if ids is not None:
+        df = df[df["id"].isin(ids)]
+
+    return {
+        (int(prato_id), int(ing_id))
+        for prato_id, lista in zip(df["id"], df["ingredient_ids"])
+        for ing_id in lista
+    }
